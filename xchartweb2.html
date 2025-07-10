@@ -1067,10 +1067,10 @@
                                     // Filter out DUA and DLA labels and ensure rectangles are filled
                                     return labels.filter(label => {
                                         return !label.text.includes('DUA') && !label.text.includes('DLA') && 
-                                               !label.text.includes('Límite Superior de Alerta') && 
-                                               !label.text.includes('Límite Inferior de Alerta') &&
-                                               !label.text.includes('Upper Alert Limit') && 
-                                               !label.text.includes('Lower Alert Limit');
+                                               !label.text.includes('Promedio DPA-UCL') && 
+                                               !label.text.includes('Promedio DPA-LCL'') &&
+                                               !label.text.includes('DPA-UCL Average') && 
+                                               !label.text.includes('DPA-LCL Average');
                                     }).map(label => {
                                         // Ensure fillStyle matches strokeStyle for solid rectangles
                                         label.fillStyle = label.strokeStyle;
