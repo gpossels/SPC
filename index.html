@@ -536,6 +536,7 @@
                         <div class="button-group">
                             <button class="update-btn" id="updateChartBtn">Actualizar Gráfico</button>
                             <button class="download-btn" id="downloadChartBtn">Descargar Gráfico</button>
+                            <button class="download-btn" id="copyChartBtn">Copiar Gráfico</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -608,6 +609,7 @@
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
                 updateChartBtn: 'Actualizar Gráfico',
                 downloadChartBtn: 'Descargar Gráfico',
+                copyChartBtn: 'Copiar Gráfico',
                 downloadTableBtn: 'Descargar Tabla',
                 hideTableBtn: 'Ocultar Tabla',
                 showTableBtn: 'Mostrar Tabla',
@@ -654,6 +656,7 @@
                 chartTitlePlaceholder: 'Enter chart title',
                 updateChartBtn: 'Update Chart',
                 downloadChartBtn: 'Download Chart',
+                copyChartBtn: 'Copy Chart',
                 downloadTableBtn: 'Download Table',
                 hideTableBtn: 'Hide Table',
                 showTableBtn: 'Show Table',
@@ -717,10 +720,12 @@
             
             // Update counter text
             const pointWord = count === 1 ? t.dataPointsSingular : t.dataPointsPlural;
-            counter.textContent = `${count} ${pointWord}`;
+            const counterText = `${count} ${pointWord}`;
+            counter.textContent = counterText;
             
             // Update counter styling and button state
             counter.className = 'data-counter';
+            
             if (count === 0) {
                 counter.classList.add('insufficient');
                 calcBtn.disabled = true;
@@ -1093,6 +1098,7 @@
             document.getElementById('chartTitleInput').placeholder = t.chartTitlePlaceholder;
             document.getElementById('updateChartBtn').textContent = t.updateChartBtn;
             document.getElementById('downloadChartBtn').textContent = t.downloadChartBtn;
+            document.getElementById('copyChartBtn').textContent = t.copyChartBtn;
             document.getElementById('downloadTableBtn').textContent = t.downloadTableBtn;
             document.getElementById('toggleTableBtn').textContent = isTableVisible ? t.hideTableBtn : t.showTableBtn;
             
@@ -1128,6 +1134,19 @@
             const customDataName = document.getElementById('dataNameInput').value.trim();
             const dataLabel = customDataName || '(DP)';
             
+            // Get time unit and format period count
+            const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const dataCount = currentResults.length;
+            let periodText = '';
+            
+            if (timeUnit === 'months') {
+                periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
+            } else if (timeUnit === 'weeks') {
+                periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
+            } else {
+                periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
+            }
+            
             // Prepare data
             const labels = currentResults.map(r => r.date);
             const dpData = currentResults.map(r => r.dp);
@@ -1141,9 +1160,10 @@
             const dpPointColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
             const dpPointBorderColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
             
-            // Custom title from input
+            // Custom title from input with period count
             const customTitle = document.getElementById('chartTitleInput').value.trim();
-            const chartTitle = customTitle || t.chartTitle;
+            const baseTitle = customTitle || t.chartTitle;
+            const chartTitle = `${baseTitle} ${periodText}`;
             
             // Destroy existing chart
             if (spcChart) {
@@ -1351,6 +1371,44 @@
             });
         }
 
+        // Copy chart to clipboard
+        async function copyChart() {
+            if (!spcChart) return;
+            
+            try {
+                const canvas = spcChart.canvas;
+                
+                // Create a blob from the canvas
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        
+                        // Show success feedback
+                        const btn = document.getElementById('copyChartBtn');
+                        const originalText = btn.textContent;
+                        btn.textContent = isSpanish ? '¡Copiado!' : 'Copied!';
+                        btn.style.backgroundColor = '#28a745';
+                        
+                        setTimeout(() => {
+                            btn.textContent = originalText;
+                            btn.style.backgroundColor = '#6f42c1';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy chart: ', err);
+                        // Fallback: show instruction to right-click
+                        alert(isSpanish ? 
+                            'No se pudo copiar automáticamente. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
+                            'Could not copy automatically. Right-click on the chart and select "Copy image".');
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error('Failed to copy chart: ', err);
+                alert(isSpanish ? 
+                    'No se pudo copiar el gráfico. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
+                    'Could not copy chart. Right-click on the chart and select "Copy image".');
+            }
+        }
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;
@@ -1570,6 +1628,7 @@
             document.getElementById('toggleTableBtn').onclick = toggleTable;
             document.getElementById('updateChartBtn').onclick = updateChart;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
+            document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
         });
     </script>
