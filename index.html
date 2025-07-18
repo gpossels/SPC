@@ -459,6 +459,9 @@
                         <div class="data-counter" id="dataCounter">0 puntos</div>
                         <textarea id="dataInput" placeholder="8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
                     </div>
+                    <div style="margin-top: 10px;">
+                        <button class="clear-btn" id="clearBtn">Limpiar</button>
+                    </div>
                 </div>
 
                 <div class="input-group">
@@ -512,7 +515,6 @@
 
                 <div class="button-row">
                     <button class="calculate-btn" id="calcBtn">Calcular SPC</button>
-                    <button class="clear-btn" id="clearBtn">Limpiar</button>
                 </div>
             </div>
 
@@ -1002,7 +1004,7 @@
             const periodSelect = document.getElementById('periodSelect');
             const periodSelectContainer = periodSelect.parentElement;
             const currentDate = new Date();
-            const currentYear = parseInt(document.getElementById('yearRef').value) || currentDate.getFullYear();
+            let currentYear = parseInt(document.getElementById('yearRef').value) || currentDate.getFullYear();
             
             if (timeUnit === 'years') {
                 // Hide the period selector when years is selected
@@ -1015,6 +1017,9 @@
             } else {
                 // Show the period selector for other time units
                 periodSelectContainer.style.display = 'block';
+                // Reset year to current year when switching from years to other units
+                currentYear = currentDate.getFullYear();
+                document.getElementById('yearRef').value = currentYear;
                 
                 if (timeUnit === 'days') {
                     let options = '';
