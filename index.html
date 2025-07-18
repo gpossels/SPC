@@ -695,7 +695,47 @@
             const result = [];
             
             for (const item of items) {
-                const normalized = item.replace(',', '.');
+                let normalized = item.trim();
+                
+                // Detect number format and remove thousands separators
+                if (normalized.includes(',') && normalized.includes('.')) {
+                    // Both comma and dot present - determine which is decimal separator
+                    const lastCommaPos = normalized.lastIndexOf(',');
+                    const lastDotPos = normalized.lastIndexOf('.');
+                    
+                    if (lastDotPos > lastCommaPos) {
+                        // US format: dot is decimal, comma is thousands separator
+                        normalized = normalized.replace(/,/g, '');
+                    } else {
+                        // European format: comma is decimal, dot is thousands separator
+                        normalized = normalized.replace(/\./g, '').replace(',', '.');
+                    }
+                } else if (normalized.includes(',')) {
+                    // Only comma present - could be European decimal or US thousands
+                    const commaPos = normalized.indexOf(',');
+                    const afterComma = normalized.substring(commaPos + 1);
+                    
+                    if (afterComma.length <= 3 && !afterComma.includes(',')) {
+                        // Likely European decimal separator
+                        normalized = normalized.replace(',', '.');
+                    } else {
+                        // Likely US thousands separator
+                        normalized = normalized.replace(/,/g, '');
+                    }
+                } else if (normalized.includes('.')) {
+                    // Only dot present - could be US decimal or European thousands
+                    const dotPos = normalized.indexOf('.');
+                    const afterDot = normalized.substring(dotPos + 1);
+                    
+                    if (afterDot.length <= 3 && !afterDot.includes('.')) {
+                        // Likely US decimal separator - keep as is
+                        // normalized = normalized;
+                    } else {
+                        // Likely European thousands separator
+                        normalized = normalized.replace(/\./g, '');
+                    }
+                }
+                
                 const num = parseFloat(normalized);
                 if (isNaN(num)) throw new Error('Invalid number: ' + item);
                 result.push(num);
@@ -822,9 +862,13 @@
             return periods;
         }
 
-        // Format number with comma
+        // Format number with appropriate decimal marker based on language
         function fmt(num) {
-            return num.toFixed(2).replace('.', ',');
+            if (isSpanish) {
+                return num.toFixed(2).replace('.', ',');
+            } else {
+                return num.toFixed(2);
+            }
         }
 
         // Calculate SPC
