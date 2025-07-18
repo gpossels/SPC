@@ -457,7 +457,7 @@
                     <label id="dataLabel">Datos (separados por espacio, tab o línea):</label>
                     <div class="data-input-container">
                         <div class="data-counter" id="dataCounter">0 puntos</div>
-                        <textarea id="dataInput" placeholder="7,22 1,54 4,51 5,94 4,67 7,26 2,41 6,05 6,83 6,11 9,97 7,76 14,27 7,57 8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">7,22 1,54 4,51 5,94 4,67 7,26 2,41 6,05 6,83 6,11 9,97 7,76 14,27 7,57 8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
+                        <textarea id="dataInput" placeholder="8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
                     </div>
                 </div>
 
@@ -1010,6 +1010,8 @@
                 // Set a default value for internal use
                 periodSelect.innerHTML = '<option value="1">Year</option>';
                 periodSelect.value = '1';
+                // Set year to previous year when years is selected
+                document.getElementById('yearRef').value = currentDate.getFullYear() - 1;
             } else {
                 // Show the period selector for other time units
                 periodSelectContainer.style.display = 'block';
@@ -1543,7 +1545,8 @@
             // Reset to current month/week and year
             const currentDate = new Date();
             document.getElementById('yearRef').value = currentDate.getFullYear();
-            document.getElementById('monthsRadio').checked = true;
+            // Keep the currently selected time unit instead of resetting to months
+            // document.getElementById('monthsRadio').checked = true;
             document.getElementById('endRadio').checked = true;
             updatePeriodSelector();
             updateDataCounter(); // Update counter after clearing
