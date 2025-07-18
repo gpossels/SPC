@@ -54,7 +54,7 @@
             position: absolute;
             bottom: 15px;
             right: 20px;
-            font-size: 0.75em;
+            font-size: 0.75em !important;
             color: black;
             margin: 0;
         }
@@ -408,9 +408,7 @@
             gap: 10px;
             flex-wrap: wrap;
         }
-
         @media (max-width: 768px) {
-            .input-row {
                 flex-direction: column;
             }
             
@@ -723,7 +721,7 @@
             
             // Update counter text
             const pointWord = count === 1 ? t.dataPointsSingular : t.dataPointsPlural;
-            const counterText = count + ' ' + pointWord;
+            const counterText = `${count} ${pointWord}`;
             counter.textContent = counterText;
             
             // Update counter styling and button state
@@ -756,19 +754,19 @@
                 if (type === 'start') {
                     if (unit === 'years') {
                         currentYear = refYear + i;
-                        periods.push(currentYear.toString());
+                        periods.push(`${currentYear}`);
                     } else if (unit === 'days') {
                         const totalDays = parseInt(refPeriod) + i;
                         const daysInYear = isLeapYear(refYear) ? 366 : 365;
                         currentYear = refYear + Math.floor((totalDays - 1) / daysInYear);
                         currentPeriod = ((totalDays - 1) % daysInYear) + 1;
-                        const dayLabel = isSpanish ? 'Día ' + currentPeriod : 'Day ' + currentPeriod;
-                        periods.push(dayLabel + ' ' + currentYear);
+                        const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
+                        periods.push(`${dayLabel} ${currentYear}`);
                     } else if (unit === 'weeks') {
                         const totalWeeks = parseInt(refPeriod) + i;
                         currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
                         currentPeriod = ((totalWeeks - 1) % 52) + 1;
-                        periods.push('S' + currentPeriod + ' ' + currentYear);
+                        periods.push(`S${currentPeriod} ${currentYear}`);
                     } else {
                         const totalMonths = parseInt(refPeriod) + i;
                         currentYear = refYear + Math.floor((totalMonths - 1) / 12);
@@ -776,13 +774,13 @@
                         const monthNames = isSpanish ? 
                             ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
                             ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        periods.push(monthNames[currentPeriod - 1] + ' ' + currentYear);
+                        periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
                     }
                 } else {
                     const offset = count - 1 - i;
                     if (unit === 'years') {
                         currentYear = refYear - offset;
-                        periods.push(currentYear.toString());
+                        periods.push(`${currentYear}`);
                     } else if (unit === 'days') {
                         let totalDays = parseInt(refPeriod) - offset;
                         currentYear = refYear;
@@ -792,8 +790,8 @@
                             totalDays += daysInPrevYear;
                         }
                         currentPeriod = totalDays;
-                        const dayLabel = isSpanish ? 'Día ' + currentPeriod : 'Day ' + currentPeriod;
-                        periods.push(dayLabel + ' ' + currentYear);
+                        const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
+                        periods.push(`${dayLabel} ${currentYear}`);
                     } else if (unit === 'weeks') {
                         let totalWeeks = parseInt(refPeriod) - offset;
                         currentYear = refYear;
@@ -802,7 +800,7 @@
                             currentYear--;
                         }
                         currentPeriod = totalWeeks;
-                        periods.push('S' + currentPeriod + ' ' + currentYear);
+                        periods.push(`S${currentPeriod} ${currentYear}`);
                     } else {
                         let totalMonths = parseInt(refPeriod) - offset;
                         currentYear = refYear;
@@ -814,7 +812,7 @@
                         const monthNames = isSpanish ? 
                             ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
                             ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        periods.push(monthNames[currentPeriod - 1] + ' ' + currentYear);
+                        periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
                     }
                 }
             }
@@ -830,32 +828,22 @@
         // Calculate SPC
         function calcSPC(data, periods) {
             const t = isSpanish ? lang.es : lang.en;
-            const results = data.map(function(dp, i) {
-                return {
-                    period: i + 1,
-                    date: periods[i],
-                    dp: dp,
-                    dpa: null, 
-                    mr: null, 
-                    mra: null,
-                    lcl: null, 
-                    dla: null, 
-                    dua: null, 
-                    ucl: null, 
-                    mrucl: null,
-                    rule: null, 
-                    ruleApplied: null, 
-                    signal: null
-                };
-            });
+            const results = data.map((dp, i) => ({
+                period: i + 1,
+                date: periods[i],
+                dp: dp,
+                dpa: null, mr: null, mra: null,
+                lcl: null, dla: null, dua: null, ucl: null, mrucl: null,
+                rule: null, ruleApplied: null, signal: null
+            }));
 
             // Baseline calculation (first 8 points)
-            const dpa = data.slice(0, 8).reduce(function(a, b) { return a + b; }) / 8;
+            const dpa = data.slice(0, 8).reduce((a, b) => a + b) / 8;
             const mrs = [];
             for (let i = 1; i < 8; i++) {
                 mrs.push(Math.abs(data[i] - data[i-1]));
             }
-            const mra = mrs.reduce(function(a, b) { return a + b; }) / mrs.length;
+            const mra = mrs.reduce((a, b) => a + b) / mrs.length;
             
             const factor = Math.round((3/1.128) * 100000000) / 100000000;
             const lcl = dpa - (mra * factor);
@@ -903,26 +891,28 @@
                 // Rule 2: All 8 recent DPs above or below current DPA
                 if (i >= 7) {
                     const last8 = data.slice(i-7, i+1);
-                    const allAboveDPA = last8.every(function(dp) { return dp > currentDPA; });
-                    const allBelowDPA = last8.every(function(dp) { return dp < currentDPA; });
+                    const allAboveDPA = last8.every(dp => dp > currentDPA);
+                    const allBelowDPA = last8.every(dp => dp < currentDPA);
                     
                     if (allAboveDPA || allBelowDPA) {
                         ruleTriggered = true;
                         
-                        const newDPA = last8.reduce(function(a, b) { return a + b; }) / 8;
+                        const newDPA = last8.reduce((a, b) => a + b) / 8;
                         
-                        // Calculate 8 MR values
+                        // Calculate 8 MR values: from (i-7) to i, including transition MR
                         const newMRs = [];
+                        // First MR: transition from previous DP to first DP of the 8-point window
                         if (i-8 >= 0) {
                             newMRs.push(Math.abs(data[i-7] - data[i-8]));
                         } else {
-                            newMRs.push(0);
+                            newMRs.push(0); // No previous DP available
                         }
+                        // Remaining 7 MRs: within the 8-point window
                         for (let j = 1; j < 8; j++) {
                             newMRs.push(Math.abs(last8[j] - last8[j-1]));
                         }
                         
-                        const newMRA = newMRs.reduce(function(a, b) { return a + b; }) / newMRs.length;
+                        const newMRA = newMRs.reduce((a, b) => a + b) / newMRs.length;
                         const newLCL = newDPA - (newMRA * factor);
                         const newUCL = newDPA + (newMRA * factor);
                         const newMRUCL = newMRA * 3.27;
@@ -947,26 +937,28 @@
                 // Rule 3: At least 3 of last 4 DPs above DUA or below DLA
                 if (!ruleTriggered && i >= 3) {
                     const last4 = data.slice(i-3, i+1);
-                    const aboveDUA = last4.filter(function(dp) { return dp > currentDUA; }).length;
-                    const belowDLA = last4.filter(function(dp) { return dp < currentDLA; }).length;
+                    const aboveDUA = last4.filter(dp => dp > currentDUA).length;
+                    const belowDLA = last4.filter(dp => dp < currentDLA).length;
                     
                     if (aboveDUA >= 3 || belowDLA >= 3) {
                         ruleTriggered = true;
                         
-                        const newDPA = last4.reduce(function(a, b) { return a + b; }) / 4;
+                        const newDPA = last4.reduce((a, b) => a + b) / 4;
                         
-                        // Calculate 4 MR values
+                        // Calculate 4 MR values: from (i-3) to i, including transition MR
                         const newMRs = [];
+                        // First MR: transition from previous DP to first DP of the 4-point window
                         if (i-4 >= 0) {
                             newMRs.push(Math.abs(data[i-3] - data[i-4]));
                         } else {
-                            newMRs.push(0);
+                            newMRs.push(0); // No previous DP available
                         }
+                        // Remaining 3 MRs: within the 4-point window
                         for (let j = 1; j < 4; j++) {
                             newMRs.push(Math.abs(last4[j] - last4[j-1]));
                         }
                         
-                        const newMRA = newMRs.reduce(function(a, b) { return a + b; }) / newMRs.length;
+                        const newMRA = newMRs.reduce((a, b) => a + b) / newMRs.length;
                         const newLCL = newDPA - (newMRA * factor);
                         const newUCL = newDPA + (newMRA * factor);
                         const newMRUCL = newMRA * 3.27;
@@ -1013,51 +1005,47 @@
             const currentYear = parseInt(document.getElementById('yearRef').value) || currentDate.getFullYear();
             
             if (timeUnit === 'years') {
+                // Hide the period selector when years is selected
                 periodSelectContainer.style.display = 'none';
+                // Set a default value for internal use
                 periodSelect.innerHTML = '<option value="1">Year</option>';
                 periodSelect.value = '1';
-                // Set year to previous year when Years is selected
-                const previousYear = currentDate.getFullYear() - 1;
-                document.getElementById('yearRef').value = previousYear;
             } else {
-                // Reset to current year when switching back from Years (unless manually changed)
-                if (currentYear === currentDate.getFullYear() - 1) {
-                    document.getElementById('yearRef').value = currentDate.getFullYear();
-                }
-                
-                const yearToUse = parseInt(document.getElementById('yearRef').value);
+                // Show the period selector for other time units
                 periodSelectContainer.style.display = 'block';
                 
                 if (timeUnit === 'days') {
                     let options = '';
-                    const daysInYear = isLeapYear(yearToUse) ? 366 : 365;
+                    const daysInYear = isLeapYear(currentYear) ? 366 : 365;
                     const dayLabel = isSpanish ? 'Día' : 'Day';
                     for (let i = 1; i <= daysInYear; i++) {
-                        options += '<option value="' + i + '">' + dayLabel + ' ' + i + '</option>';
+                        options += `<option value="${i}">${dayLabel} ${i}</option>`;
                     }
                     periodSelect.innerHTML = options;
                     
-                    if (yearToUse === currentDate.getFullYear()) {
+                    // Set to yesterday (previous day) by default
+                    if (currentYear === currentDate.getFullYear()) {
                         const currentDay = Math.floor((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (24 * 60 * 60 * 1000)) + 1;
                         const previousDay = currentDay > 1 ? currentDay - 1 : daysInYear;
                         periodSelect.value = previousDay;
                     } else {
-                        periodSelect.value = daysInYear;
+                        periodSelect.value = daysInYear; // If different year, default to last day
                     }
                 } else if (timeUnit === 'weeks') {
                     let options = '';
                     const weekLabel = isSpanish ? 'Semana' : 'Week';
                     for (let i = 1; i <= 52; i++) {
-                        options += '<option value="' + i + '">' + weekLabel + ' ' + i + '</option>';
+                        options += `<option value="${i}">${weekLabel} ${i}</option>`;
                     }
                     periodSelect.innerHTML = options;
                     
-                    if (yearToUse === currentDate.getFullYear()) {
+                    // Set to previous week by default
+                    if (currentYear === currentDate.getFullYear()) {
                         const currentWeek = Math.ceil((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
                         const previousWeek = currentWeek > 1 ? currentWeek - 1 : 52;
                         periodSelect.value = previousWeek;
                     } else {
-                        periodSelect.value = 52;
+                        periodSelect.value = 52; // If different year, default to last week
                     }
                 } else {
                     const monthNames = isSpanish ? 
@@ -1065,17 +1053,18 @@
                         ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
                     
                     let options = '';
-                    monthNames.forEach(function(month, index) {
-                        options += '<option value="' + (index + 1) + '">' + month + '</option>';
+                    monthNames.forEach((month, index) => {
+                        options += `<option value="${index + 1}">${month}</option>`;
                     });
                     periodSelect.innerHTML = options;
                     
-                    if (yearToUse === currentDate.getFullYear()) {
+                    // Set to previous month by default
+                    if (currentYear === currentDate.getFullYear()) {
                         const currentMonth = currentDate.getMonth() + 1;
                         const previousMonth = currentMonth > 1 ? currentMonth - 1 : 12;
                         periodSelect.value = previousMonth;
                     } else {
-                        periodSelect.value = 12;
+                        periodSelect.value = 12; // If different year, default to December
                     }
                 }
             }
@@ -1085,17 +1074,21 @@
         function updateExistingResults() {
             if (!currentResults) return;
             
+            // Get original parameters from the UI
             const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
             const refPeriod = document.getElementById('periodSelect').value;
             const refYear = parseInt(document.getElementById('yearRef').value);
             const dateType = document.querySelector('input[name="dateType"]:checked').value;
             
+            // Regenerate periods with new language
             const newPeriods = genPeriods(refPeriod, refYear, timeUnit, dateType, currentResults.length);
             
-            currentResults.forEach(function(result, index) {
+            // Update the results with new periods
+            currentResults.forEach((result, index) => {
                 result.date = newPeriods[index];
             });
             
+            // Update table if visible
             if (currentResults) {
                 showResults(currentResults);
             }
@@ -1136,15 +1129,17 @@
             document.getElementById('endLabel').textContent = t.end;
             
             updatePeriodSelector();
-            updateDataCounter();
+            updateDataCounter(); // Update counter text with new language
             
             const headers = document.getElementById('tableHead');
-            headers.innerHTML = t.headers.map(function(h) { return '<th>' + h + '</th>'; }).join('');
+            headers.innerHTML = t.headers.map(h => `<th>${h}</th>`).join('');
             
+            // Update chart if it exists
             if (spcChart && currentResults) {
                 updateChart();
             }
             
+            // Update existing results with new language
             updateExistingResults();
         }
 
@@ -1155,40 +1150,47 @@
             const t = isSpanish ? lang.es : lang.en;
             const ctx = document.getElementById('spcChart').getContext('2d');
             
+            // Get custom data name or use default
             const customDataName = document.getElementById('dataNameInput').value.trim();
             const dataLabel = customDataName || '(DP)';
             
+            // Get time unit and format period count
             const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
             const dataCount = currentResults.length;
             let periodText = '';
             
             if (timeUnit === 'years') {
-                periodText = isSpanish ? '(' + dataCount + ' años)' : '(' + dataCount + ' years)';
+                periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
             } else if (timeUnit === 'months') {
-                periodText = isSpanish ? '(' + dataCount + ' meses)' : '(' + dataCount + ' months)';
+                periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
             } else if (timeUnit === 'weeks') {
-                periodText = isSpanish ? '(' + dataCount + ' semanas)' : '(' + dataCount + ' weeks)';
+                periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
             } else {
-                periodText = isSpanish ? '(' + dataCount + ' días)' : '(' + dataCount + ' days)';
+                periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
             }
             
-            const labels = currentResults.map(function(r) { return r.date; });
-            const dpData = currentResults.map(function(r) { return r.dp; });
-            const dpaData = currentResults.map(function(r) { return r.dpa; });
-            const uclData = currentResults.map(function(r) { return r.ucl; });
-            const lclData = currentResults.map(function(r) { return r.lcl; });
+            // Prepare data
+            const labels = currentResults.map(r => r.date);
+            const dpData = currentResults.map(r => r.dp);
+            const dpaData = currentResults.map(r => r.dpa);
+            const uclData = currentResults.map(r => r.ucl);
+            const lclData = currentResults.map(r => r.lcl);
             
-            const dpPointColors = currentResults.map(function(r) { return r.signal === 1 ? '#FF0000' : '#4169E1'; });
-            const dpPointBorderColors = currentResults.map(function(r) { return r.signal === 1 ? '#FF0000' : '#4169E1'; });
+            // Prepare point colors for DP line (red for signals, blue for normal)
+            const dpPointColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+            const dpPointBorderColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
             
+            // Custom title from input with period count
             const customTitle = document.getElementById('chartTitleInput').value.trim();
             const baseTitle = customTitle || t.chartTitle;
-            const chartTitle = baseTitle + ' ' + periodText;
+            const chartTitle = `${baseTitle} ${periodText}`;
             
+            // Destroy existing chart
             if (spcChart) {
                 spcChart.destroy();
             }
             
+            // Create new chart
             spcChart = new Chart(ctx, {
                 type: 'line',
                 plugins: [ChartDataLabels],
@@ -1256,7 +1258,16 @@
                                 usePointStyle: false,
                                 padding: 20,
                                 boxWidth: 20,
-                                boxHeight: 8
+                                boxHeight: 8,
+                                generateLabels: function(chart) {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                    const labels = original.call(this, chart);
+                                    
+                                    return labels.map(label => {
+                                        label.fillStyle = label.strokeStyle;
+                                        return label;
+                                    });
+                                }
                             }
                         },
                         tooltip: {
@@ -1265,10 +1276,33 @@
                             usePointStyle: false,
                             boxWidth: 20,
                             boxHeight: 8,
+                            filter: function(tooltipItem) {
+                                // Hide DUA and DLA from tooltip (they're no longer in chart)
+                                return true;
+                            },
+                            itemSort: function(a, b) {
+                                // Custom sort order: UCL, DP/custom, DPA, LCL
+                                const getOrder = (label) => {
+                                    if (label.includes('UCL')) return 1;
+                                    if (label.includes('DP') || (!label.includes('DPA') && !label.includes('UCL') && !label.includes('LCL'))) return 2;
+                                    if (label.includes('DPA')) return 3;
+                                    if (label.includes('LCL')) return 4;
+                                    return 5;
+                                };
+                                return getOrder(a.dataset.label) - getOrder(b.dataset.label);
+                            },
                             callbacks: {
                                 label: function(context) {
                                     const value = context.parsed.y;
                                     return context.dataset.label + ': ' + fmt(value);
+                                },
+                                labelColor: function(context) {
+                                    return {
+                                        borderColor: context.dataset.borderColor,
+                                        backgroundColor: context.dataset.borderColor,
+                                        borderWidth: 1,
+                                        borderRadius: 0
+                                    };
                                 }
                             }
                         },
@@ -1329,33 +1363,31 @@
         }
 
         // Copy chart to clipboard
-        function copyChart() {
+        async function copyChart() {
             if (!spcChart) return;
             
             try {
                 const canvas = spcChart.canvas;
                 
-                canvas.toBlob(function(blob) {
+                // Create a blob from the canvas
+                canvas.toBlob(async (blob) => {
                     try {
                         const item = new ClipboardItem({ 'image/png': blob });
-                        navigator.clipboard.write([item]).then(function() {
-                            const btn = document.getElementById('copyChartBtn');
-                            const originalText = btn.textContent;
-                            btn.textContent = isSpanish ? '¡Copiado!' : 'Copied!';
-                            btn.style.backgroundColor = '#28a745';
-                            
-                            setTimeout(function() {
-                                btn.textContent = originalText;
-                                btn.style.backgroundColor = '#6f42c1';
-                            }, 2000);
-                        }).catch(function(err) {
-                            console.error('Failed to copy chart: ', err);
-                            alert(isSpanish ? 
-                                'No se pudo copiar automáticamente. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
-                                'Could not copy automatically. Right-click on the chart and select "Copy image".');
-                        });
+                        await navigator.clipboard.write([item]);
+                        
+                        // Show success feedback
+                        const btn = document.getElementById('copyChartBtn');
+                        const originalText = btn.textContent;
+                        btn.textContent = isSpanish ? '¡Copiado!' : 'Copied!';
+                        btn.style.backgroundColor = '#28a745';
+                        
+                        setTimeout(() => {
+                            btn.textContent = originalText;
+                            btn.style.backgroundColor = '#6f42c1';
+                        }, 2000);
                     } catch (err) {
                         console.error('Failed to copy chart: ', err);
+                        // Fallback: show instruction to right-click
                         alert(isSpanish ? 
                             'No se pudo copiar automáticamente. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
                             'Could not copy automatically. Right-click on the chart and select "Copy image".');
@@ -1368,7 +1400,6 @@
                     'Could not copy chart. Right-click on the chart and select "Copy image".');
             }
         }
-
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;
@@ -1378,7 +1409,7 @@
             const filename = customTitle || t.chartTitle;
             
             const link = document.createElement('a');
-            link.download = filename + '.png';
+            link.download = `${filename}.png`;
             link.href = spcChart.toBase64Image('image/png', 1.0);
             link.click();
         }
@@ -1389,22 +1420,20 @@
             
             const t = isSpanish ? lang.es : lang.en;
             
-            const excelData = currentResults.map(function(row) {
-                const obj = {};
-                obj[t.headers[0]] = row.period;
-                obj[t.headers[1]] = row.date;
-                obj[t.headers[2]] = row.dp;
-                obj[t.headers[3]] = row.dpa || '';
-                obj[t.headers[4]] = row.mr || '';
-                obj[t.headers[5]] = row.mra || '';
-                obj[t.headers[6]] = row.lcl || '';
-                obj[t.headers[7]] = row.dla || '';
-                obj[t.headers[8]] = row.dua || '';
-                obj[t.headers[9]] = row.ucl || '';
-                obj[t.headers[10]] = row.mrucl || '';
-                obj[t.headers[11]] = row.signal || '';
-                return obj;
-            });
+            const excelData = currentResults.map(row => ({
+                [t.headers[0]]: row.period,
+                [t.headers[1]]: row.date,
+                [t.headers[2]]: row.dp,
+                [t.headers[3]]: row.dpa || '',
+                [t.headers[4]]: row.mr || '',
+                [t.headers[5]]: row.mra || '',
+                [t.headers[6]]: row.lcl || '',
+                [t.headers[7]]: row.dla || '',
+                [t.headers[8]]: row.dua || '',
+                [t.headers[9]]: row.ucl || '',
+                [t.headers[10]]: row.mrucl || '',
+                [t.headers[11]]: row.signal || ''
+            }));
             
             const wb = XLSX.utils.book_new();
             const ws = XLSX.utils.json_to_sheet(excelData);
@@ -1413,7 +1442,7 @@
             
             const customDataName = document.getElementById('dataNameInput').value.trim();
             const dataName = customDataName || (isSpanish ? 'Datos_SPC' : 'SPC_Data');
-            const filename = dataName + '_' + t.resultsTitle + '.xlsx';
+            const filename = `${dataName}_${t.resultsTitle}.xlsx`;
             
             XLSX.writeFile(wb, filename);
         }
@@ -1442,7 +1471,7 @@
             
             const t = isSpanish ? lang.es : lang.en;
             
-            results.forEach(function(row) {
+            results.forEach(row => {
                 const tr = document.createElement('tr');
                 if (!isSpanish) {
                     if (row.ruleApplied === t.baseline) tr.classList.add('baseline-row');
@@ -1464,7 +1493,7 @@
                     row.signal || ''
                 ];
                 
-                cells.forEach(function(cell, i) {
+                cells.forEach((cell, i) => {
                     const td = document.createElement('td');
                     td.textContent = cell;
                     if (i === 11 && cell) td.classList.add('signal-cell');
@@ -1497,7 +1526,7 @@
         function showError(msg) {
             document.getElementById('errorMsg').textContent = msg;
             document.getElementById('errorDiv').classList.remove('hidden');
-            setTimeout(function() {
+            setTimeout(() => {
                 document.getElementById('errorDiv').classList.add('hidden');
             }, 5000);
         }
@@ -1511,12 +1540,13 @@
             document.getElementById('resultsDiv').classList.add('hidden');
             document.getElementById('chartDiv').classList.add('hidden');
             
+            // Reset to current month/week and year
             const currentDate = new Date();
             document.getElementById('yearRef').value = currentDate.getFullYear();
             document.getElementById('monthsRadio').checked = true;
             document.getElementById('endRadio').checked = true;
             updatePeriodSelector();
-            updateDataCounter();
+            updateDataCounter(); // Update counter after clearing
             
             if (spcChart) {
                 spcChart.destroy();
@@ -1562,9 +1592,10 @@
             document.getElementById('yearRef').value = currentDate.getFullYear();
             
             updateLang();
-            updatePeriodSelector();
-            updateDataCounter();
+            updatePeriodSelector(); // Set current month/week by default
+            updateDataCounter(); // Initialize counter
             
+            // Add event listener for data input changes
             document.getElementById('dataInput').addEventListener('input', updateDataCounter);
             
             document.getElementById('langBtn').onclick = function() {
@@ -1572,17 +1603,17 @@
                 updateLang();
             };
             
-            document.querySelectorAll('input[name="timeUnit"]').forEach(function(radio) {
+            document.querySelectorAll('input[name="timeUnit"]').forEach(radio => {
                 radio.onchange = updatePeriodSelector;
             });
             
+            // Add event listener for year changes to update days selector
             document.getElementById('yearRef').addEventListener('change', function() {
                 const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
                 if (timeUnit === 'days') {
                     updatePeriodSelector();
                 }
             });
-            
             document.getElementById('calcBtn').onclick = calculate;
             document.getElementById('clearBtn').onclick = clearAll;
             document.getElementById('toggleTableBtn').onclick = toggleTable;
