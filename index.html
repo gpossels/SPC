@@ -51,18 +51,15 @@
         }
 
         .header .author {
-            position: absolute;
-            bottom: 15px;
-            right: 20px;
+            position: static;
             font-size: 0.75em !important;
             color: black;
-            margin: 0;
+            margin: 10px 0;
+            text-align: center;
         }
 
         .lang-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            position: static;
             background: white;
             border: 2px solid black;
             color: black;
@@ -70,6 +67,8 @@
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin: 0 auto;
+            display: block;
         }
 
         .lang-toggle:hover {
@@ -382,8 +381,9 @@
 
         .radio-group {
             display: flex;
-            gap: 20px;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
         }
 
         .radio-item {
@@ -445,10 +445,10 @@
 <body>
     <div class="container">
         <div class="header">
-            <button class="lang-toggle" id="langBtn">English</button>
             <h1 id="title">Calculadora SPC</h1>
             <p id="subtitle">Control Estadístico de Procesos</p>
             <p id="author" class="author">por Dr. Gustavo Possel S.</p>
+            <button class="lang-toggle" id="langBtn">English</button>
         </div>
 
         <div class="main-content">
