@@ -1347,12 +1347,7 @@
                         
                         pdf.addImage(chartImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
                         
-                        // Add author credit at bottom of page
-                        pdf.setFontSize(10);
-                        pdf.setTextColor(128, 128, 128);
-                        const authorCredit = 'Dr. Gustavo Possel S. - Médico';
-                        const authorCreditWidth = pdf.getTextWidth(authorCredit);
-                        pdf.text(authorCredit, (pageWidth - authorCreditWidth) / 2, pageHeight - 10);
+                        // REMOVED: Author credit section completely removed from PDF
                         
                         // Destroy temp chart
                         tempChart.destroy();
