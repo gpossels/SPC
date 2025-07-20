@@ -172,6 +172,7 @@
         <div class="header">
             <h1 id="mainTitle">Gráficos de Comportamiento de Procesos</h1>
             <p id="mainSubtitle">Herramienta web completa para el análisis estadístico de procesos mediante gráficos de control SPC. Carga tus datos y obtén análisis automático con detección de señales y límites de control.</p>
+            <p id="authorCredit" style="margin-top: 20px; font-size: 0.9em; color: black;">Dr. Gustavo Possel S. - Médico</p>
             <button id="langToggle" class="lang-toggle">English</button>
         </div>
 
@@ -192,7 +193,7 @@
         </div>
 
         <div class="footer">
-            <p id="footerText">Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. Saludos, y espero que le sea útil.</p>
+            <p id="footerText">Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="_blank">LinkedIn</a>. Saludos, y espero que le sea útil.</p>
         </div>
     </div>
 
@@ -203,6 +204,7 @@
             es: {
                 title: 'Gráficos de Comportamiento de Procesos',
                 subtitle: 'Herramienta web completa para el análisis estadístico de procesos mediante gráficos de control SPC. Carga tus datos y obtén análisis automático con detección de señales y límites de control.',
+                authorCredit: 'Dr. Gustavo Possel S. - Médico',
                 calculatorTitle: 'Calculadora',
                 calculatorDesc: 'La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.',
                 calculatorBtn: 'Calculadora',
@@ -214,6 +216,7 @@
             en: {
                 title: 'Process Behavior Charts',
                 subtitle: 'Complete web tool for statistical process analysis using SPC control charts. Upload your data and get automatic analysis with signal detection and control limits.',
+                authorCredit: 'Dr. Gustavo Possel S. - MD',
                 calculatorTitle: 'Calculator',
                 calculatorDesc: 'The Calculator allows you to enter any data series to generate a process behavior chart. You can copy and paste numbers from any type of file, or from a web page.',
                 calculatorBtn: 'Calculator',
@@ -233,6 +236,7 @@
             
             document.getElementById('mainTitle').textContent = lang.title;
             document.getElementById('mainSubtitle').textContent = lang.subtitle;
+            document.getElementById('authorCredit').textContent = lang.authorCredit;
             document.getElementById('langToggle').textContent = isEnglish ? 'Español' : 'English';
             
             document.getElementById('calculatorTitle').textContent = lang.calculatorTitle;
