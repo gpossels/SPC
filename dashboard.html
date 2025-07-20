@@ -272,9 +272,13 @@
         <div class="header">
             <h1 id="mainTitle">Dashboard SPC</h1>
             <p id="mainSubtitle">Control Estadístico de Procesos</p>
-            <button id="langToggle" class="lang-toggle">English</button>
-            <button id="downloadPDF" class="download-btn">📄 Descargar PDF</button>
-            <button id="headerBackBtn" class="header-back-btn" style="display: none;">← Cargar Nuevo Archivo</button>
+            <p id="authorCredit" style="margin-top: 20px; font-size: 0.9em; color: black;">Dr. Gustavo Possel S. - Médico</p>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
+                <button id="backToIndex" class="lang-toggle btn-green">← Inicio</button>
+                <button id="downloadPDF" class="download-btn" style="margin-left: 0; display: none;">📄 Descargar PDF</button>
+                <button id="langToggle" class="lang-toggle">English</button>
+            </div>
+            <button id="headerBackBtn" class="header-back-btn btn-red" style="display: none;">← Cargar Nuevo Archivo</button>
         </div>
 
         <div class="main-content">
@@ -327,11 +331,13 @@
             es: {
                 title: 'Dashboard SPC',
                 subtitle: 'Control Estadístico de Procesos',
+                authorCredit: 'Dr. Gustavo Possel S. - Médico',
                 uploadTitle: 'Cargar Archivo de Datos',
                 uploadDesc: 'Seleccione un archivo Excel (.xlsx, .xls) o CSV con sus datos de métricas',
                 uploadBtn: '📁 Seleccionar Archivo',
                 uploadInfo: 'El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar',
                 backBtn: '← Cargar Nuevo Archivo',
+                backToIndex: '← Inicio',
                 downloadPDF: '📄 Descargar PDF',
                 downloadingPDF: 'Generando PDF...',
                 processing: 'Procesando archivo...',
@@ -351,11 +357,13 @@
             en: {
                 title: 'SPC Dashboard',
                 subtitle: 'Statistical Process Control',
+                authorCredit: 'Dr. Gustavo Possel S. - MD',
                 uploadTitle: 'Load Data File',
                 uploadDesc: 'Select an Excel (.xlsx, .xls) or CSV file with your metrics data',
                 uploadBtn: '📁 Select File',
                 uploadInfo: 'The file must contain columns for: Center/Institution, dates (Year, Month, etc.) and metrics to analyze',
                 backBtn: '← Load New File',
+                backToIndex: '← Home',
                 downloadPDF: '📄 Download PDF',
                 downloadingPDF: 'Generating PDF...',
                 processing: 'Processing file...',
@@ -383,7 +391,9 @@
             
             document.getElementById('mainTitle').textContent = lang.title;
             document.getElementById('mainSubtitle').textContent = lang.subtitle;
+            document.getElementById('authorCredit').textContent = lang.authorCredit;
             document.getElementById('langToggle').textContent = isEnglish ? 'Español' : 'English';
+            document.getElementById('backToIndex').textContent = lang.backToIndex;
             
             // Update upload section if visible
             const uploadSection = document.getElementById('uploadSection');
@@ -1298,13 +1308,6 @@
                         pdf.addPage();
                     }
                     
-                    // Add title to PDF page
-                    pdf.setFontSize(20);
-                    pdf.setTextColor(0, 0, 0);
-                    const title = `${metric.name} - ${institution}`;
-                    const titleWidth = pdf.getTextWidth(title);
-                    pdf.text(title, (pageWidth - titleWidth) / 2, 20);
-                    
                     if (currentData.hasError) {
                         // Add error message for problematic metrics
                         pdf.setFontSize(16);
@@ -1340,9 +1343,16 @@
                         const imgWidth = pageWidth - 40;
                         const imgHeight = (imgWidth * 720) / 1120;
                         const imgX = 20;
-                        const imgY = 35;
+                        const imgY = 20;
                         
                         pdf.addImage(chartImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
+                        
+                        // Add author credit at bottom of page
+                        pdf.setFontSize(10);
+                        pdf.setTextColor(128, 128, 128);
+                        const authorCredit = 'Dr. Gustavo Possel S. - Médico';
+                        const authorCreditWidth = pdf.getTextWidth(authorCredit);
+                        pdf.text(authorCredit, (pageWidth - authorCreditWidth) / 2, pageHeight - 10);
                         
                         // Destroy temp chart
                         tempChart.destroy();
@@ -1619,6 +1629,11 @@
 
         // PDF download button event listener
         document.getElementById('downloadPDF').addEventListener('click', generatePDFReport);
+
+        // Back to index button event listener
+        document.getElementById('backToIndex').addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
 
         // Navigation event listeners
         document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
