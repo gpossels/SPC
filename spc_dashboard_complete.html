@@ -7,6 +7,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -271,6 +273,7 @@
             <h1 id="mainTitle">Dashboard SPC</h1>
             <p id="mainSubtitle">Control Estadístico de Procesos</p>
             <button id="langToggle" class="lang-toggle">English</button>
+            <button id="downloadPDF" class="download-btn">📄 Descargar PDF</button>
             <button id="headerBackBtn" class="header-back-btn" style="display: none;">← Cargar Nuevo Archivo</button>
         </div>
 
@@ -329,6 +332,8 @@
                 uploadBtn: '📁 Seleccionar Archivo',
                 uploadInfo: 'El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar',
                 backBtn: '← Cargar Nuevo Archivo',
+                downloadPDF: '📄 Descargar PDF',
+                downloadingPDF: 'Generando PDF...',
                 processing: 'Procesando archivo...',
                 errorMissingData: 'Datos faltantes o inválidos en los últimos 24 puntos',
                 errorInsufficientData: 'Insuficientes datos válidos (mínimo 8 puntos)',
@@ -351,6 +356,8 @@
                 uploadBtn: '📁 Select File',
                 uploadInfo: 'The file must contain columns for: Center/Institution, dates (Year, Month, etc.) and metrics to analyze',
                 backBtn: '← Load New File',
+                downloadPDF: '📄 Download PDF',
+                downloadingPDF: 'Generating PDF...',
                 processing: 'Processing file...',
                 errorMissingData: 'Missing or invalid data in the last 24 points',
                 errorInsufficientData: 'Insufficient valid data (minimum 8 points)',
@@ -391,6 +398,7 @@
             const chartSection = document.getElementById('chartSection');
             if (chartSection.style.display !== 'none') {
                 document.getElementById('headerBackBtn').textContent = lang.backBtn;
+                document.getElementById('downloadPDF').textContent = lang.downloadPDF;
                 
                 // Update current chart if it exists
                 if (spcChart) {
@@ -886,6 +894,7 @@
             document.getElementById('uploadSection').style.display = 'none';
             document.getElementById('chartSection').style.display = 'block';
             document.getElementById('headerBackBtn').style.display = 'block';
+            document.getElementById('downloadPDF').style.display = 'inline-block';
             
             updateMetricSelector();
             updateChart();
@@ -1249,11 +1258,280 @@
             updateNavigation();
         }
 
+        async function generatePDFReport() {
+            const downloadBtn = document.getElementById('downloadPDF');
+            const originalText = downloadBtn.textContent;
+            const lang = getCurrentLang();
+            
+            try {
+                // Disable button and show loading
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = lang.downloadingPDF;
+                
+                // Initialize jsPDF
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('landscape', 'mm', 'a4');
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                
+                // Create a temporary canvas container for chart rendering
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.width = '1200px';
+                tempContainer.style.height = '800px';
+                tempContainer.style.backgroundColor = 'white';
+                tempContainer.innerHTML = `
+                    <div style="padding: 40px; background: white;">
+                        <canvas id="tempChart" width="1120" height="720"></canvas>
+                    </div>
+                `;
+                document.body.appendChild(tempContainer);
+                
+                // Process each metric
+                for (let i = 0; i < processedResults.length; i++) {
+                    const currentData = processedResults[i];
+                    const metric = currentData.metric;
+                    const institution = currentData.institution;
+                    
+                    if (i > 0) {
+                        pdf.addPage();
+                    }
+                    
+                    // Add title to PDF page
+                    pdf.setFontSize(20);
+                    pdf.setTextColor(0, 0, 0);
+                    const title = `${metric.name} - ${institution}`;
+                    const titleWidth = pdf.getTextWidth(title);
+                    pdf.text(title, (pageWidth - titleWidth) / 2, 20);
+                    
+                    if (currentData.hasError) {
+                        // Add error message for problematic metrics
+                        pdf.setFontSize(16);
+                        pdf.setTextColor(220, 20, 60);
+                        const errorTitle = 'ERROR';
+                        const errorTitleWidth = pdf.getTextWidth(errorTitle);
+                        pdf.text(errorTitle, (pageWidth - errorTitleWidth) / 2, pageHeight / 2 - 10);
+                        
+                        pdf.setFontSize(12);
+                        pdf.setTextColor(108, 117, 125);
+                        const errorMsg = currentData.errorMessage;
+                        const errorMsgWidth = pdf.getTextWidth(errorMsg);
+                        pdf.text(errorMsg, (pageWidth - errorMsgWidth) / 2, pageHeight / 2 + 10);
+                    } else {
+                        // Create chart for this metric
+                        const tempCanvas = document.getElementById('tempChart');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        // Create the chart
+                        const results = currentData.results;
+                        const dataCount = results.length;
+                        const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})`;
+                        
+                        const tempChart = await createTempSPCChart(tempCtx, results, metric, metric.name, finalTitle);
+                        
+                        // Wait for chart to render
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        // Convert chart to image
+                        const chartImage = tempCanvas.toDataURL('image/png', 1.0);
+                        
+                        // Add chart image to PDF
+                        const imgWidth = pageWidth - 40;
+                        const imgHeight = (imgWidth * 720) / 1120;
+                        const imgX = 20;
+                        const imgY = 35;
+                        
+                        pdf.addImage(chartImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
+                        
+                        // Destroy temp chart
+                        tempChart.destroy();
+                    }
+                }
+                
+                // Clean up
+                document.body.removeChild(tempContainer);
+                
+                // Generate filename
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const institution = processedResults[0]?.institution || 'SPC';
+                const filename = `SPC_Report_${institution}_${timestamp}.pdf`;
+                
+                // Download PDF
+                pdf.save(filename);
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error al generar el PDF. Por favor, inténtelo de nuevo.');
+            } finally {
+                // Restore button
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = originalText;
+            }
+        }
+
+        function createTempSPCChart(ctx, results, metric, dataLabel, chartTitle) {
+            const lang = getCurrentLang();
+
+            // Prepare data
+            const labels = results.map(r => r.date);
+            const dpData = results.map(r => r.dp);
+            const dpaData = results.map(r => r.dpa);
+            const uclData = results.map(r => r.ucl);
+            const lclData = results.map(r => r.lcl);
+
+            // Point colors for signals
+            const dpPointColors = results.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+
+            // Create chart with same configuration as main chart
+            return new Chart(ctx, {
+                type: 'line',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: `${dataLabel} (DP)`,
+                            data: dpData,
+                            borderColor: '#4169E1',
+                            backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                            borderWidth: 3,
+                            pointBackgroundColor: dpPointColors,
+                            pointBorderColor: dpPointColors,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            tension: 0
+                        },
+                        {
+                            label: lang.average,
+                            data: dpaData,
+                            borderColor: '#228B22',
+                            backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: lang.upperLimit,
+                            data: uclData,
+                            borderColor: '#DC143C',
+                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: lang.lowerLimit,
+                            data: lclData,
+                            borderColor: '#DC143C',
+                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                            borderWidth: 3,
+                            pointRadius: 0,
+                            tension: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: chartTitle,
+                            font: {
+                                size: 24,
+                                weight: 'bold'
+                            },
+                            color: '#2c3e50',
+                            padding: 30
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: false,
+                                padding: 25,
+                                boxWidth: 20,
+                                boxHeight: 3,
+                                font: {
+                                    size: 16
+                                }
+                            }
+                        },
+                        datalabels: {
+                            display: function(context) {
+                                return context.datasetIndex === 0;
+                            },
+                            align: 'top',
+                            offset: 10,
+                            color: function(context) {
+                                const result = results[context.dataIndex];
+                                return result.signal === 1 ? '#FF0000' : '#4169E1';
+                            },
+                            font: {
+                                size: 12,
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
+                                return fmt(value);
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: lang.period,
+                                font: {
+                                    weight: 'bold',
+                                    size: 18
+                                }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: lang.value,
+                                font: {
+                                    weight: 'bold',
+                                    size: 18
+                                }
+                            },
+                            ticks: {
+                                font: {
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
         function backToMenu() {
             document.getElementById('fileInput').value = '';
             document.getElementById('chartSection').style.display = 'none';
             document.getElementById('uploadSection').style.display = 'block';
             document.getElementById('headerBackBtn').style.display = 'none';
+            document.getElementById('downloadPDF').style.display = 'none';
             
             if (spcChart) {
                 spcChart.destroy();
@@ -1338,6 +1616,9 @@
 
         // Header back button event listener
         document.getElementById('headerBackBtn').addEventListener('click', backToMenu);
+
+        // PDF download button event listener
+        document.getElementById('downloadPDF').addEventListener('click', generatePDFReport);
 
         // Navigation event listeners
         document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
