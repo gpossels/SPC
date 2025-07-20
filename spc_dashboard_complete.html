@@ -1,0 +1,1348 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard SPC - Análisis de Procesos</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+            color: black;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .header {
+            background: white;
+            color: black;
+            padding: 30px;
+            text-align: center;
+            border-bottom: 2px solid black;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .upload-section {
+            background: white;
+            padding: 40px;
+            border: 2px solid black;
+            border-radius: 8px;
+            text-align: center;
+            margin-bottom: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            background: #f9f9f9;
+        }
+
+        .upload-section.dragover {
+            background: #f0f0f0;
+            border-style: dashed;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: white;
+            color: black;
+            padding: 15px 40px;
+            border: 2px solid black;
+            border-radius: 4px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .upload-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .upload-info {
+            margin-top: 20px;
+            color: black;
+            font-size: 0.9em;
+            opacity: 0.7;
+        }
+
+        .chart-section {
+            display: none;
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .chart-header {
+            background: white;
+            color: black;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px solid black;
+        }
+
+        .chart-navigation {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .nav-btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            border-radius: 4px;
+            width: 40px;
+            height: 40px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .nav-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .metric-selector {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+
+        .metric-selector:hover {
+            background: #f0f0f0;
+        }
+
+        .metric-selector:focus {
+            outline: none;
+            background: #f0f0f0;
+        }
+
+        .chart-counter {
+            color: black;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+
+        .lang-toggle {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 15px;
+        }
+
+        .lang-toggle:hover {
+            background: #f0f0f0;
+        }
+
+        .header-back-btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        .header-back-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 600px;
+            padding: 30px;
+            background: white;
+        }
+
+        .error-message {
+            background: white;
+            color: black;
+            padding: 15px;
+            border: 2px solid black;
+            border-radius: 4px;
+            margin: 20px 0;
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: black;
+            font-weight: bold;
+        }
+
+        .loading::after {
+            content: "";
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f0f0f0;
+            border-top: 4px solid black;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                padding: 20px;
+            }
+            
+            .chart-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .chart-container {
+                height: 400px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="mainTitle">Dashboard SPC</h1>
+            <p id="mainSubtitle">Control Estadístico de Procesos</p>
+            <button id="langToggle" class="lang-toggle">English</button>
+            <button id="headerBackBtn" class="header-back-btn" style="display: none;">← Cargar Nuevo Archivo</button>
+        </div>
+
+        <div class="main-content">
+            <div id="uploadSection" class="upload-section">
+                <h3>Cargar Archivo de Datos</h3>
+                <p>Seleccione un archivo Excel (.xlsx, .xls) o CSV con sus datos de métricas</p>
+                <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls,.csv">
+                <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                    📁 Seleccionar Archivo
+                </button>
+                <div class="upload-info">
+                    <p>El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar</p>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error-message"></div>
+
+            <div id="loadingSection" class="loading" style="display: none;">
+                Procesando archivo...
+            </div>
+
+            <div id="chartSection" class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-navigation">
+                        <button id="prevChart" class="nav-btn">←</button>
+                        <span id="chartCounter" class="chart-counter">1 / 1</span>
+                        <button id="nextChart" class="nav-btn">→</button>
+                        <select id="metricSelector" class="metric-selector">
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="spcChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let uploadedData = null;
+        let currentChartIndex = 0;
+        let spcChart = null;
+        let processedResults = [];
+        let isEnglish = false;
+
+        // Language translations
+        const translations = {
+            es: {
+                title: 'Dashboard SPC',
+                subtitle: 'Control Estadístico de Procesos',
+                uploadTitle: 'Cargar Archivo de Datos',
+                uploadDesc: 'Seleccione un archivo Excel (.xlsx, .xls) o CSV con sus datos de métricas',
+                uploadBtn: '📁 Seleccionar Archivo',
+                uploadInfo: 'El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar',
+                backBtn: '← Cargar Nuevo Archivo',
+                processing: 'Procesando archivo...',
+                errorMissingData: 'Datos faltantes o inválidos en los últimos 24 puntos',
+                errorInsufficientData: 'Insuficientes datos válidos (mínimo 8 puntos)',
+                errorNoValidMetrics: 'No se encontraron métricas válidas para SPC (se necesitan al menos 8 puntos de datos por métrica)',
+                errorFileFormat: 'Formato de archivo no soportado. Use .xlsx, .xls o .csv',
+                errorProcessing: 'Error al procesar el archivo: ',
+                period: 'Período',
+                value: 'Valor',
+                average: 'Promedio (DPA)',
+                upperLimit: 'Límite Superior (UCL)',
+                lowerLimit: 'Límite Inferior (LCL)',
+                signalDetected: '🚨 SEÑAL DETECTADA',
+                points: 'puntos'
+            },
+            en: {
+                title: 'SPC Dashboard',
+                subtitle: 'Statistical Process Control',
+                uploadTitle: 'Load Data File',
+                uploadDesc: 'Select an Excel (.xlsx, .xls) or CSV file with your metrics data',
+                uploadBtn: '📁 Select File',
+                uploadInfo: 'The file must contain columns for: Center/Institution, dates (Year, Month, etc.) and metrics to analyze',
+                backBtn: '← Load New File',
+                processing: 'Processing file...',
+                errorMissingData: 'Missing or invalid data in the last 24 points',
+                errorInsufficientData: 'Insufficient valid data (minimum 8 points)',
+                errorNoValidMetrics: 'No valid metrics found for SPC (at least 8 data points required per metric)',
+                errorFileFormat: 'Unsupported file format. Use .xlsx, .xls or .csv',
+                errorProcessing: 'Error processing file: ',
+                period: 'Period',
+                value: 'Value',
+                average: 'Average (DPA)',
+                upperLimit: 'Upper Limit (UCL)',
+                lowerLimit: 'Lower Limit (LCL)',
+                signalDetected: '🚨 SIGNAL DETECTED',
+                points: 'points'
+            }
+        };
+
+        function getCurrentLang() {
+            return isEnglish ? translations.en : translations.es;
+        }
+
+        function updateLanguage() {
+            const lang = getCurrentLang();
+            
+            document.getElementById('mainTitle').textContent = lang.title;
+            document.getElementById('mainSubtitle').textContent = lang.subtitle;
+            document.getElementById('langToggle').textContent = isEnglish ? 'Español' : 'English';
+            
+            // Update upload section if visible
+            const uploadSection = document.getElementById('uploadSection');
+            if (uploadSection.style.display !== 'none') {
+                uploadSection.querySelector('h3').textContent = lang.uploadTitle;
+                uploadSection.querySelector('p').textContent = lang.uploadDesc;
+                uploadSection.querySelector('button').innerHTML = lang.uploadBtn;
+                uploadSection.querySelector('.upload-info p').textContent = lang.uploadInfo;
+            }
+            
+            // Update chart section if visible
+            const chartSection = document.getElementById('chartSection');
+            if (chartSection.style.display !== 'none') {
+                document.getElementById('headerBackBtn').textContent = lang.backBtn;
+                
+                // Update current chart if it exists
+                if (spcChart) {
+                    updateChart();
+                }
+            }
+            
+            // Update loading text if visible
+            const loadingSection = document.getElementById('loadingSection');
+            if (loadingSection.style.display !== 'none') {
+                loadingSection.textContent = lang.processing;
+            }
+        }
+
+        // Number formatting
+        function fmt(num) {
+            return num.toFixed(2).replace('.', ',');
+        }
+
+        // Parse numeric data with various formats
+        function parseNumericData(input) {
+            let items = input.split(/[\s\t\n]+/).filter(s => s.trim());
+            const result = [];
+            
+            for (const item of items) {
+                let normalized = item.trim();
+                
+                if (normalized.includes(',') && normalized.includes('.')) {
+                    const lastCommaPos = normalized.lastIndexOf(',');
+                    const lastDotPos = normalized.lastIndexOf('.');
+                    
+                    if (lastDotPos > lastCommaPos) {
+                        normalized = normalized.replace(/,/g, '');
+                    } else {
+                        normalized = normalized.replace(/\./g, '').replace(',', '.');
+                    }
+                } else if (normalized.includes(',')) {
+                    const commaPos = normalized.indexOf(',');
+                    const afterComma = normalized.substring(commaPos + 1);
+                    
+                    if (afterComma.length <= 3 && !afterComma.includes(',')) {
+                        normalized = normalized.replace(',', '.');
+                    } else {
+                        normalized = normalized.replace(/,/g, '');
+                    }
+                } else if (normalized.includes('.')) {
+                    const dotPos = normalized.indexOf('.');
+                    const afterDot = normalized.substring(dotPos + 1);
+                    
+                    if (afterDot.length > 3 || afterDot.includes('.')) {
+                        normalized = normalized.replace(/\./g, '');
+                    }
+                }
+                
+                const num = parseFloat(normalized);
+                if (!isNaN(num)) {
+                    result.push(num);
+                }
+            }
+            
+            return result;
+        }
+
+        // SPC Calculation
+        function calcSPC(data, periods) {
+            const results = data.map((dp, i) => ({
+                period: i + 1,
+                date: periods[i],
+                dp: dp,
+                dpa: null, mr: null, mra: null,
+                lcl: null, ucl: null, mrucl: null,
+                rule: null, ruleApplied: null, signal: null
+            }));
+
+            // Baseline calculation (first 8 points)
+            const dpa = data.slice(0, 8).reduce((a, b) => a + b) / 8;
+            const mrs = [];
+            for (let i = 1; i < 8; i++) {
+                mrs.push(Math.abs(data[i] - data[i-1]));
+            }
+            const mra = mrs.reduce((a, b) => a + b) / mrs.length;
+            
+            const factor = 3/1.128;
+            const lcl = dpa - (mra * factor);
+            const ucl = dpa + (mra * factor);
+            const mrucl = mra * 3.27;
+
+            // Apply baseline to first 8 rows
+            for (let i = 0; i < 8; i++) {
+                results[i].dpa = dpa;
+                results[i].mra = mra;
+                results[i].lcl = lcl;
+                results[i].ucl = ucl;
+                results[i].mrucl = mrucl;
+                results[i].ruleApplied = 'Línea Base';
+                if (i > 0) results[i].mr = Math.abs(data[i] - data[i-1]);
+            }
+
+            // Process remaining points with SPC rules
+            for (let i = 8; i < data.length; i++) {
+                const curr = data[i];
+                const prev = data[i-1];
+                const mr = Math.abs(curr - prev);
+                results[i].mr = mr;
+                
+                const currentResult = results[i-1];
+                const currentDPA = currentResult.dpa;
+                const currentMRA = currentResult.mra;
+                const currentLCL = currentResult.lcl;
+                const currentUCL = currentResult.ucl;
+                const currentMRUCL = currentResult.mrucl;
+                
+                let ruleTriggered = false;
+
+                // Rule 1: DP outside control limits AND MR > MRUCL
+                if ((curr > currentUCL || curr < currentLCL) && mr > currentMRUCL) {
+                    results[i].signal = 1;
+                }
+
+                // Rule 2: All 8 recent DPs above or below current DPA
+                if (i >= 7) {
+                    const last8 = data.slice(i-7, i+1);
+                    const allAboveDPA = last8.every(dp => dp > currentDPA);
+                    const allBelowDPA = last8.every(dp => dp < currentDPA);
+                    
+                    if (allAboveDPA || allBelowDPA) {
+                        ruleTriggered = true;
+                        
+                        const newDPA = last8.reduce((a, b) => a + b) / 8;
+                        const newMRs = [];
+                        if (i-8 >= 0) {
+                            newMRs.push(Math.abs(data[i-7] - data[i-8]));
+                        } else {
+                            newMRs.push(0);
+                        }
+                        for (let j = 1; j < 8; j++) {
+                            newMRs.push(Math.abs(last8[j] - last8[j-1]));
+                        }
+                        
+                        const newMRA = newMRs.reduce((a, b) => a + b) / newMRs.length;
+                        const newLCL = newDPA - (newMRA * factor);
+                        const newUCL = newDPA + (newMRA * factor);
+                        const newMRUCL = newMRA * 3.27;
+                        
+                        for (let j = i-7; j <= i; j++) {
+                            results[j].dpa = newDPA;
+                            results[j].mra = newMRA;
+                            results[j].lcl = newLCL;
+                            results[j].ucl = newUCL;
+                            results[j].mrucl = newMRUCL;
+                            results[j].ruleApplied = 'Regla 2';
+                        }
+                        results[i].rule = 'Regla 2';
+                    }
+                }
+
+                // Rule 3: At least 3 of last 4 DPs above DUA or below DLA
+                if (!ruleTriggered && i >= 3) {
+                    const currentDLA = (currentLCL + currentDPA) / 2;
+                    const currentDUA = (currentDPA + currentUCL) / 2;
+                    const last4 = data.slice(i-3, i+1);
+                    const aboveDUA = last4.filter(dp => dp > currentDUA).length;
+                    const belowDLA = last4.filter(dp => dp < currentDLA).length;
+                    
+                    if (aboveDUA >= 3 || belowDLA >= 3) {
+                        ruleTriggered = true;
+                        
+                        const newDPA = last4.reduce((a, b) => a + b) / 4;
+                        const newMRs = [];
+                        if (i-4 >= 0) {
+                            newMRs.push(Math.abs(data[i-3] - data[i-4]));
+                        } else {
+                            newMRs.push(0);
+                        }
+                        for (let j = 1; j < 4; j++) {
+                            newMRs.push(Math.abs(last4[j] - last4[j-1]));
+                        }
+                        
+                        const newMRA = newMRs.reduce((a, b) => a + b) / newMRs.length;
+                        const newLCL = newDPA - (newMRA * factor);
+                        const newUCL = newDPA + (newMRA * factor);
+                        const newMRUCL = newMRA * 3.27;
+                        
+                        for (let j = i-3; j <= i; j++) {
+                            results[j].dpa = newDPA;
+                            results[j].mra = newMRA;
+                            results[j].lcl = newLCL;
+                            results[j].ucl = newUCL;
+                            results[j].mrucl = newMRUCL;
+                            results[j].ruleApplied = 'Regla 3';
+                        }
+                        results[i].rule = 'Regla 3';
+                    }
+                }
+
+                // If no rules triggered, copy current baseline
+                if (!ruleTriggered) {
+                    results[i].dpa = currentDPA;
+                    results[i].mra = currentMRA;
+                    results[i].lcl = currentLCL;
+                    results[i].ucl = currentUCL;
+                    results[i].mrucl = currentMRUCL;
+                    results[i].ruleApplied = currentResult.ruleApplied;
+                }
+            }
+
+            return results;
+        }
+
+        // File processing
+        function processExcelFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, {type: 'array'});
+                        const sheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[sheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                        resolve(jsonData);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function processCSVFile(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const csv = e.target.result;
+                        const lines = csv.split('\n');
+                        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                        const data = [];
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            if (lines[i].trim()) {
+                                const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
+                                const row = {};
+                                headers.forEach((header, index) => {
+                                    row[header] = values[index] || '';
+                                });
+                                data.push(row);
+                            }
+                        }
+                        resolve(data);
+                    } catch (error) {
+                        reject(error);
+                    }
+                };
+                reader.readAsText(file, 'utf-8');
+            });
+        }
+
+        function analyzeDataStructure(data) {
+            if (!data || data.length === 0) {
+                throw new Error('No se encontraron datos en el archivo');
+            }
+
+            const headers = Object.keys(data[0]);
+            console.log('All headers found:', headers);
+
+            // Find institution column
+            const institutionColumn = headers.find(h => 
+                h.toLowerCase().includes('centro') || 
+                h.toLowerCase().includes('center') ||
+                h.toLowerCase().includes('institución') ||
+                h.toLowerCase().includes('institution')
+            );
+
+            // Find date columns
+            const fechaColumn = headers.find(h => h.toLowerCase().includes('fecha') || h.toLowerCase().includes('date'));
+            console.log('Fecha column found:', fechaColumn);
+
+            const dateColumns = {
+                year: headers.find(h => h.toLowerCase().includes('año') || h.toLowerCase().includes('year')),
+                month: headers.find(h => h.toLowerCase().includes('mes') || h.toLowerCase().includes('month')),
+                week: headers.find(h => h.toLowerCase().includes('semana') || h.toLowerCase().includes('week')),
+                day: headers.find(h => h.toLowerCase().includes('día') || h.toLowerCase().includes('day'))
+            };
+            console.log('Date columns found:', dateColumns);
+
+            // Find metric columns (exclude institution, date columns, and fecha column)
+            const excludeColumns = [institutionColumn, fechaColumn, ...Object.values(dateColumns)].filter(Boolean);
+            const metricColumns = headers.filter(h => !excludeColumns.includes(h));
+
+            // Analyze each metric column
+            const metrics = metricColumns.map(column => {
+                const values = data.map(row => row[column]).filter(v => v !== '' && v !== null && v !== undefined);
+                const numericValues = parseNumericData(values.join(' '));
+                
+                return {
+                    name: column,
+                    column: column,
+                    dataPoints: numericValues.length,
+                    validForSPC: numericValues.length >= 8
+                };
+            });
+
+            return {
+                institution: institutionColumn,
+                institutionName: institutionColumn ? data[0][institutionColumn] : 'Sin identificar',
+                dateColumns: dateColumns,
+                fechaColumn: fechaColumn,
+                metrics: metrics,
+                rawData: data
+            };
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showLoading(show) {
+            document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
+        }
+
+        function formatExcelDate(dateValue) {
+            if (typeof dateValue === 'number' && dateValue > 1000) {
+                const baseDate = new Date(1899, 11, 30);
+                const msPerDay = 24 * 60 * 60 * 1000;
+                const jsDate = new Date(baseDate.getTime() + (dateValue * msPerDay));
+                return jsDate.toLocaleDateString('es-ES', { 
+                    month: 'short', 
+                    year: 'numeric'
+                });
+            }
+            return dateValue.toString();
+        }
+
+        function processAllMetrics() {
+            showLoading(true);
+            
+            setTimeout(() => {
+                try {
+                    processedResults = [];
+                    
+                    console.log('=== PROCESSING ALL METRICS ===');
+                    console.log('uploadedData.fechaColumn:', uploadedData.fechaColumn);
+                    console.log('uploadedData.dateColumns:', uploadedData.dateColumns);
+                    console.log('Sample row 0:', uploadedData.rawData[0]);
+                    console.log('Sample row 1:', uploadedData.rawData[1]);
+                    
+                    uploadedData.metrics.filter(m => m.validForSPC).forEach(metric => {
+                        console.log('\n--- Processing metric:', metric.name, '---');
+                        
+                        const numericValues = [];
+                        const periods = [];
+                        let hasError = false;
+                        let errorMessage = '';
+                        
+                        // Get all data first
+                        uploadedData.rawData.forEach((row, index) => {
+                            const value = row[metric.column];
+                            if (value !== '' && value !== null && value !== undefined) {
+                                const numValue = parseFloat(value.toString().replace(',', '.'));
+                                if (!isNaN(numValue)) {
+                                    numericValues.push(numValue);
+                                    
+                                    let period = '';
+                                    
+                                    // Debug each row thoroughly
+                                    if (index < 3) { // Only log first 3 rows to avoid spam
+                                        console.log(`Row ${index}:`);
+                                        console.log('  fechaColumn exists:', !!uploadedData.fechaColumn);
+                                        console.log('  fechaColumn value:', row[uploadedData.fechaColumn]);
+                                        console.log('  year column exists:', !!uploadedData.dateColumns.year);
+                                        console.log('  year value:', uploadedData.dateColumns.year ? row[uploadedData.dateColumns.year] : 'N/A');
+                                        console.log('  month column exists:', !!uploadedData.dateColumns.month);
+                                        console.log('  month value:', uploadedData.dateColumns.month ? row[uploadedData.dateColumns.month] : 'N/A');
+                                    }
+                                    
+                                    if (uploadedData.fechaColumn && row[uploadedData.fechaColumn] !== '' && row[uploadedData.fechaColumn] !== null && row[uploadedData.fechaColumn] !== undefined) {
+                                        period = formatExcelDate(row[uploadedData.fechaColumn]);
+                                        if (index < 3) console.log('  → Using fecha column, result:', period);
+                                    } else if (uploadedData.dateColumns.year && row[uploadedData.dateColumns.year] !== '' && row[uploadedData.dateColumns.year] !== null && row[uploadedData.dateColumns.year] !== undefined) {
+                                        const year = row[uploadedData.dateColumns.year];
+                                        if (uploadedData.dateColumns.month && row[uploadedData.dateColumns.month] !== '' && row[uploadedData.dateColumns.month] !== null && row[uploadedData.dateColumns.month] !== undefined) {
+                                            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+                                            const month = parseInt(row[uploadedData.dateColumns.month]);
+                                            if (month >= 1 && month <= 12) {
+                                                period = `${monthNames[month - 1]} ${year}`;
+                                            } else {
+                                                period = `${year}`;
+                                            }
+                                            if (index < 3) console.log('  → Using year+month, result:', period);
+                                        } else {
+                                            period = `${year}`;
+                                            if (index < 3) console.log('  → Using year only, result:', period);
+                                        }
+                                    } else {
+                                        // Try to find any date-like values in the row
+                                        let foundDate = false;
+                                        for (const [key, value] of Object.entries(row)) {
+                                            if (value && typeof value === 'string') {
+                                                // Check for date patterns like DD/MM/YYYY, YYYY-MM-DD, etc.
+                                                const datePatterns = [
+                                                    /^\d{1,2}\/\d{1,2}\/\d{4}$/,
+                                                    /^\d{4}-\d{1,2}-\d{1,2}$/,
+                                                    /^\d{1,2}-\d{1,2}-\d{4}$/,
+                                                    /^\d{4}\/\d{1,2}\/\d{1,2}$/
+                                                ];
+                                                
+                                                if (datePatterns.some(pattern => pattern.test(value.toString()))) {
+                                                    period = value.toString();
+                                                    foundDate = true;
+                                                    if (index < 3) console.log('  → Found date pattern in column', key, ':', period);
+                                                    break;
+                                                }
+                                            }
+                                            // Check for Excel date numbers
+                                            else if (typeof value === 'number' && value > 1000 && value < 100000) {
+                                                period = formatExcelDate(value);
+                                                foundDate = true;
+                                                if (index < 3) console.log('  → Found Excel date number in column', key, ':', period);
+                                                break;
+                                            }
+                                        }
+                                        
+                                        if (!foundDate) {
+                                            period = `Período ${numericValues.length}`;
+                                            if (index < 3) console.log('  → Fallback to period number, result:', period);
+                                        }
+                                    }
+                                    periods.push(period);
+                                }
+                            }
+                        });
+                        
+                        console.log('Final periods array (first 5):', periods.slice(0, 5));
+                        
+                        // Take only the last 24 data points
+                        const last24NumericValues = numericValues.slice(-24);
+                        const last24Periods = periods.slice(-24);
+                        
+                        console.log('Last 24 periods:', last24Periods);
+                        
+                        // Check for issues in the last 24 points
+                        const totalRowsToCheck = Math.min(24, uploadedData.rawData.length);
+                        const lastRows = uploadedData.rawData.slice(-totalRowsToCheck);
+                        
+                        let validPointsInLast24 = 0;
+                        lastRows.forEach(row => {
+                            const value = row[metric.column];
+                            if (value !== '' && value !== null && value !== undefined) {
+                                const numValue = parseFloat(value.toString().replace(',', '.'));
+                                if (!isNaN(numValue)) {
+                                    validPointsInLast24++;
+                                }
+                            }
+                        });
+                        
+                        // Check if there are missing/invalid data points in the last 24
+                        if (validPointsInLast24 < totalRowsToCheck || last24NumericValues.length < 8) {
+                            hasError = true;
+                            if (last24NumericValues.length < 8) {
+                                errorMessage = getCurrentLang().errorInsufficientData;
+                            } else {
+                                errorMessage = getCurrentLang().errorMissingData;
+                            }
+                        }
+                        
+                        processedResults.push({
+                            metric: metric,
+                            results: hasError ? null : calcSPC(last24NumericValues, last24Periods),
+                            institution: uploadedData.institutionName,
+                            hasError: hasError,
+                            errorMessage: errorMessage
+                        });
+                    });
+
+                    currentChartIndex = 0;
+                    showChartSection();
+                    
+                } catch (error) {
+                    showError(getCurrentLang().errorProcessing + error.message);
+                } finally {
+                    showLoading(false);
+                }
+            }, 500);
+        }
+
+        function showChartSection() {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('chartSection').style.display = 'block';
+            document.getElementById('headerBackBtn').style.display = 'block';
+            
+            updateMetricSelector();
+            updateChart();
+            updateNavigation();
+        }
+
+        function updateMetricSelector() {
+            const selector = document.getElementById('metricSelector');
+            selector.innerHTML = '';
+            
+            processedResults.forEach((result, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = result.metric.name;
+                if (index === currentChartIndex) {
+                    option.selected = true;
+                }
+                selector.appendChild(option);
+            });
+        }
+
+        function updateChart() {
+            if (processedResults.length === 0) return;
+
+            const currentData = processedResults[currentChartIndex];
+            const metric = currentData.metric;
+            const institution = currentData.institution;
+
+            // Check if this metric has an error
+            if (currentData.hasError) {
+                displayErrorChart(metric.name, institution, currentData.errorMessage);
+                return;
+            }
+
+            const results = currentData.results;
+            const dataCount = results.length;
+            const finalTitle = `${metric.name} - ${institution} (${dataCount} ${getCurrentLang().points})`;
+
+            createSPCChart(results, metric, metric.name, finalTitle);
+        }
+
+        function displayErrorChart(metricName, institution, errorMessage) {
+            const ctx = document.getElementById('spcChart').getContext('2d');
+            
+            // Destroy existing chart
+            if (spcChart) {
+                spcChart.destroy();
+            }
+
+            // Create error display chart
+            spcChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: []
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: `${metricName} - ${institution}`,
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            color: '#dc3545',
+                            padding: 20
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: false
+                        },
+                        y: {
+                            display: false
+                        }
+                    },
+                    animation: false
+                },
+                plugins: [{
+                    id: 'errorMessage',
+                    beforeDraw: function(chart) {
+                        const ctx = chart.ctx;
+                        const width = chart.width;
+                        const height = chart.height;
+                        
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        
+                        // Error title
+                        ctx.font = 'bold 32px Arial';
+                        ctx.fillStyle = '#dc3545';
+                        ctx.fillText('ERROR', width / 2, height / 2 - 30);
+                        
+                        // Error message
+                        ctx.font = '16px Arial';
+                        ctx.fillStyle = '#6c757d';
+                        ctx.fillText(errorMessage, width / 2, height / 2 + 20);
+                        
+                        ctx.restore();
+                    }
+                }]
+            });
+        }
+
+        function createSPCChart(results, metric, dataLabel, chartTitle) {
+            const ctx = document.getElementById('spcChart').getContext('2d');
+            const lang = getCurrentLang();
+
+            // Prepare data
+            const labels = results.map(r => r.date);
+            const dpData = results.map(r => r.dp);
+            const dpaData = results.map(r => r.dpa);
+            const uclData = results.map(r => r.ucl);
+            const lclData = results.map(r => r.lcl);
+
+            // Point colors for signals
+            const dpPointColors = results.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+
+            // Destroy existing chart
+            if (spcChart) {
+                spcChart.destroy();
+            }
+
+            // Create new chart
+            spcChart = new Chart(ctx, {
+                type: 'line',
+                plugins: [ChartDataLabels],
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: `${dataLabel} (DP)`,
+                            data: dpData,
+                            borderColor: '#4169E1',
+                            backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                            borderWidth: 2,
+                            pointBackgroundColor: dpPointColors,
+                            pointBorderColor: dpPointColors,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            tension: 0
+                        },
+                        {
+                            label: lang.average,
+                            data: dpaData,
+                            borderColor: '#228B22',
+                            backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: lang.upperLimit,
+                            data: uclData,
+                            borderColor: '#DC143C',
+                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: lang.lowerLimit,
+                            data: lclData,
+                            borderColor: '#DC143C',
+                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: chartTitle,
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            color: '#2c3e50',
+                            padding: 20
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: {
+                                usePointStyle: false,
+                                padding: 20,
+                                boxWidth: 15,
+                                boxHeight: 2,
+                                font: {
+                                    size: 12
+                                },
+                                generateLabels: function(chart) {
+                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                    const labels = original.call(this, chart);
+                                    
+                                    return labels.map((label, index) => {
+                                        // Keep default for DP (first dataset), customize others
+                                        if (index > 0) {
+                                            label.fillStyle = label.strokeStyle;
+                                            label.strokeStyle = label.strokeStyle;
+                                        }
+                                        return label;
+                                    });
+                                }
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: '#3498db',
+                            borderWidth: 1,
+                            usePointStyle: false,
+                            boxWidth: 15,
+                            boxHeight: 2,
+                            callbacks: {
+                                label: function(context) {
+                                    const value = context.parsed.y;
+                                    return context.dataset.label + ': ' + fmt(value);
+                                },
+                                afterBody: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const result = results[index];
+                                    let extra = [];
+                                    
+                                    if (result.signal === 1) {
+                                        extra.push(lang.signalDetected);
+                                    }
+                                    if (result.rule) {
+                                        extra.push('📋 ' + result.rule);
+                                    }
+                                    
+                                    return extra;
+                                },
+                                labelColor: function(context) {
+                                    return {
+                                        borderColor: context.dataset.borderColor,
+                                        backgroundColor: context.dataset.borderColor,
+                                        borderWidth: 0,
+                                        borderRadius: 0
+                                    };
+                                }
+                            }
+                        },
+                        datalabels: {
+                            display: function(context) {
+                                return context.datasetIndex === 0;
+                            },
+                            align: 'top',
+                            offset: 8,
+                            color: function(context) {
+                                const result = results[context.dataIndex];
+                                return result.signal === 1 ? '#FF0000' : '#4169E1';
+                            },
+                            font: {
+                                size: 10,
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
+                                return fmt(value);
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: lang.period,
+                                font: {
+                                    weight: 'bold',
+                                    size: 14
+                                }
+                            },
+                            ticks: {
+                                maxRotation: 45,
+                                font: {
+                                    size: 11
+                                }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        y: {
+                            display: true,
+                            title: {
+                                display: true,
+                                text: lang.value,
+                                font: {
+                                    weight: 'bold',
+                                    size: 14
+                                }
+                            },
+                            grid: {
+                                display: true,
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prevChart');
+            const nextBtn = document.getElementById('nextChart');
+            const counter = document.getElementById('chartCounter');
+            const selector = document.getElementById('metricSelector');
+
+            const total = processedResults.length;
+            const current = currentChartIndex + 1;
+
+            counter.textContent = `${current} / ${total}`;
+            
+            // Enable all navigation buttons for circular navigation
+            prevBtn.disabled = false;
+            nextBtn.disabled = false;
+            
+            selector.value = currentChartIndex;
+        }
+
+        function navigateChart(direction) {
+            const total = processedResults.length;
+            
+            if (direction === 'prev') {
+                // If at first chart, go to last chart
+                currentChartIndex = currentChartIndex === 0 ? total - 1 : currentChartIndex - 1;
+            } else if (direction === 'next') {
+                // If at last chart, go to first chart
+                currentChartIndex = currentChartIndex === total - 1 ? 0 : currentChartIndex + 1;
+            }
+            
+            updateChart();
+            updateNavigation();
+        }
+
+        function selectMetricFromDropdown(selectedIndex) {
+            currentChartIndex = parseInt(selectedIndex);
+            updateChart();
+            updateNavigation();
+        }
+
+        function backToMenu() {
+            document.getElementById('fileInput').value = '';
+            document.getElementById('chartSection').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'block';
+            document.getElementById('headerBackBtn').style.display = 'none';
+            
+            if (spcChart) {
+                spcChart.destroy();
+                spcChart = null;
+            }
+            
+            uploadedData = null;
+            processedResults = [];
+            currentChartIndex = 0;
+        }
+
+        // Event listeners
+        document.getElementById('fileInput').addEventListener('change', async function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            showLoading(true);
+            
+            try {
+                let data;
+                const fileName = file.name.toLowerCase();
+                
+                if (fileName.endsWith('.csv')) {
+                    data = await processCSVFile(file);
+                } else if (fileName.endsWith('.xlsx') || fileName.endsWith('.xls')) {
+                    data = await processExcelFile(file);
+                } else {
+                    throw new Error(getCurrentLang().errorFileFormat);
+                }
+
+                const analysis = analyzeDataStructure(data);
+                uploadedData = analysis;
+                
+                if (analysis.metrics.filter(m => m.validForSPC).length > 0) {
+                    processAllMetrics();
+                } else {
+                    showError(getCurrentLang().errorNoValidMetrics);
+                    showLoading(false);
+                }
+                
+            } catch (error) {
+                showError(getCurrentLang().errorProcessing + error.message);
+                console.error('Error:', error);
+                showLoading(false);
+            }
+        });
+
+        // Drag and drop functionality
+        const uploadSection = document.getElementById('uploadSection');
+        
+        uploadSection.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', function(e) {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                document.getElementById('fileInput').files = files;
+                document.getElementById('fileInput').dispatchEvent(new Event('change'));
+            }
+        });
+
+        // Initialize language and event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
+        });
+
+        // Language toggle event listener
+        document.getElementById('langToggle').addEventListener('click', function() {
+            isEnglish = !isEnglish;
+            updateLanguage();
+        });
+
+        // Header back button event listener
+        document.getElementById('headerBackBtn').addEventListener('click', backToMenu);
+
+        // Navigation event listeners
+        document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
+        document.getElementById('nextChart').addEventListener('click', () => navigateChart('next'));
+        document.getElementById('metricSelector').addEventListener('change', (e) => selectMetricFromDropdown(e.target.value));
+    </script>
+</body>
+</html>
