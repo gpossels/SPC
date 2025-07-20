@@ -1,83 +1,261 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Gráficos de Comportamiento de Procesos</title>
-  <style>
-    body {
-      background-color: #fff;
-      color: #333; /* gris oscuro */
-      font-family: Arial, sans-serif;
-      text-align: justify;
-      padding: 40px 80px;
-      font-size: 0.95em;
-      line-height: 1.6;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gráficos de Comportamiento de Procesos</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-    .main-title {
-      text-align: center;
-      font-size: 1.0em;
-      margin-bottom: 30px;
-      font-weight: normal;
-      color: #666;
-    }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+            color: black;
+        }
 
-    p {
-      margin-bottom: 20px;
-    }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            overflow: hidden;
+        }
 
-    .button-container {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      margin-top: 40px;
-    }
+        .header {
+            background: white;
+            color: black;
+            padding: 40px;
+            text-align: center;
+            border-bottom: 2px solid black;
+        }
 
-    .btn {
-      padding: 12px 24px;
-      font-size: 14px;
-      border: 1px solid #666;
-      background-color: #fff;
-      color: #333;
-      text-decoration: none;
-      transition: 0.3s;
-      cursor: pointer;
-    }
+        .header h1 {
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: bold;
+        }
 
-    .btn:hover {
-      background-color: #333;
-      color: #fff;
-    }
-  </style>
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.8;
+            margin-bottom: 25px;
+        }
+
+        .lang-toggle {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .lang-toggle:hover {
+            background: #f0f0f0;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .description {
+            font-size: 1.1em;
+            line-height: 1.7;
+            margin-bottom: 40px;
+            text-align: justify;
+        }
+
+        .tools-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .tool-card {
+            background: white;
+            border: 2px solid black;
+            border-radius: 8px;
+            padding: 30px;
+            transition: all 0.3s ease;
+        }
+
+        .tool-card:hover {
+            background: #f9f9f9;
+        }
+
+        .tool-card h3 {
+            font-size: 1.4em;
+            margin-bottom: 15px;
+            color: black;
+        }
+
+        .tool-card p {
+            font-size: 1em;
+            line-height: 1.6;
+            margin-bottom: 25px;
+            text-align: justify;
+        }
+
+        .btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+        }
+
+        .footer {
+            background: white;
+            border-top: 2px solid black;
+            padding: 30px;
+            text-align: center;
+            font-size: 1em;
+            line-height: 1.6;
+        }
+
+        .footer a {
+            color: black;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.2em;
+            }
+            
+            .main-content {
+                padding: 30px 20px;
+            }
+            
+            .tools-section {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .tool-card {
+                padding: 20px;
+            }
+            
+            .btn {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
 </head>
 <body>
-  <div class="main-title">
-    Gráficos de Comportamiento de Procesos
-  </div>
-  <p>
-   Bienvenido. Acá podrás encontrar dos programas hechos en HTML. Funcionan a nivel local: no se guarda la información que ingrese.
-  </p>
+    <div class="container">
+        <div class="header">
+            <h1 id="mainTitle">Gráficos de Comportamiento de Procesos</h1>
+            <p id="mainSubtitle">Herramienta web completa para el análisis estadístico de procesos mediante gráficos de control SPC. Carga tus datos y obtén análisis automático con detección de señales y límites de control.</p>
+            <button id="langToggle" class="lang-toggle">English</button>
+        </div>
 
-  <p>
-    La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.
-  </p>
+        <div class="main-content">
+            <div class="tools-section">
+                <div class="tool-card">
+                    <h3 id="calculatorTitle">Calculadora</h3>
+                    <p id="calculatorDesc">La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.</p>
+                    <a href="calculator.html" class="btn" id="calculatorBtn">Calculadora</a>
+                </div>
+                
+                <div class="tool-card">
+                    <h3 id="dashboardTitle">Panel de Control</h3>
+                    <p id="dashboardDesc">El Panel de Control te permite cargar un archivo tipo Excel para generar como gráfico cuantas columnas con datos haya en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos, y una columna con las fechas correspondientes a cada punto de datos, y comunes a cada serie de datos. También puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad desde donde se origina la información. El panel tiene la opción de bajar todos los gráficos en formato .pdf como una presentación.</p>
+                    <a href="dashboard.html" class="btn" id="dashboardBtn">Panel de Control</a>
+                </div>
+            </div>
+        </div>
 
-  <p>
-    El Panel de Control te permite cargar un archivo tipo Excel para generar como gráfico cuantas columnas con datos haya en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos, y una columna con las fechas correspondientes a cada punto de datos, y comunes a cada serie de datos. También puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad desde donde se origina la información. El panel tiene la opción de bajar todos los gráficos en formato .pdf como una presentación.
-  </p>
+        <div class="footer">
+            <p id="footerText">Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. Saludos, y espero que le sea útil.</p>
+        </div>
+    </div>
 
-  <p>
-    Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en LinkedIn. Saludos, y espero que le sea útil.  
-  </p>
+    <script>
+        let isEnglish = false;
 
-  <p>
-    Dr. Gustavo Possel S. - Médico
-  </p>
-  
-  <div class="button-container">
-    <a href="calculator.html" class="btn">Calculadora</a>
-    <a href="dashboard.html" class="btn">Panel de Control</a>
-  </div>
+        const translations = {
+            es: {
+                title: 'Gráficos de Comportamiento de Procesos',
+                subtitle: 'Herramienta web completa para el análisis estadístico de procesos mediante gráficos de control SPC. Carga tus datos y obtén análisis automático con detección de señales y límites de control.',
+                calculatorTitle: 'Calculadora',
+                calculatorDesc: 'La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.',
+                calculatorBtn: 'Calculadora',
+                dashboardTitle: 'Panel de Control',
+                dashboardDesc: 'El Panel de Control te permite cargar un archivo tipo Excel para generar como gráfico cuantas columnas con datos haya en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos, y una columna con las fechas correspondientes a cada punto de datos, y comunes a cada serie de datos. También puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad desde donde se origina la información. El panel tiene la opción de bajar todos los gráficos en formato .pdf como una presentación.',
+                dashboardBtn: 'Panel de Control',
+                footerText: 'Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="_blank">LinkedIn</a>. Saludos, y espero que le sea útil.'
+            },
+            en: {
+                title: 'Process Behavior Charts',
+                subtitle: 'Complete web tool for statistical process analysis using SPC control charts. Upload your data and get automatic analysis with signal detection and control limits.',
+                calculatorTitle: 'Calculator',
+                calculatorDesc: 'The Calculator allows you to enter any data series to generate a process behavior chart. You can copy and paste numbers from any type of file, or from a web page.',
+                calculatorBtn: 'Calculator',
+                dashboardTitle: 'Dashboard',
+                dashboardDesc: 'The Dashboard allows you to upload an Excel file to generate charts for as many data columns as the file contains. Columns must include headers with the names of each data series, and a column with dates corresponding to each data point, common to each data series. You can also include a column with the header "Center", where the organization or unit from which the information originates is recorded. The dashboard has the option to download all charts in .pdf format as a presentation.',
+                dashboardBtn: 'Dashboard',
+                footerText: 'If you want more information about the process behavior charts methodology, you can find me on <a href="https://linkedin.com" target="_blank">LinkedIn</a>. Greetings, and I hope it is useful to you.'
+            }
+        };
+
+        function getCurrentLang() {
+            return isEnglish ? translations.en : translations.es;
+        }
+
+        function updateLanguage() {
+            const lang = getCurrentLang();
+            
+            document.getElementById('mainTitle').textContent = lang.title;
+            document.getElementById('mainSubtitle').textContent = lang.subtitle;
+            document.getElementById('langToggle').textContent = isEnglish ? 'Español' : 'English';
+            
+            document.getElementById('calculatorTitle').textContent = lang.calculatorTitle;
+            document.getElementById('calculatorDesc').textContent = lang.calculatorDesc;
+            document.getElementById('calculatorBtn').textContent = lang.calculatorBtn;
+            
+            document.getElementById('dashboardTitle').textContent = lang.dashboardTitle;
+            document.getElementById('dashboardDesc').textContent = lang.dashboardDesc;
+            document.getElementById('dashboardBtn').textContent = lang.dashboardBtn;
+            
+            document.getElementById('footerText').innerHTML = lang.footerText;
+        }
+
+        // Initialize language
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
+        });
+
+        // Language toggle event listener
+        document.getElementById('langToggle').addEventListener('click', function() {
+            isEnglish = !isEnglish;
+            updateLanguage();
+        });
+    </script>
 </body>
 </html>
-
