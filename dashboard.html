@@ -1278,6 +1278,11 @@
                 downloadBtn.disabled = true;
                 downloadBtn.textContent = lang.downloadingPDF;
                 
+                // Hide author credit during PDF generation
+                const authorCredit = document.getElementById('authorCredit');
+                const originalDisplay = authorCredit.style.display;
+                authorCredit.style.display = 'none';
+                
                 // Initialize jsPDF
                 const { jsPDF } = window.jspdf;
                 const pdf = new jsPDF('landscape', 'mm', 'a4');
@@ -1357,6 +1362,9 @@
                 // Clean up
                 document.body.removeChild(tempContainer);
                 
+                // Restore author credit visibility
+                authorCredit.style.display = originalDisplay;
+                
                 // Generate filename
                 const now = new Date();
                 const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
@@ -1369,6 +1377,12 @@
             } catch (error) {
                 console.error('Error generating PDF:', error);
                 alert('Error al generar el PDF. Por favor, inténtelo de nuevo.');
+                
+                // Restore author credit visibility in case of error
+                const authorCredit = document.getElementById('authorCredit');
+                if (authorCredit) {
+                    authorCredit.style.display = '';
+                }
             } finally {
                 // Restore button
                 downloadBtn.disabled = false;
