@@ -51,18 +51,15 @@
         }
 
         .header .author {
-            position: absolute;
-            bottom: 15px;
-            right: 20px;
+            position: static;
             font-size: 0.75em !important;
             color: black;
-            margin: 0;
+            margin: 10px 0;
+            text-align: center;
         }
 
         .lang-toggle {
-            position: absolute;
-            top: 20px;
-            right: 20px;
+            position: static;
             background: white;
             border: 2px solid black;
             color: black;
@@ -70,6 +67,8 @@
             border-radius: 4px;
             cursor: pointer;
             transition: all 0.3s ease;
+            margin: 0 auto;
+            display: block;
         }
 
         .lang-toggle:hover {
@@ -98,6 +97,34 @@
             font-weight: 600;
             color: black;
             font-size: 1.1em;
+        }
+
+        .data-input-container {
+            position: relative;
+        }
+
+        .data-counter {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            background: white;
+            color: black;
+            border: 1px solid black;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .data-counter.insufficient {
+            background: black;
+            color: white;
+        }
+
+        .data-counter.sufficient {
+            background: white;
+            color: black;
         }
 
         .input-row {
@@ -153,6 +180,11 @@
 
         .calculate-btn:hover {
             background: #218838;
+        }
+
+        .calculate-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
         }
 
         .clear-btn {
@@ -349,8 +381,9 @@
 
         .radio-group {
             display: flex;
-            gap: 20px;
-            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
         }
 
         .radio-item {
@@ -399,31 +432,35 @@
                 flex-direction: column;
                 align-items: stretch;
             }
+
+            .data-counter {
+                position: static;
+                margin-bottom: 8px;
+                display: inline-block;
+                width: auto;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <button class="lang-toggle" id="langBtn">English</button>
             <h1 id="title">Calculadora SPC</h1>
             <p id="subtitle">Control Estadístico de Procesos</p>
             <p id="author" class="author">por Dr. Gustavo Possel S.</p>
+            <button class="lang-toggle" id="langBtn">English</button>
         </div>
 
         <div class="main-content">
             <div class="input-section">
                 <div class="input-group">
                     <label id="dataLabel">Datos (separados por espacio, tab o línea):</label>
-                    <textarea id="dataInput" placeholder="7,22 1,54 4,51 5,94 4,67 7,26 2,41 6,05 6,83 6,11 9,97 7,76 14,27 7,57 8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">7,22 1,54 4,51 5,94 4,67 7,26 2,41 6,05 6,83 6,11 9,97 7,76 14,27 7,57 8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
-                </div>
-
-                <div class="input-group">
-                    <div class="input-row">
-                        <div class="input-col">
-                            <label id="dataNameLabel">Nombre de los datos (opcional):</label>
-                            <input type="text" id="dataNameInput" placeholder="Ej: Defectos por millón, Tiempo de respuesta, etc.">
-                        </div>
+                    <div class="data-input-container">
+                        <div class="data-counter" id="dataCounter">0 puntos</div>
+                        <textarea id="dataInput" placeholder="8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button class="clear-btn" id="clearBtn">Limpiar</button>
                     </div>
                 </div>
 
@@ -433,6 +470,10 @@
                             <label id="timeLabel">Unidad:</label>
                             <div class="radio-group">
                                 <div class="radio-item">
+                                    <input type="radio" id="yearsRadio" name="timeUnit" value="years">
+                                    <label for="yearsRadio" id="yearsLabel">Años</label>
+                                </div>
+                                <div class="radio-item">
                                     <input type="radio" id="monthsRadio" name="timeUnit" value="months" checked>
                                     <label for="monthsRadio" id="monthsLabel">Meses</label>
                                 </div>
@@ -440,10 +481,14 @@
                                     <input type="radio" id="weeksRadio" name="timeUnit" value="weeks">
                                     <label for="weeksRadio" id="weeksLabel">Semanas</label>
                                 </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="daysRadio" name="timeUnit" value="days">
+                                    <label for="daysRadio" id="daysLabel">Días</label>
+                                </div>
                             </div>
                         </div>
                         <div class="input-col">
-                            <label id="periodLabel">Semana o Mes:</label>
+                            <label id="periodLabel">Año, Mes, Semana o Día:</label>
                             <select id="periodSelect">
                                 <!-- Will be populated based on time unit -->
                             </select>
@@ -470,7 +515,6 @@
 
                 <div class="button-row">
                     <button class="calculate-btn" id="calcBtn">Calcular SPC</button>
-                    <button class="clear-btn" id="clearBtn">Limpiar</button>
                 </div>
             </div>
 
@@ -486,9 +530,14 @@
                             <label id="chartTitleLabel">Título del gráfico (opcional):</label>
                             <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
                         </div>
+                        <div class="input-col">
+                            <label id="dataNameLabel">Nombre de los datos (opcional):</label>
+                            <input type="text" id="dataNameInput" placeholder="Ej: Defectos por millón, Tiempo de respuesta, etc.">
+                        </div>
                         <div class="button-group">
                             <button class="update-btn" id="updateChartBtn">Actualizar Gráfico</button>
                             <button class="download-btn" id="downloadChartBtn">Descargar Gráfico</button>
+                            <button class="download-btn" id="copyChartBtn">Copiar Gráfico</button>
                         </div>
                     </div>
                     <div class="chart-container">
@@ -550,7 +599,7 @@
                 dataNameLabel: 'Nombre de los datos (opcional):',
                 dataNamePlaceholder: 'Ej: Defectos por millón, Tiempo de respuesta, etc.',
                 timeLabel: 'Unidad:',
-                periodLabel: 'Semana o Mes:',
+                periodLabel: 'Año, Mes, Semana o Día:',
                 yearRefLabel: 'Año:',
                 typeLabel: 'Fecha seleccionada es:',
                 calcBtn: 'Calcular SPC',
@@ -561,11 +610,14 @@
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
                 updateChartBtn: 'Actualizar Gráfico',
                 downloadChartBtn: 'Descargar Gráfico',
+                copyChartBtn: 'Copiar Gráfico',
                 downloadTableBtn: 'Descargar Tabla',
                 hideTableBtn: 'Ocultar Tabla',
                 showTableBtn: 'Mostrar Tabla',
+                years: 'Años',
                 weeks: 'Semanas',
                 months: 'Meses',
+                days: 'Días',
                 start: 'Primera de la serie',
                 end: 'Última de la serie',
                 headers: ['Período', 'Fecha', 'DP', 'DPA', 'MR', 'MRA', 'LCL', 'DLA', 'DUA', 'UCL', 'MRUCL', 'Señal'],
@@ -576,6 +628,8 @@
                 errorInvalidData: 'Datos numéricos inválidos.',
                 errorNoData: 'Ingrese algunos datos.',
                 errorDate: 'Seleccione un período y año válidos.',
+                dataPointsSingular: 'punto de datos',
+                dataPointsPlural: 'puntos de datos',
                 chartLabels: {
                     dp: '(DP)',
                     dpa: '(DPA)',
@@ -593,7 +647,7 @@
                 dataNameLabel: 'Data name (optional):',
                 dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
                 timeLabel: 'Unit:',
-                periodLabel: 'Week or Month:',
+                periodLabel: 'Year, Month, Week, or Day:',
                 yearRefLabel: 'Year:',
                 typeLabel: 'Selected date is:',
                 calcBtn: 'Calculate SPC',
@@ -604,11 +658,14 @@
                 chartTitlePlaceholder: 'Enter chart title',
                 updateChartBtn: 'Update Chart',
                 downloadChartBtn: 'Download Chart',
+                copyChartBtn: 'Copy Chart',
                 downloadTableBtn: 'Download Table',
                 hideTableBtn: 'Hide Table',
                 showTableBtn: 'Show Table',
+                years: 'Years',
                 weeks: 'Weeks',
                 months: 'Months',
+                days: 'Days',
                 start: 'First in series',
                 end: 'Last in series',
                 headers: ['Period', 'Date', 'DP', 'DPA', 'MR', 'MRA', 'LCL', 'DLA', 'DUA', 'UCL', 'MRUCL', 'Signal'],
@@ -619,6 +676,8 @@
                 errorInvalidData: 'Invalid numeric data.',
                 errorNoData: 'Enter some data.',
                 errorDate: 'Select a valid period and year.',
+                dataPointsSingular: 'data point',
+                dataPointsPlural: 'data points',
                 chartLabels: {
                     dp: '(DP)',
                     dpa: '(DPA)',
@@ -636,13 +695,95 @@
             const result = [];
             
             for (const item of items) {
-                const normalized = item.replace(',', '.');
+                let normalized = item.trim();
+                
+                // Detect number format and remove thousands separators
+                if (normalized.includes(',') && normalized.includes('.')) {
+                    // Both comma and dot present - determine which is decimal separator
+                    const lastCommaPos = normalized.lastIndexOf(',');
+                    const lastDotPos = normalized.lastIndexOf('.');
+                    
+                    if (lastDotPos > lastCommaPos) {
+                        // US format: dot is decimal, comma is thousands separator
+                        normalized = normalized.replace(/,/g, '');
+                    } else {
+                        // European format: comma is decimal, dot is thousands separator
+                        normalized = normalized.replace(/\./g, '').replace(',', '.');
+                    }
+                } else if (normalized.includes(',')) {
+                    // Only comma present - could be European decimal or US thousands
+                    const commaPos = normalized.indexOf(',');
+                    const afterComma = normalized.substring(commaPos + 1);
+                    
+                    if (afterComma.length <= 3 && !afterComma.includes(',')) {
+                        // Likely European decimal separator
+                        normalized = normalized.replace(',', '.');
+                    } else {
+                        // Likely US thousands separator
+                        normalized = normalized.replace(/,/g, '');
+                    }
+                } else if (normalized.includes('.')) {
+                    // Only dot present - could be US decimal or European thousands
+                    const dotPos = normalized.indexOf('.');
+                    const afterDot = normalized.substring(dotPos + 1);
+                    
+                    if (afterDot.length <= 3 && !afterDot.includes('.')) {
+                        // Likely US decimal separator - keep as is
+                        // normalized = normalized;
+                    } else {
+                        // Likely European thousands separator
+                        normalized = normalized.replace(/\./g, '');
+                    }
+                }
+                
                 const num = parseFloat(normalized);
                 if (isNaN(num)) throw new Error('Invalid number: ' + item);
                 result.push(num);
             }
             
             return result;
+        }
+
+        // Update data point counter
+        function updateDataCounter() {
+            const dataInput = document.getElementById('dataInput').value.trim();
+            const counter = document.getElementById('dataCounter');
+            const calcBtn = document.getElementById('calcBtn');
+            const t = isSpanish ? lang.es : lang.en;
+            
+            let count = 0;
+            if (dataInput) {
+                try {
+                    const data = parseData(dataInput);
+                    count = data.length;
+                } catch (e) {
+                    count = 0;
+                }
+            }
+            
+            // Update counter text
+            const pointWord = count === 1 ? t.dataPointsSingular : t.dataPointsPlural;
+            const counterText = `${count} ${pointWord}`;
+            counter.textContent = counterText;
+            
+            // Update counter styling and button state
+            counter.className = 'data-counter';
+            
+            if (count === 0) {
+                counter.classList.add('insufficient');
+                calcBtn.disabled = true;
+            } else if (count < 8) {
+                counter.classList.add('insufficient');
+                calcBtn.disabled = true;
+            } else {
+                counter.classList.add('sufficient');
+                calcBtn.disabled = false;
+            }
+        }
+
+        // Check if year is leap year
+        function isLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
         }
 
         // Generate periods
@@ -653,7 +794,17 @@
                 let currentPeriod, currentYear;
                 
                 if (type === 'start') {
-                    if (unit === 'weeks') {
+                    if (unit === 'years') {
+                        currentYear = refYear + i;
+                        periods.push(`${currentYear}`);
+                    } else if (unit === 'days') {
+                        const totalDays = parseInt(refPeriod) + i;
+                        const daysInYear = isLeapYear(refYear) ? 366 : 365;
+                        currentYear = refYear + Math.floor((totalDays - 1) / daysInYear);
+                        currentPeriod = ((totalDays - 1) % daysInYear) + 1;
+                        const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
+                        periods.push(`${dayLabel} ${currentYear}`);
+                    } else if (unit === 'weeks') {
                         const totalWeeks = parseInt(refPeriod) + i;
                         currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
                         currentPeriod = ((totalWeeks - 1) % 52) + 1;
@@ -669,7 +820,21 @@
                     }
                 } else {
                     const offset = count - 1 - i;
-                    if (unit === 'weeks') {
+                    if (unit === 'years') {
+                        currentYear = refYear - offset;
+                        periods.push(`${currentYear}`);
+                    } else if (unit === 'days') {
+                        let totalDays = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalDays <= 0) {
+                            currentYear--;
+                            const daysInPrevYear = isLeapYear(currentYear) ? 366 : 365;
+                            totalDays += daysInPrevYear;
+                        }
+                        currentPeriod = totalDays;
+                        const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
+                        periods.push(`${dayLabel} ${currentYear}`);
+                    } else if (unit === 'weeks') {
                         let totalWeeks = parseInt(refPeriod) - offset;
                         currentYear = refYear;
                         while (totalWeeks <= 0) {
@@ -697,9 +862,13 @@
             return periods;
         }
 
-        // Format number with comma
+        // Format number with appropriate decimal marker based on language
         function fmt(num) {
-            return num.toFixed(2).replace('.', ',');
+            if (isSpanish) {
+                return num.toFixed(2).replace('.', ',');
+            } else {
+                return num.toFixed(2);
+            }
         }
 
         // Calculate SPC
@@ -877,30 +1046,78 @@
         function updatePeriodSelector() {
             const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
             const periodSelect = document.getElementById('periodSelect');
+            const periodSelectContainer = periodSelect.parentElement;
             const currentDate = new Date();
+            let currentYear = parseInt(document.getElementById('yearRef').value) || currentDate.getFullYear();
             
-            if (timeUnit === 'weeks') {
-                let options = '';
-                const currentWeek = Math.ceil((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
-                for (let i = 1; i <= 52; i++) {
-                    const weekLabel = isSpanish ? `Semana ${i}` : `Week ${i}`;
-                    options += `<option value="${i}">${weekLabel}</option>`;
-                }
-                periodSelect.innerHTML = options;
-                periodSelect.value = Math.min(currentWeek, 52);
-                document.getElementById('yearRef').value = currentDate.getFullYear();
+            if (timeUnit === 'years') {
+                // Hide the period selector when years is selected
+                periodSelectContainer.style.display = 'none';
+                // Set a default value for internal use
+                periodSelect.innerHTML = '<option value="1">Year</option>';
+                periodSelect.value = '1';
+                // Set year to previous year when years is selected
+                document.getElementById('yearRef').value = currentDate.getFullYear() - 1;
             } else {
-                const monthNames = isSpanish ? 
-                    ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] :
-                    ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                // Show the period selector for other time units
+                periodSelectContainer.style.display = 'block';
+                // Reset year to current year when switching from years to other units
+                currentYear = currentDate.getFullYear();
+                document.getElementById('yearRef').value = currentYear;
                 
-                let options = '';
-                monthNames.forEach((month, index) => {
-                    options += `<option value="${index + 1}">${month}</option>`;
-                });
-                periodSelect.innerHTML = options;
-                periodSelect.value = currentDate.getMonth() + 1;
-                document.getElementById('yearRef').value = currentDate.getFullYear();
+                if (timeUnit === 'days') {
+                    let options = '';
+                    const daysInYear = isLeapYear(currentYear) ? 366 : 365;
+                    const dayLabel = isSpanish ? 'Día' : 'Day';
+                    for (let i = 1; i <= daysInYear; i++) {
+                        options += `<option value="${i}">${dayLabel} ${i}</option>`;
+                    }
+                    periodSelect.innerHTML = options;
+                    
+                    // Set to yesterday (previous day) by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentDay = Math.floor((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (24 * 60 * 60 * 1000)) + 1;
+                        const previousDay = currentDay > 1 ? currentDay - 1 : daysInYear;
+                        periodSelect.value = previousDay;
+                    } else {
+                        periodSelect.value = daysInYear; // If different year, default to last day
+                    }
+                } else if (timeUnit === 'weeks') {
+                    let options = '';
+                    const weekLabel = isSpanish ? 'Semana' : 'Week';
+                    for (let i = 1; i <= 52; i++) {
+                        options += `<option value="${i}">${weekLabel} ${i}</option>`;
+                    }
+                    periodSelect.innerHTML = options;
+                    
+                    // Set to previous week by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentWeek = Math.ceil((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+                        const previousWeek = currentWeek > 1 ? currentWeek - 1 : 52;
+                        periodSelect.value = previousWeek;
+                    } else {
+                        periodSelect.value = 52; // If different year, default to last week
+                    }
+                } else {
+                    const monthNames = isSpanish ? 
+                        ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] :
+                        ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    
+                    let options = '';
+                    monthNames.forEach((month, index) => {
+                        options += `<option value="${index + 1}">${month}</option>`;
+                    });
+                    periodSelect.innerHTML = options;
+                    
+                    // Set to previous month by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const previousMonth = currentMonth > 1 ? currentMonth - 1 : 12;
+                        periodSelect.value = previousMonth;
+                    } else {
+                        periodSelect.value = 12; // If different year, default to December
+                    }
+                }
             }
         }
 
@@ -951,15 +1168,19 @@
             document.getElementById('chartTitleInput').placeholder = t.chartTitlePlaceholder;
             document.getElementById('updateChartBtn').textContent = t.updateChartBtn;
             document.getElementById('downloadChartBtn').textContent = t.downloadChartBtn;
+            document.getElementById('copyChartBtn').textContent = t.copyChartBtn;
             document.getElementById('downloadTableBtn').textContent = t.downloadTableBtn;
             document.getElementById('toggleTableBtn').textContent = isTableVisible ? t.hideTableBtn : t.showTableBtn;
             
+            document.getElementById('yearsLabel').textContent = t.years;
             document.getElementById('monthsLabel').textContent = t.months;
             document.getElementById('weeksLabel').textContent = t.weeks;
+            document.getElementById('daysLabel').textContent = t.days;
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             
             updatePeriodSelector();
+            updateDataCounter(); // Update counter text with new language
             
             const headers = document.getElementById('tableHead');
             headers.innerHTML = t.headers.map(h => `<th>${h}</th>`).join('');
@@ -984,22 +1205,36 @@
             const customDataName = document.getElementById('dataNameInput').value.trim();
             const dataLabel = customDataName || '(DP)';
             
+            // Get time unit and format period count
+            const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const dataCount = currentResults.length;
+            let periodText = '';
+            
+            if (timeUnit === 'years') {
+                periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
+            } else if (timeUnit === 'months') {
+                periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
+            } else if (timeUnit === 'weeks') {
+                periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
+            } else {
+                periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
+            }
+            
             // Prepare data
             const labels = currentResults.map(r => r.date);
             const dpData = currentResults.map(r => r.dp);
             const dpaData = currentResults.map(r => r.dpa);
             const uclData = currentResults.map(r => r.ucl);
             const lclData = currentResults.map(r => r.lcl);
-            const duaData = currentResults.map(r => r.dua);
-            const dlaData = currentResults.map(r => r.dla);
             
             // Prepare point colors for DP line (red for signals, blue for normal)
             const dpPointColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
             const dpPointBorderColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
             
-            // Custom title from input
+            // Custom title from input with period count
             const customTitle = document.getElementById('chartTitleInput').value.trim();
-            const chartTitle = customTitle || t.chartTitle;
+            const baseTitle = customTitle || t.chartTitle;
+            const chartTitle = `${baseTitle} ${periodText}`;
             
             // Destroy existing chart
             if (spcChart) {
@@ -1051,28 +1286,6 @@
                             borderWidth: 2,
                             pointRadius: 0,
                             tension: 0
-                        },
-                        {
-                            label: t.chartLabels.dua,
-                            data: duaData,
-                            borderColor: '#228B22',
-                            backgroundColor: 'rgba(34, 139, 34, 0.1)',
-                            borderWidth: 1,
-                            borderDash: [10, 5],
-                            pointRadius: 0,
-                            tension: 0,
-                            display: false
-                        },
-                        {
-                            label: t.chartLabels.dla,
-                            data: dlaData,
-                            borderColor: '#228B22',
-                            backgroundColor: 'rgba(34, 139, 34, 0.1)',
-                            borderWidth: 1,
-                            borderDash: [10, 5],
-                            pointRadius: 0,
-                            tension: 0,
-                            display: false
                         }
                     ]
                 },
@@ -1101,13 +1314,7 @@
                                     const original = Chart.defaults.plugins.legend.labels.generateLabels;
                                     const labels = original.call(this, chart);
                                     
-                                    return labels.filter(label => {
-                                        return !label.text.includes('DUA') && !label.text.includes('DLA') && 
-                                               !label.text.includes('Promedio DPA-UCL') && 
-                                               !label.text.includes('Promedio DPA-LCL') &&
-                                               !label.text.includes('DPA-UCL Average') && 
-                                               !label.text.includes('DPA-LCL Average');
-                                    }).map(label => {
+                                    return labels.map(label => {
                                         label.fillStyle = label.strokeStyle;
                                         return label;
                                     });
@@ -1121,9 +1328,8 @@
                             boxWidth: 20,
                             boxHeight: 8,
                             filter: function(tooltipItem) {
-                                // Hide DUA and DLA from tooltip
-                                const label = tooltipItem.dataset.label;
-                                return !label.includes('DUA') && !label.includes('DLA');
+                                // Hide DUA and DLA from tooltip (they're no longer in chart)
+                                return true;
                             },
                             itemSort: function(a, b) {
                                 // Custom sort order: UCL, DP/custom, DPA, LCL
@@ -1207,6 +1413,44 @@
             });
         }
 
+        // Copy chart to clipboard
+        async function copyChart() {
+            if (!spcChart) return;
+            
+            try {
+                const canvas = spcChart.canvas;
+                
+                // Create a blob from the canvas
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+                        
+                        // Show success feedback
+                        const btn = document.getElementById('copyChartBtn');
+                        const originalText = btn.textContent;
+                        btn.textContent = isSpanish ? '¡Copiado!' : 'Copied!';
+                        btn.style.backgroundColor = '#28a745';
+                        
+                        setTimeout(() => {
+                            btn.textContent = originalText;
+                            btn.style.backgroundColor = '#6f42c1';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy chart: ', err);
+                        // Fallback: show instruction to right-click
+                        alert(isSpanish ? 
+                            'No se pudo copiar automáticamente. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
+                            'Could not copy automatically. Right-click on the chart and select "Copy image".');
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error('Failed to copy chart: ', err);
+                alert(isSpanish ? 
+                    'No se pudo copiar el gráfico. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
+                    'Could not copy chart. Right-click on the chart and select "Copy image".');
+            }
+        }
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;
@@ -1350,9 +1594,11 @@
             // Reset to current month/week and year
             const currentDate = new Date();
             document.getElementById('yearRef').value = currentDate.getFullYear();
-            document.getElementById('monthsRadio').checked = true;
+            // Keep the currently selected time unit instead of resetting to months
+            // document.getElementById('monthsRadio').checked = true;
             document.getElementById('endRadio').checked = true;
             updatePeriodSelector();
+            updateDataCounter(); // Update counter after clearing
             
             if (spcChart) {
                 spcChart.destroy();
@@ -1399,6 +1645,10 @@
             
             updateLang();
             updatePeriodSelector(); // Set current month/week by default
+            updateDataCounter(); // Initialize counter
+            
+            // Add event listener for data input changes
+            document.getElementById('dataInput').addEventListener('input', updateDataCounter);
             
             document.getElementById('langBtn').onclick = function() {
                 isSpanish = !isSpanish;
@@ -1408,11 +1658,20 @@
             document.querySelectorAll('input[name="timeUnit"]').forEach(radio => {
                 radio.onchange = updatePeriodSelector;
             });
+            
+            // Add event listener for year changes to update days selector
+            document.getElementById('yearRef').addEventListener('change', function() {
+                const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+                if (timeUnit === 'days') {
+                    updatePeriodSelector();
+                }
+            });
             document.getElementById('calcBtn').onclick = calculate;
             document.getElementById('clearBtn').onclick = clearAll;
             document.getElementById('toggleTableBtn').onclick = toggleTable;
             document.getElementById('updateChartBtn').onclick = updateChart;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
+            document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
         });
     </script>
