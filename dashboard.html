@@ -1649,28 +1649,35 @@
         document.getElementById('nextChart').addEventListener('click', () => navigateChart('next'));
         document.getElementById('metricSelector').addEventListener('change', (e) => selectMetricFromDropdown(e.target.value));
 
-         // Keyboard navigation event listener
-        document.addEventListener('keydown', function(e) {
-            // Only enable keyboard navigation when charts are visible
-            const chartSection = document.getElementById('chartSection');
-        if (chartSection.style.display === 'none' || processedResults.length === 0) {
-                return;
-            }
+         // Initialize language and event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLanguage();
             
-            // Check if user is typing in an input field or textarea
-            const activeElement = document.activeElement;
-            if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT')) {
-                return;
-            }
-            
-            // Handle arrow key navigation
-            if (e.key === 'ArrowLeft') {
-                e.preventDefault();
-                navigateChart('prev');
-            } else if (e.key === 'ArrowRight') {
-                e.preventDefault();
-                navigateChart('next');
-            }
+            // Add keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                // Only enable keyboard navigation when charts are visible
+                const chartSection = document.getElementById('chartSection');
+                if (!chartSection || chartSection.style.display === 'none' || processedResults.length === 0) {
+                    return;
+                }
+                
+                // Check if user is typing in an input field or textarea
+                const activeElement = document.activeElement;
+                if (activeElement && (activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT')) {
+                    return;
+                }
+                
+                // Handle arrow key navigation
+                if (e.key === 'ArrowLeft') {
+                    e.preventDefault();
+                    console.log('Left arrow pressed - navigating to previous chart');
+                    navigateChart('prev');
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    console.log('Right arrow pressed - navigating to next chart');
+                    navigateChart('next');
+                }
+            });
         });
     </script>
 </body>
