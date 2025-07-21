@@ -100,6 +100,16 @@
             text-align: justify;
         }
 
+        .tool-image {
+            width: 100%;
+            max-width: 100%;
+            height: auto;
+            border: 2px solid black;
+            border-radius: 4px;
+            margin-bottom: 25px;
+            display: block;
+        }
+
         .btn {
             background: white;
             color: black;
@@ -177,11 +187,13 @@
                 <div class="tool-card">
                     <a href="calculator.html" class="btn" id="calculatorBtn">Calculadora</a>
                     <p id="calculatorDesc">La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.</p>
+                    <img src="Calculadora.png" alt="Calculator preview" class="tool-image" id="calculatorImage">
                 </div>
                 
                 <div class="tool-card">
                     <a href="dashboard.html" class="btn" id="dashboardBtn">Panel de Control</a>
                     <p id="dashboardDesc">El Panel de Control te permite cargar un archivo tipo Excel para generar un gráfico por cada columna con datos haya en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos. Debes añadir una columna con las fechas correspondientes a cada punto de datos de la planilla. Puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad que genera la información. Puedes descargar todos los gráficos en formato PDF para presentación.</p>
+                    <img src="Dashboard.png" alt="Dashboard preview" class="tool-image" id="dashboardImage">
                 </div>
             </div>
         </div>
@@ -201,8 +213,10 @@
                 authorCredit: 'Dr. Gustavo Possel S. - Médico',
                 calculatorDesc: 'La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.',
                 calculatorBtn: 'Calculadora',
+                calculatorAlt: 'Vista previa de la calculadora',
                 dashboardDesc: 'El Panel de Control te permite cargar un archivo tipo Excel para generar un gráfico por cada columna con datos haya en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos. Debes añadir una columna con las fechas correspondientes a cada punto de datos de la planilla. Puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad que genera la información. Puedes descargar todos los gráficos en formato PDF para presentación.',
                 dashboardBtn: 'Panel de Control',
+                dashboardAlt: 'Vista previa del panel de control',
                 footerText: 'Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="_blank">LinkedIn</a>. Saludos, y espero que te sea útil.'
             },
             en: {
@@ -211,8 +225,10 @@
                 authorCredit: 'Dr. Gustavo Possel S. - MD',
                 calculatorDesc: 'The Calculator allows you to enter any data series to generate a process behavior chart. You can copy and paste numbers from any type of file, or from a web page.',
                 calculatorBtn: 'Calculator',
+                calculatorAlt: 'Calculator preview',
                 dashboardDesc: 'The Dashboard allows you to upload an Excel file to generate one chart per each data columns the file contains. Columns must include headers with the names of each data series. You must add a column with dates corresponding to each data point in the spreadsheet. You can include a column with the header "Center", where the organization or unit from which the information originates is recorded. You can download all charts in PDF format as a presentation.',
                 dashboardBtn: 'Dashboard',
+                dashboardAlt: 'Dashboard preview',
                 footerText: 'If you want more information about the process behavior charts methodology, you can find me on <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. Greetings, and I hope this will be useful to you.'
             }
         };
@@ -231,9 +247,11 @@
             
             document.getElementById('calculatorDesc').textContent = lang.calculatorDesc;
             document.getElementById('calculatorBtn').textContent = lang.calculatorBtn;
+            document.getElementById('calculatorImage').alt = lang.calculatorAlt;
             
             document.getElementById('dashboardDesc').textContent = lang.dashboardDesc;
             document.getElementById('dashboardBtn').textContent = lang.dashboardBtn;
+            document.getElementById('dashboardImage').alt = lang.dashboardAlt;
             
             document.getElementById('footerText').innerHTML = lang.footerText;
         }
