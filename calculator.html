@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SPC Calculator</title>
+    <title>PBC Calculator</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -445,11 +445,11 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="title">Calculadora SPC</h1>
-            <p id="subtitle">Control Estadístico de Procesos</p>
+            <h1 id="title">Calculadora PBC</h1>
+            <p id="subtitle">Gráfico de Comportamiento de Procesos</p>
             <p id="author" class="author">por Dr. Gustavo Possel S.</p>
             <div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
-                <button class="lang-toggle" id="homeBtn" onclick="window.location.href='index.html'">Inicio</button>
+                <button class="lang-toggle" id="homeBtn" onclick="window.location.href='index.html'">← Inicio</button>
                 <button class="lang-toggle" id="langBtn">English</button>
             </div>
         </div>
@@ -517,7 +517,7 @@
                 </div>
 
                 <div class="button-row">
-                    <button class="calculate-btn" id="calcBtn">Calcular SPC</button>
+                    <button class="calculate-btn" id="calcBtn">Calcular PBC</button>
                 </div>
             </div>
 
@@ -595,8 +595,8 @@
         // Language translations
         const lang = {
             es: {
-                title: 'Calculadora SPC',
-                subtitle: 'Control Estadístico de Procesos',
+                title: 'Calculadora PBC',
+                subtitle: 'Calculadora de Gráfico de Comportamiento de Procesos',
                 author: 'Dr. Gustavo Possel S. - Médico',
                 dataLabel: 'Datos (separados por espacio, tab o línea):',
                 dataNameLabel: 'Nombre de los datos (opcional):',
@@ -605,10 +605,10 @@
                 periodLabel: 'Año, Mes, Semana o Día:',
                 yearRefLabel: 'Año:',
                 typeLabel: 'Fecha seleccionada es:',
-                calcBtn: 'Calcular SPC',
+                calcBtn: 'Calcular PBC',
                 clearBtn: 'Limpiar',
-                resultsTitle: 'Resultados SPC',
-                chartTitle: 'Gráfico SPC',
+                resultsTitle: 'Resultados PBC',
+                chartTitle: 'Gráfico PBC',
                 chartTitleLabel: 'Título del gráfico (opcional):',
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
                 updateChartBtn: 'Actualizar Gráfico',
@@ -643,8 +643,8 @@
                 }
             },
             en: {
-                title: 'SPC Calculator',
-                subtitle: 'Statistical Process Control',
+                title: 'PBC Calculator',
+                subtitle: 'Process Behavior Chart Calculator',
                 author: 'Dr. Gustavo Possel S. - MD.',
                 dataLabel: 'Data (separated by space, tab or line):',
                 dataNameLabel: 'Data name (optional):',
@@ -653,10 +653,10 @@
                 periodLabel: 'Year, Month, Week, or Day:',
                 yearRefLabel: 'Year:',
                 typeLabel: 'Selected date is:',
-                calcBtn: 'Calculate SPC',
+                calcBtn: 'Calculate PBC',
                 clearBtn: 'Clear',
-                resultsTitle: 'SPC Results',
-                chartTitle: 'SPC Chart',
+                resultsTitle: 'PBC Results',
+                chartTitle: 'PBC Chart',
                 chartTitleLabel: 'Chart title (optional):',
                 chartTitlePlaceholder: 'Enter chart title',
                 updateChartBtn: 'Update Chart',
