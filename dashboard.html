@@ -400,7 +400,16 @@
                 weekPrefix: 'S',
                 dayPrefix: 'D',
                 yearPrefix: 'A',
-                quarterPrefix: 'T'
+                quarterPrefix: 'T',
+                // Period type translations
+                periodTypes: {
+                    daily: 'diario',
+                    weekly: 'semanal', 
+                    monthly: 'mensual',
+                    yearly: 'anual',
+                    irregular: 'irregular',
+                    unknown: 'desconocido'
+                }
             },
             en: {
                 title: 'PBC Dashboard',
@@ -434,7 +443,16 @@
                 weekPrefix: 'W',
                 dayPrefix: 'D',
                 yearPrefix: 'Y',
-                quarterPrefix: 'Q'
+                quarterPrefix: 'Q',
+                // Period type translations
+                periodTypes: {
+                    daily: 'daily',
+                    weekly: 'weekly',
+                    monthly: 'monthly', 
+                    yearly: 'yearly',
+                    irregular: 'irregular',
+                    unknown: 'unknown'
+                }
             }
         };
 
@@ -551,11 +569,10 @@
             
             console.log('Date intervals analysis:', intervals, 'Median:', median);
             
-            // Determine period based on median interval
+            // Determine period based on median interval (quarterly detection removed)
             if (median <= 1) return 'daily';
             if (median >= 6 && median <= 8) return 'weekly';
             if (median >= 28 && median <= 35) return 'monthly';
-            if (median >= 85 && median <= 95) return 'quarterly'; // ~90 days
             if (median >= 360 && median <= 370) return 'yearly';
             
             return 'irregular';
@@ -615,10 +632,6 @@
                     const monthIndex = date.getMonth();
                     const year = date.getFullYear();
                     return `${lang.monthsShort[monthIndex]} ${year}`;
-                
-                case 'quarterly':
-                    const quarter = Math.floor(date.getMonth() / 3) + 1;
-                    return `${lang.quarterPrefix}${quarter} ${date.getFullYear()}`;
                 
                 case 'yearly':
                     return `${date.getFullYear()}`;
@@ -1164,8 +1177,9 @@
 
             const results = currentData.results;
             const dataCount = results.length;
-            const periodInfo = detectedPeriod !== 'unknown' ? ` (${detectedPeriod})` : '';
-            const finalTitle = `${metric.name} - ${institution} (${dataCount} ${getCurrentLang().points})${periodInfo}`;
+            const lang = getCurrentLang();
+            const periodInfo = detectedPeriod !== 'unknown' ? ` (${lang.periodTypes[detectedPeriod] || detectedPeriod})` : '';
+            const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})${periodInfo}`;
 
             createSPCChart(results, metric, metric.name, finalTitle);
         }
@@ -1558,7 +1572,7 @@
                         // Create the chart
                         const results = currentData.results;
                         const dataCount = results.length;
-                        const periodInfo = currentData.detectedPeriod !== 'unknown' ? ` (${currentData.detectedPeriod})` : '';
+                        const periodInfo = currentData.detectedPeriod !== 'unknown' ? ` (${lang.periodTypes[currentData.detectedPeriod] || currentData.detectedPeriod})` : '';
                         const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})${periodInfo}`;
                         
                         const tempChart = await createTempSPCChart(tempCtx, results, metric, metric.name, finalTitle);
@@ -1661,7 +1675,7 @@
                         // Create the chart
                         const results = currentData.results;
                         const dataCount = results.length;
-                        const periodInfo = currentData.detectedPeriod !== 'unknown' ? ` (${currentData.detectedPeriod})` : '';
+                        const periodInfo = currentData.detectedPeriod !== 'unknown' ? ` (${lang.periodTypes[currentData.detectedPeriod] || currentData.detectedPeriod})` : '';
                         const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})${periodInfo}`;
                         
                         const tempChart = await createTempSPCChart(tempCtx, results, metric, metric.name, finalTitle);
