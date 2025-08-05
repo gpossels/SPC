@@ -177,7 +177,7 @@
     <div class="container">
         <div class="header">
             <h1 id="mainTitle">Gráficos de Comportamiento de Procesos</h1>
-            <p id="mainSubtitle">Herramienta web para generar gráficos de control SPC. Carga tus datos y obtén gráficos con detección de señales y límites de control. Sube con facilidad tu información y genera presentaciones en PDF.</p>
+            <p id="mainSubtitle">Herramienta web para generar gráficos de control SPC. Carga tus datos y obtén gráficos con detección de señales y límites de control. Sube con facilidad tu información y genera presentaciones en ODP o documentos en PDF.</p>
             <p id="authorCredit" style="margin-top: 20px; font-size: 0.9em; color: black;">Dr. Gustavo Possel S. - Médico</p>
             <button id="langToggle" class="lang-toggle">English</button>
         </div>
@@ -192,14 +192,14 @@
                 
                 <div class="tool-card">
                     <a href="dashboard.html" class="btn" id="dashboardBtn">Panel de Control</a>
-                    <p id="dashboardDesc">El Panel de Control te permite cargar un archivo tipo Excel para generar un gráfico por cada columna de datos en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos. Debes añadir una columna con las fechas correspondientes a cada punto de datos de la planilla. Puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad que genera la información. Puedes descargar todos los gráficos en formato PDF para presentación.</p>
+                    <p id="dashboardDesc">El Panel de Control te permite cargar un archivo tipo Excel para generar un gráfico por cada columna de datos en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos. Debes añadir una columna con las fechas correspondientes a cada punto de datos de la planilla. Puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad que genera la información. Puedes descargar todos los gráficos en formato OPD (presentación) o PDF.</p>
                     <img src="Dashboard.png" alt="Dashboard preview" class="tool-image" id="dashboardImage">
                 </div>
             </div>
         </div>
 
         <div class="footer">
-            <p id="footerText">Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. Saludos, y espero que te sea útil.</p>
+            <p id="footerText">Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. ¡Espero que te sea útil!</p>
         </div>
     </div>
 
@@ -209,27 +209,27 @@
         const translations = {
             es: {
                 title: 'Gráficos de Comportamiento de Procesos',
-                subtitle: 'Herramienta web para generar gráficos de comportamiento de proceso. Carga tus datos y obtén gráficos con detección de señales y límites estadísticos de control. Sube con facilidad tu información y genera gráficos para presentación en formato PDF.',
+                subtitle: 'Herramienta web para generar gráficos de comportamiento de proceso. Carga tus datos y obtén gráficos con detección de señales y límites estadísticos de control. Sube con facilidad tu información y genera presentaciones en ODP o documentos en PDF.',
                 authorCredit: 'Dr. Gustavo Possel S. - Médico',
                 calculatorDesc: 'La Calculadora te permite ingresar cualquier serie de datos para generar un gráfico de comportamiento de proceso. Puedes copiar y pegar los números desde cualquier tipo de archivo, o desde una página web.',
                 calculatorBtn: 'Calculadora',
                 calculatorAlt: 'Vista previa de la calculadora',
-                dashboardDesc: 'El Panel de Control te permite cargar un archivo tipo Excel para generar un gráfico por cada columna de datos en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos. Debes añadir una columna con las fechas correspondientes a cada punto de datos de la planilla. Puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad que genera la información. Puedes descargar todos los gráficos en formato PDF para presentación.',
+                dashboardDesc: 'El Panel de Control te permite cargar un archivo tipo Excel para generar un gráfico por cada columna de datos en el archivo. Las columnas deben incluir encabezados con los nombres de cada serie de datos. Debes añadir una columna con las fechas correspondientes a cada punto de datos de la planilla. Puedes incluir una columna con el encabezado "Centro", en donde se registre la organización o unidad que genera la información. Puedes descargar todos los gráficos en formato OPD (presentación) o PDF.',
                 dashboardBtn: 'Panel de Control',
                 dashboardAlt: 'Vista previa del panel de control',
                 footerText: 'Si quieres más información sobre la metodología de gráficos de comportamiento de proceso, puedes encontrarme en <a href="https://linkedin.com" target="_blank">LinkedIn</a>. Saludos, y espero que te sea útil.'
             },
             en: {
                 title: 'Process Behavior Charts',
-                subtitle: 'Web tool for proces behavior chart generation. Upload your data and get process behavior charts with signal detection and statistical control limits. Easily upload your information and generate presentation charts in PDF format.',
+                subtitle: 'Web tool for proces behavior chart generation. Upload your data and get process behavior charts with signal detection and statistical control limits. Easily upload your information and generate presentation charts in ODP (slides) or PDF format.',
                 authorCredit: 'Dr. Gustavo Possel S. - MD',
                 calculatorDesc: 'The Calculator allows you to enter any data series to generate a process behavior chart. You can copy and paste numbers from any type of file, or from a web page.',
                 calculatorBtn: 'Calculator',
                 calculatorAlt: 'Calculator preview',
-                dashboardDesc: 'The Dashboard allows you to upload an Excel file to generate one chart per each data columns the file contains. Columns must include headers with the names of each data series. You must add a column with dates corresponding to each data point in the spreadsheet. You can include a column with the header "Center", where the organization or unit from which the information originates is recorded. You can download all charts in PDF format as a presentation.',
+                dashboardDesc: 'The Dashboard allows you to upload an Excel file to generate one chart per each data columns the file contains. Columns must include headers with the names of each data series. You must add a column with dates corresponding to each data point in the spreadsheet. You can include a column with the header "Center", where the organization or unit from which the information originates is recorded. You can download all charts in ODP (slides) or PDF format.',
                 dashboardBtn: 'Dashboard',
                 dashboardAlt: 'Dashboard preview',
-                footerText: 'If you want more information about the process behavior charts methodology, you can find me on <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. Greetings, and I hope this will be useful to you.'
+                footerText: 'If you want more information about the process behavior charts methodology, you can find me on <a href="https://linkedin.com" target="https://www.linkedin.com/in/gpossel/">LinkedIn</a>. I hope you will find this useful!'
             }
         };
 
