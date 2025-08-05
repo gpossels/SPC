@@ -423,7 +423,40 @@
                 points: 'points'
             }
         };
+// Month abbreviations for different languages
+const monthAbbreviations = {
+    es: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+    en: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+};
 
+// Function to get month abbreviations based on current language
+function getMonthAbbreviations() {
+    return isEnglish ? monthAbbreviations.en : monthAbbreviations.es;
+}
+
+// Replace the existing month handling section in processAllMetrics function
+// Find this line in processAllMetrics():
+// const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+// Replace it with:
+const monthNames = getMonthAbbreviations();
+
+// Additionally, update the formatExcelDate function to use language-appropriate formatting
+function formatExcelDate(dateValue) {
+    if (typeof dateValue === 'number' && dateValue > 1000) {
+        const baseDate = new Date(1899, 11, 30);
+        const msPerDay = 24 * 60 * 60 * 1000;
+        const jsDate = new Date(baseDate.getTime() + (dateValue * msPerDay));
+        
+        // Use language-appropriate month abbreviations
+        const monthNames = getMonthAbbreviations();
+        const month = jsDate.getMonth();
+        const year = jsDate.getFullYear();
+        
+        return `${monthNames[month]} ${year}`;
+    }
+    return dateValue.toString();
+}
         function getCurrentLang() {
             return isEnglish ? translations.en : translations.es;
         }
