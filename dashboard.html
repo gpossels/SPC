@@ -9,6 +9,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -208,6 +209,34 @@
             background: #f0f0f0;
         }
 
+        .download-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .download-btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            min-width: 150px;
+        }
+
+        .download-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .download-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .chart-container {
             position: relative;
             height: 600px;
@@ -264,18 +293,27 @@
                 height: 400px;
                 padding: 15px;
             }
+
+            .download-buttons {
+                flex-direction: row;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="mainTitle">Dashboard PBC</h1>
-            <p id="mainSubtitle">Panel de Comportamiento de Procesos</p>
+            <h1 id="mainTitle">Dashboard SPC</h1>
+            <p id="mainSubtitle">Control Estadístico de Procesos</p>
             <p id="authorCredit" style="margin-top: 20px; font-size: 0.9em; color: black;">Dr. Gustavo Possel S. - Médico</p>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 15px;">
                 <button id="backToIndex" class="lang-toggle btn-green">← Inicio</button>
-                <button id="downloadPDF" class="download-btn" style="margin-left: 0; display: none;">📄 Descargar PDF</button>
+                <div id="downloadButtonsContainer" class="download-buttons" style="display: none;">
+                    <button id="downloadPDF" class="download-btn">📄 Descargar PDF</button>
+                    <button id="downloadODP" class="download-btn">📊 Descargar ODP</button>
+                </div>
                 <button id="langToggle" class="lang-toggle">English</button>
             </div>
             <button id="headerBackBtn" class="header-back-btn btn-red" style="display: none;">← Cargar Nuevo Archivo</button>
@@ -290,7 +328,7 @@
                     📁 Seleccionar Archivo
                 </button>
                 <div class="upload-info">
-                    <p>El archivo debe contener columnas para: Centro, fechas (Año, Mes, etc.) y métricas a analizar</p>
+                    <p>El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar</p>
                 </div>
             </div>
 
@@ -329,17 +367,19 @@
         // Language translations
         const translations = {
             es: {
-                title: 'Dashboard PBC',
-                subtitle: 'Panel de Comportamiento de Proceso',
+                title: 'Dashboard SPC',
+                subtitle: 'Control Estadístico de Procesos',
                 authorCredit: 'Dr. Gustavo Possel S. - Médico',
                 uploadTitle: 'Cargar Archivo de Datos',
                 uploadDesc: 'Seleccione un archivo Excel (.xlsx, .xls) o CSV con sus datos de métricas',
                 uploadBtn: '📁 Seleccionar Archivo',
-                uploadInfo: 'El archivo debe contener columnas para: Centro, fechas (Año, Mes, etc.) y métricas a analizar',
+                uploadInfo: 'El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar',
                 backBtn: '← Cargar Nuevo Archivo',
                 backToIndex: '← Inicio',
                 downloadPDF: '📄 Descargar PDF',
+                downloadODP: '📊 Descargar ODP',
                 downloadingPDF: 'Generando PDF...',
+                downloadingODP: 'Generando ODP...',
                 processing: 'Procesando archivo...',
                 errorMissingData: 'Datos faltantes o inválidos en los últimos 24 puntos',
                 errorInsufficientData: 'Insuficientes datos válidos (mínimo 8 puntos)',
@@ -355,17 +395,19 @@
                 points: 'puntos'
             },
             en: {
-                title: 'PBC Dashboard',
-                subtitle: 'Process Behavior Chart',
+                title: 'SPC Dashboard',
+                subtitle: 'Statistical Process Control',
                 authorCredit: 'Dr. Gustavo Possel S. - MD',
                 uploadTitle: 'Load Data File',
                 uploadDesc: 'Select an Excel (.xlsx, .xls) or CSV file with your metrics data',
                 uploadBtn: '📁 Select File',
-                uploadInfo: 'The file must contain columns for: Center, dates (Year, Month, etc.) and metrics to analyze',
+                uploadInfo: 'The file must contain columns for: Center/Institution, dates (Year, Month, etc.) and metrics to analyze',
                 backBtn: '← Load New File',
                 backToIndex: '← Home',
                 downloadPDF: '📄 Download PDF',
+                downloadODP: '📊 Download ODP',
                 downloadingPDF: 'Generating PDF...',
+                downloadingODP: 'Generating ODP...',
                 processing: 'Processing file...',
                 errorMissingData: 'Missing or invalid data in the last 24 points',
                 errorInsufficientData: 'Insufficient valid data (minimum 8 points)',
@@ -409,6 +451,7 @@
             if (chartSection.style.display !== 'none') {
                 document.getElementById('headerBackBtn').textContent = lang.backBtn;
                 document.getElementById('downloadPDF').textContent = lang.downloadPDF;
+                document.getElementById('downloadODP').textContent = lang.downloadODP;
                 
                 // Update current chart if it exists
                 if (spcChart) {
@@ -472,7 +515,7 @@
             return result;
         }
 
-        // PBC Calculation
+        // SPC Calculation
         function calcSPC(data, periods) {
             const results = data.map((dp, i) => ({
                 period: i + 1,
@@ -507,7 +550,7 @@
                 if (i > 0) results[i].mr = Math.abs(data[i] - data[i-1]);
             }
 
-            // Process remaining points with PBC rules
+            // Process remaining points with SPC rules
             for (let i = 8; i < data.length; i++) {
                 const curr = data[i];
                 const prev = data[i-1];
@@ -904,7 +947,7 @@
             document.getElementById('uploadSection').style.display = 'none';
             document.getElementById('chartSection').style.display = 'block';
             document.getElementById('headerBackBtn').style.display = 'block';
-            document.getElementById('downloadPDF').style.display = 'inline-block';
+            document.getElementById('downloadButtonsContainer').style.display = 'flex';
             
             updateMetricSelector();
             updateChart();
@@ -1050,8 +1093,8 @@
                             borderWidth: 2,
                             pointBackgroundColor: dpPointColors,
                             pointBorderColor: dpPointColors,
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
+                            pointRadius: 2,
+                            pointHoverRadius: 4,
                             tension: 0
                         },
                         {
@@ -1352,8 +1395,6 @@
                         
                         pdf.addImage(chartImage, 'PNG', imgX, imgY, imgWidth, imgHeight);
                         
-                        // REMOVED: Author credit section completely removed from PDF
-                        
                         // Destroy temp chart
                         tempChart.destroy();
                     }
@@ -1390,6 +1431,233 @@
             }
         }
 
+        async function generateODPPresentation() {
+            const downloadBtn = document.getElementById('downloadODP');
+            const originalText = downloadBtn.textContent;
+            const lang = getCurrentLang();
+            
+            try {
+                // Disable button and show loading
+                downloadBtn.disabled = true;
+                downloadBtn.textContent = lang.downloadingODP;
+                
+                // Create a temporary canvas container for chart rendering
+                const tempContainer = document.createElement('div');
+                tempContainer.style.position = 'absolute';
+                tempContainer.style.left = '-9999px';
+                tempContainer.style.width = '1200px';
+                tempContainer.style.height = '800px';
+                tempContainer.style.backgroundColor = 'white';
+                tempContainer.innerHTML = `
+                    <div style="padding: 40px; background: white;">
+                        <canvas id="tempChartODP" width="1120" height="720"></canvas>
+                    </div>
+                `;
+                document.body.appendChild(tempContainer);
+                
+                // Initialize JSZip for creating ODP file
+                const zip = new JSZip();
+                
+                // Create ODP structure
+                createODPStructure(zip);
+                
+                // Create content.xml with slides
+                let contentXml = createContentXmlHeader();
+                
+                // Generate chart images and slide content
+                const chartImages = [];
+                for (let i = 0; i < processedResults.length; i++) {
+                    const currentData = processedResults[i];
+                    const metric = currentData.metric;
+                    const institution = currentData.institution;
+                    
+                    if (!currentData.hasError) {
+                        // Create chart for this metric
+                        const tempCanvas = document.getElementById('tempChartODP');
+                        const tempCtx = tempCanvas.getContext('2d');
+                        
+                        // Create the chart
+                        const results = currentData.results;
+                        const dataCount = results.length;
+                        const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})`;
+                        
+                        const tempChart = await createTempSPCChart(tempCtx, results, metric, metric.name, finalTitle);
+                        
+                        // Wait for chart to render
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                        // Convert chart to base64 image
+                        const chartImage = tempCanvas.toDataURL('image/png', 1.0);
+                        const base64Data = chartImage.split(',')[1];
+                        
+                        // Add image to zip
+                        const imageName = `chart${i + 1}.png`;
+                        zip.file(`Pictures/${imageName}`, base64Data, {base64: true});
+                        
+                        // Add slide content
+                        contentXml += createSlideXml(i + 1, finalTitle, imageName);
+                        
+                        // Destroy temp chart
+                        tempChart.destroy();
+                    } else {
+                        // Create error slide
+                        contentXml += createErrorSlideXml(i + 1, `${metric.name} - ${institution}`, currentData.errorMessage);
+                    }
+                }
+                
+                contentXml += createContentXmlFooter();
+                
+                // Add content.xml to zip
+                zip.file('content.xml', contentXml);
+                
+                // Clean up
+                document.body.removeChild(tempContainer);
+                
+                // Generate and download ODP file
+                const blob = await zip.generateAsync({type: 'blob'});
+                
+                // Generate filename
+                const now = new Date();
+                const timestamp = now.toISOString().slice(0, 19).replace(/:/g, '-');
+                const institution = processedResults[0]?.institution || 'SPC';
+                const filename = `SPC_Presentation_${institution}_${timestamp}.odp`;
+                
+                // Download ODP
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = filename;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(link.href);
+                
+            } catch (error) {
+                console.error('Error generating ODP:', error);
+                alert('Error al generar el archivo ODP. Por favor, inténtelo de nuevo.');
+            } finally {
+                // Restore button
+                downloadBtn.disabled = false;
+                downloadBtn.textContent = originalText;
+            }
+        }
+
+        function createODPStructure(zip) {
+            // mimetype
+            zip.file('mimetype', 'application/vnd.oasis.opendocument.presentation');
+            
+            // META-INF/manifest.xml
+            const manifestXml = `<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+    <manifest:file-entry manifest:full-path="/" manifest:version="1.2" manifest:media-type="application/vnd.oasis.opendocument.presentation"/>
+    <manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+    <manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
+    <manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>
+    <manifest:file-entry manifest:full-path="Pictures/" manifest:media-type=""/>
+</manifest:manifest>`;
+            zip.file('META-INF/manifest.xml', manifestXml);
+            
+            // meta.xml
+            const metaXml = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-meta xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:ooo="http://openoffice.org/2004/office" office:version="1.2">
+    <office:meta>
+        <meta:generator>SPC Dashboard</meta:generator>
+        <dc:title>SPC Analysis Report</dc:title>
+        <dc:description>Statistical Process Control Charts</dc:description>
+        <dc:creator>Dr. Gustavo Possel S.</dc:creator>
+        <dc:date>${new Date().toISOString()}</dc:date>
+    </office:meta>
+</office:document-meta>`;
+            zip.file('meta.xml', metaXml);
+            
+            // styles.xml
+            const stylesXml = `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:dom="http://www.w3.org/2001/xml-events" office:version="1.2">
+    <office:styles>
+        <draw:gradient draw:name="Gradient_20_1" draw:display-name="Gradient 1" draw:style="linear" draw:start-color="#729fcf" draw:end-color="#3465a4" draw:start-intensity="100%" draw:end-intensity="100%" draw:angle="0" draw:border="0%"/>
+        <style:style style:name="Standard" style:family="graphic">
+            <style:graphic-properties draw:stroke="none" draw:fill="none" draw:textarea-horizontal-align="center" draw:textarea-vertical-align="middle" draw:color-mode="standard" draw:luminance="0%" draw:contrast="0%" draw:gamma="100%" draw:red="0%" draw:green="0%" draw:blue="0%" fo:clip="rect(0cm, 0cm, 0cm, 0cm)" draw:image-opacity="100%" style:mirror="none"/>
+            <style:paragraph-properties style:text-autospace="ideograph-alpha" style:punctuation-wrap="simple" style:line-break="strict" style:writing-mode="lr-tb" style:font-independent-line-spacing="false">
+                <style:tab-stops/>
+            </style:paragraph-properties>
+            <style:text-properties style:use-window-font-color="true" fo:font-family="&apos;Liberation Sans&apos;" style:font-family-generic="swiss" style:font-pitch="variable" fo:font-size="18pt" fo:language="en" fo:country="US" style:letter-kerning="true" style:font-family-asian="&apos;DejaVu Sans&apos;" style:font-family-generic-asian="system" style:font-pitch-asian="variable" style:font-size-asian="18pt" style:language-asian="zh" style:country-asian="CN" style:font-family-complex="&apos;DejaVu Sans&apos;" style:font-family-generic-complex="system" style:font-pitch-complex="variable" style:font-size-complex="18pt" style:language-complex="hi" style:country-complex="IN"/>
+        </style:style>
+    </office:styles>
+    <office:automatic-styles>
+        <style:page-layout style:name="PM1">
+            <style:page-layout-properties fo:margin-top="2.54cm" fo:margin-bottom="2.54cm" fo:margin-left="1.91cm" fo:margin-right="1.91cm" fo:page-width="29.7cm" fo:page-height="21cm" style:print-orientation="landscape"/>
+        </style:page-layout>
+        <draw:marker draw:name="Arrow"/>
+    </office:automatic-styles>
+    <office:master-styles>
+        <style:master-page style:name="Default" style:page-layout-name="PM1" draw:style-name="dp1"/>
+    </office:master-styles>
+</office:document-styles>`;
+            zip.file('styles.xml', stylesXml);
+        }
+
+        function createContentXmlHeader() {
+            return `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0" xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0" xmlns:presentation="urn:oasis:names:tc:opendocument:xmlns:presentation:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:chart="urn:oasis:names:tc:opendocument:xmlns:chart:1.0" xmlns:dr3d="urn:oasis:names:tc:opendocument:xmlns:dr3d:1.0" xmlns:math="http://www.w3.org/1998/Math/MathML" xmlns:form="urn:oasis:names:tc:opendocument:xmlns:form:1.0" xmlns:script="urn:oasis:names:tc:opendocument:xmlns:script:1.0" xmlns:ooo="http://openoffice.org/2004/office" xmlns:ooow="http://openoffice.org/2004/writer" xmlns:oooc="http://openoffice.org/2004/calc" xmlns:dom="http://www.w3.org/2001/xml-events" office:version="1.2">
+    <office:scripts/>
+    <office:font-face-decls>
+        <style:font-face style:name="Liberation Sans" svg:font-family="&apos;Liberation Sans&apos;" style:font-family-generic="swiss" style:font-pitch="variable"/>
+    </office:font-face-decls>
+    <office:automatic-styles>
+        <style:style style:name="dp1" style:family="drawing-page"/>
+        <style:style style:name="gr1" style:family="graphic">
+            <style:graphic-properties draw:textarea-horizontal-align="center" draw:textarea-vertical-align="middle" draw:auto-grow-height="false" draw:auto-grow-width="false"/>
+        </style:style>
+        <style:style style:name="P1" style:family="paragraph">
+            <style:paragraph-properties fo:text-align="center"/>
+            <style:text-properties fo:font-size="24pt" fo:font-weight="bold"/>
+        </style:style>
+    </office:automatic-styles>
+    <office:body>
+        <office:presentation>`;
+        }
+
+        function createSlideXml(slideNumber, title, imageName) {
+            return `
+            <draw:page draw:name="page${slideNumber}" draw:style-name="dp1" draw:master-page-name="Default">
+                <draw:frame draw:style-name="gr1" draw:layer="layout" svg:width="26cm" svg:height="18cm" svg:x="1.85cm" svg:y="1.5cm">
+                    <draw:image xlink:href="Pictures/${imageName}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/>
+                </draw:frame>
+            </draw:page>`;
+        }
+
+        function createErrorSlideXml(slideNumber, title, errorMessage) {
+            return `
+            <draw:page draw:name="page${slideNumber}" draw:style-name="dp1" draw:master-page-name="Default">
+                <draw:frame draw:style-name="gr1" draw:text-style-name="P1" draw:layer="layout" svg:width="25cm" svg:height="2cm" svg:x="2.35cm" svg:y="1cm">
+                    <draw:text-box>
+                        <text:p text:style-name="P1">${escapeXml(title)}</text:p>
+                    </draw:text-box>
+                </draw:frame>
+                <draw:frame draw:style-name="gr1" draw:layer="layout" svg:width="20cm" svg:height="8cm" svg:x="4.85cm" svg:y="7cm">
+                    <draw:text-box>
+                        <text:p><text:span style:font-size="32pt" style:color="#dc3545" style:font-weight="bold">ERROR</text:span></text:p>
+                        <text:p><text:span style:font-size="16pt" style:color="#6c757d">${escapeXml(errorMessage)}</text:span></text:p>
+                    </draw:text-box>
+                </draw:frame>
+            </draw:page>`;
+        }
+
+        function createContentXmlFooter() {
+            return `
+        </office:presentation>
+    </office:body>
+</office:document-content>`;
+        }
+
+        function escapeXml(text) {
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&apos;');
+        }
+
         function createTempSPCChart(ctx, results, metric, dataLabel, chartTitle) {
             const lang = getCurrentLang();
 
@@ -1418,8 +1686,8 @@
                             borderWidth: 3,
                             pointBackgroundColor: dpPointColors,
                             pointBorderColor: dpPointColors,
-                            pointRadius: 6,
-                            pointHoverRadius: 8,
+                            pointRadius: 2,
+                            pointHoverRadius: 4,
                             tension: 0
                         },
                         {
@@ -1550,7 +1818,7 @@
             document.getElementById('chartSection').style.display = 'none';
             document.getElementById('uploadSection').style.display = 'block';
             document.getElementById('headerBackBtn').style.display = 'none';
-            document.getElementById('downloadPDF').style.display = 'none';
+            document.getElementById('downloadButtonsContainer').style.display = 'none';
             
             if (spcChart) {
                 spcChart.destroy();
@@ -1638,6 +1906,9 @@
 
         // PDF download button event listener
         document.getElementById('downloadPDF').addEventListener('click', generatePDFReport);
+
+        // ODP download button event listener
+        document.getElementById('downloadODP').addEventListener('click', generateODPPresentation);
 
         // Back to index button event listener
         document.getElementById('backToIndex').addEventListener('click', function() {
