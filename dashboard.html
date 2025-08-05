@@ -328,7 +328,7 @@
                     📁 Seleccionar Archivo
                 </button>
                 <div class="upload-info">
-                    <p>El archivo debe contener columnas para: Centro, fechas (Año, Mes, etc.) y métricas a analizar</p>
+                    <p>El archivo debe contener columnas para: Centro, fechas y métricas a analizar</p>
                 </div>
             </div>
 
@@ -363,8 +363,10 @@
         let spcChart = null;
         let processedResults = [];
         let isEnglish = false;
+        let detectedDateColumn = null;
+        let detectedPeriod = 'unknown';
 
-        // Language translations
+        // Enhanced language translations
         const translations = {
             es: {
                 title: 'Panel PBC',
@@ -373,7 +375,7 @@
                 uploadTitle: 'Cargar Archivo de Datos',
                 uploadDesc: 'Seleccione un archivo Excel (.xlsx, .xls) o CSV con sus datos de métricas',
                 uploadBtn: '📁 Seleccionar Archivo',
-                uploadInfo: 'El archivo debe contener columnas para: Centro/Institution, fechas (Año, Mes, etc.) y métricas a analizar',
+                uploadInfo: 'El archivo debe contener columnas para: Centro, fechas y métricas a analizar',
                 backBtn: '← Cargar Nuevo Archivo',
                 backToIndex: '← Inicio',
                 downloadPDF: '📄 Descargar PDF',
@@ -392,7 +394,13 @@
                 upperLimit: 'Límite Superior (UCL)',
                 lowerLimit: 'Límite Inferior (LCL)',
                 signalDetected: '🚨 SEÑAL DETECTADA',
-                points: 'puntos'
+                points: 'puntos',
+                monthsShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                monthsFull: ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'],
+                weekPrefix: 'S',
+                dayPrefix: 'D',
+                yearPrefix: 'A',
+                quarterPrefix: 'T'
             },
             en: {
                 title: 'PBC Dashboard',
@@ -401,7 +409,7 @@
                 uploadTitle: 'Load Data File',
                 uploadDesc: 'Select an Excel (.xlsx, .xls) or CSV file with your metrics data',
                 uploadBtn: '📁 Select File',
-                uploadInfo: 'The file must contain columns for: Center, dates (Year, Month, etc.) and metrics to analyze',
+                uploadInfo: 'The file must contain columns for: Center, dates and metrics to analyze',
                 backBtn: '← Load New File',
                 backToIndex: '← Home',
                 downloadPDF: '📄 Download PDF',
@@ -420,11 +428,221 @@
                 upperLimit: 'Upper Limit (UCL)',
                 lowerLimit: 'Lower Limit (LCL)',
                 signalDetected: '🚨 SIGNAL DETECTED',
-                points: 'points'
+                points: 'points',
+                monthsShort: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                monthsFull: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'],
+                weekPrefix: 'W',
+                dayPrefix: 'D',
+                yearPrefix: 'Y',
+                quarterPrefix: 'Q'
             }
         };
+
         function getCurrentLang() {
             return isEnglish ? translations.en : translations.es;
+        }
+
+        // Enhanced date detection functions
+        function isExcelDate(value) {
+            // Excel dates are typically numbers between 1 (1900-01-01) and ~50000+ (future dates)
+            // We'll be more conservative and check for reasonable date ranges
+            if (typeof value !== 'number') return false;
+            return value >= 25000 && value <= 60000; // Roughly 1968 to 2164
+        }
+
+        function isDateString(value) {
+            if (typeof value !== 'string') return false;
+            
+            // Common date patterns
+            const datePatterns = [
+                /^\d{4}-\d{1,2}-\d{1,2}$/,        // 2024-01-15
+                /^\d{1,2}\/\d{1,2}\/\d{4}$/,      // 15/01/2024 or 1/15/2024
+                /^\d{1,2}-\d{1,2}-\d{4}$/,        // 15-01-2024
+                /^\d{4}\/\d{1,2}\/\d{1,2}$/,      // 2024/01/15
+                /^\w{3}\s+\d{4}$/,                // Jan 2024
+                /^\w{3}-\d{4}$/,                  // Jan-2024
+                /^\d{4}$/,                        // 2024 (year only)
+                /^[A-Z][a-z]{2}\s\d{1,2},?\s\d{4}$/, // Jan 15, 2024
+                /^\d{1,2}\s[A-Z][a-z]+\s\d{4}$/   // 15 January 2024
+            ];
+            
+            return datePatterns.some(pattern => pattern.test(value.toString().trim()));
+        }
+
+        function parseAnyDateFormat(value) {
+            if (value == null || value === '') return null;
+            
+            // Handle Excel serial dates
+            if (isExcelDate(value)) {
+                // Excel epoch starts at 1900-01-01, but has a leap year bug
+                // So we use 1899-12-30 as the base date
+                const excelEpoch = new Date(1899, 11, 30);
+                const msPerDay = 24 * 60 * 60 * 1000;
+                return new Date(excelEpoch.getTime() + (value * msPerDay));
+            }
+            
+            // Handle date strings
+            if (isDateString(value)) {
+                const parsed = new Date(value.toString());
+                if (!isNaN(parsed.getTime())) {
+                    return parsed;
+                }
+                
+                // Try parsing specific formats
+                const str = value.toString().trim();
+                
+                // Handle "Jan 2024" format
+                const monthYearMatch = str.match(/^(\w{3})\s+(\d{4})$/);
+                if (monthYearMatch) {
+                    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                    const monthIndex = monthNames.findIndex(m => m.toLowerCase() === monthYearMatch[1].toLowerCase());
+                    if (monthIndex >= 0) {
+                        return new Date(parseInt(monthYearMatch[2]), monthIndex, 1);
+                    }
+                }
+                
+                // Handle year only
+                const yearMatch = str.match(/^\d{4}$/);
+                if (yearMatch) {
+                    return new Date(parseInt(yearMatch[0]), 0, 1);
+                }
+            }
+            
+            // Try to parse as a general date
+            const parsed = new Date(value);
+            return isNaN(parsed.getTime()) ? null : parsed;
+        }
+
+        function calculateDateScore(columnValues) {
+            if (!columnValues || columnValues.length === 0) return 0;
+            
+            let validDates = 0;
+            let totalValues = columnValues.length;
+            
+            for (const value of columnValues) {
+                if (isExcelDate(value) || isDateString(value)) {
+                    const parsed = parseAnyDateFormat(value);
+                    if (parsed) validDates++;
+                }
+            }
+            
+            return validDates / totalValues;
+        }
+
+        function detectPeriodFromDates(dateValues) {
+            const parsedDates = dateValues
+                .map(parseAnyDateFormat)
+                .filter(d => d !== null)
+                .sort((a, b) => a.getTime() - b.getTime());
+            
+            if (parsedDates.length < 2) return 'unknown';
+            
+            // Calculate intervals between consecutive dates (in days)
+            const intervals = [];
+            for (let i = 1; i < parsedDates.length; i++) {
+                const diffMs = parsedDates[i].getTime() - parsedDates[i-1].getTime();
+                const diffDays = diffMs / (1000 * 60 * 60 * 24);
+                intervals.push(Math.round(diffDays));
+            }
+            
+            // Remove outliers and calculate median interval
+            intervals.sort((a, b) => a - b);
+            const median = intervals[Math.floor(intervals.length / 2)];
+            
+            console.log('Date intervals analysis:', intervals, 'Median:', median);
+            
+            // Determine period based on median interval
+            if (median <= 1) return 'daily';
+            if (median >= 6 && median <= 8) return 'weekly';
+            if (median >= 28 && median <= 35) return 'monthly';
+            if (median >= 85 && median <= 95) return 'quarterly'; // ~90 days
+            if (median >= 360 && median <= 370) return 'yearly';
+            
+            return 'irregular';
+        }
+
+        function detectDateColumns(data) {
+            if (!data || data.length === 0) return [];
+            
+            const headers = Object.keys(data[0]);
+            const dateColumns = [];
+            
+            console.log('=== DETECTING DATE COLUMNS ===');
+            
+            headers.forEach(header => {
+                const columnValues = data.map(row => row[header]).filter(v => v != null && v !== '');
+                
+                if (columnValues.length === 0) return;
+                
+                const dateScore = calculateDateScore(columnValues);
+                console.log(`Column "${header}": Date score = ${dateScore.toFixed(2)}`);
+                
+                if (dateScore >= 0.6) { // 60% of values look like dates
+                    const period = detectPeriodFromDates(columnValues);
+                    console.log(`Column "${header}": Detected period = ${period}`);
+                    
+                    dateColumns.push({
+                        column: header,
+                        dateScore: dateScore,
+                        period: period,
+                        sampleValues: columnValues.slice(0, 3)
+                    });
+                }
+            });
+            
+            // Sort by date score (best first)
+            dateColumns.sort((a, b) => b.dateScore - a.dateScore);
+            
+            console.log('Detected date columns:', dateColumns);
+            return dateColumns;
+        }
+
+        function formatDateByPeriod(date, period, language) {
+            if (!date) return '';
+            
+            const lang = language || getCurrentLang();
+            
+            switch (period) {
+                case 'daily':
+                    const dayOfYear = getDayOfYear(date);
+                    return `${lang.dayPrefix}${dayOfYear} ${date.getFullYear()}`;
+                
+                case 'weekly':
+                    const weekNum = getWeekNumber(date);
+                    return `${lang.weekPrefix}${weekNum} ${date.getFullYear()}`;
+                
+                case 'monthly':
+                    const monthIndex = date.getMonth();
+                    const year = date.getFullYear();
+                    return `${lang.monthsShort[monthIndex]} ${year}`;
+                
+                case 'quarterly':
+                    const quarter = Math.floor(date.getMonth() / 3) + 1;
+                    return `${lang.quarterPrefix}${quarter} ${date.getFullYear()}`;
+                
+                case 'yearly':
+                    return `${date.getFullYear()}`;
+                
+                default:
+                    // For irregular or unknown periods, try to format appropriately
+                    return date.toLocaleDateString('es-ES', { 
+                        month: 'short', 
+                        year: 'numeric' 
+                    });
+            }
+        }
+
+        function getWeekNumber(date) {
+            const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
+            const pastDaysOfYear = (date - firstDayOfYear) / 86400000;
+            return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
+        }
+
+        function getDayOfYear(date) {
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
         }
 
         function updateLanguage() {
@@ -452,8 +670,9 @@
                 document.getElementById('downloadPDF').textContent = lang.downloadPDF;
                 document.getElementById('downloadODP').textContent = lang.downloadODP;
                 
-                // Update current chart if it exists
-                if (spcChart) {
+                // Reformat periods in processed results and update current chart
+                if (processedResults.length > 0 && detectedDateColumn) {
+                    reformatPeriodsInResults();
                     updateChart();
                 }
             }
@@ -463,6 +682,29 @@
             if (loadingSection.style.display !== 'none') {
                 loadingSection.textContent = lang.processing;
             }
+        }
+
+        function reformatPeriodsInResults() {
+            if (!uploadedData || !detectedDateColumn) return;
+            
+            // Get fresh date formatting for current language
+            const rawDateValues = uploadedData.rawData.map(row => row[detectedDateColumn.column]);
+            const freshPeriods = rawDateValues.map(value => {
+                const parsed = parseAnyDateFormat(value);
+                return parsed ? formatDateByPeriod(parsed, detectedPeriod, getCurrentLang()) : `Período ${rawDateValues.indexOf(value) + 1}`;
+            });
+            
+            // Update all processed results with new period formatting
+            processedResults.forEach(result => {
+                if (result.results) {
+                    const last24Periods = freshPeriods.slice(-24);
+                    result.results.forEach((r, index) => {
+                        if (index < last24Periods.length) {
+                            r.date = last24Periods[index];
+                        }
+                    });
+                }
+            });
         }
 
         // Number formatting
@@ -717,7 +959,7 @@
             const headers = Object.keys(data[0]);
             console.log('All headers found:', headers);
 
-            // Find institution column
+            // Find institution column (legacy approach, still useful)
             const institutionColumn = headers.find(h => 
                 h.toLowerCase().includes('centro') || 
                 h.toLowerCase().includes('center') ||
@@ -725,20 +967,16 @@
                 h.toLowerCase().includes('institution')
             );
 
-            // Find date columns
-            const fechaColumn = headers.find(h => h.toLowerCase().includes('fecha') || h.toLowerCase().includes('date'));
-            console.log('Fecha column found:', fechaColumn);
+            // NEW: Content-based date detection
+            const detectedDateColumns = detectDateColumns(data);
+            const primaryDateColumn = detectedDateColumns[0]; // Use the best date column found
 
-            const dateColumns = {
-                year: headers.find(h => h.toLowerCase().includes('año') || h.toLowerCase().includes('year')),
-                month: headers.find(h => h.toLowerCase().includes('mes') || h.toLowerCase().includes('month')),
-                week: headers.find(h => h.toLowerCase().includes('semana') || h.toLowerCase().includes('week')),
-                day: headers.find(h => h.toLowerCase().includes('día') || h.toLowerCase().includes('day'))
-            };
-            console.log('Date columns found:', dateColumns);
-
-            // Find metric columns (exclude institution, date columns, and fecha column)
-            const excludeColumns = [institutionColumn, fechaColumn, ...Object.values(dateColumns)].filter(Boolean);
+            // Find metric columns (exclude institution and detected date columns)
+            const excludeColumns = [institutionColumn];
+            if (primaryDateColumn) {
+                excludeColumns.push(primaryDateColumn.column);
+            }
+            
             const metricColumns = headers.filter(h => !excludeColumns.includes(h));
 
             // Analyze each metric column
@@ -757,8 +995,9 @@
             return {
                 institution: institutionColumn,
                 institutionName: institutionColumn ? data[0][institutionColumn] : 'Sin identificar',
-                dateColumns: dateColumns,
-                fechaColumn: fechaColumn,
+                detectedDateColumns: detectedDateColumns,
+                primaryDateColumn: primaryDateColumn,
+                datePeriod: primaryDateColumn?.period || 'unknown',
                 metrics: metrics,
                 rawData: data
             };
@@ -777,19 +1016,6 @@
             document.getElementById('loadingSection').style.display = show ? 'block' : 'none';
         }
 
-        function formatExcelDate(dateValue) {
-            if (typeof dateValue === 'number' && dateValue > 1000) {
-                const baseDate = new Date(1899, 11, 30);
-                const msPerDay = 24 * 60 * 60 * 1000;
-                const jsDate = new Date(baseDate.getTime() + (dateValue * msPerDay));
-                return jsDate.toLocaleDateString('es-ES', { 
-                    month: 'short', 
-                    year: 'numeric'
-                });
-            }
-            return dateValue.toString();
-        }
-
         function processAllMetrics() {
             showLoading(true);
             
@@ -798,10 +1024,12 @@
                     processedResults = [];
                     
                     console.log('=== PROCESSING ALL METRICS ===');
-                    console.log('uploadedData.fechaColumn:', uploadedData.fechaColumn);
-                    console.log('uploadedData.dateColumns:', uploadedData.dateColumns);
-                    console.log('Sample row 0:', uploadedData.rawData[0]);
-                    console.log('Sample row 1:', uploadedData.rawData[1]);
+                    console.log('uploadedData.primaryDateColumn:', uploadedData.primaryDateColumn);
+                    console.log('uploadedData.datePeriod:', uploadedData.datePeriod);
+                    
+                    // Set global variables for date handling
+                    detectedDateColumn = uploadedData.primaryDateColumn;
+                    detectedPeriod = uploadedData.datePeriod;
                     
                     uploadedData.metrics.filter(m => m.validForSPC).forEach(metric => {
                         console.log('\n--- Processing metric:', metric.name, '---');
@@ -821,81 +1049,33 @@
                                     
                                     let period = '';
                                     
-                                    // Debug each row thoroughly
-                                    if (index < 3) { // Only log first 3 rows to avoid spam
-                                        console.log(`Row ${index}:`);
-                                        console.log('  fechaColumn exists:', !!uploadedData.fechaColumn);
-                                        console.log('  fechaColumn value:', row[uploadedData.fechaColumn]);
-                                        console.log('  year column exists:', !!uploadedData.dateColumns.year);
-                                        console.log('  year value:', uploadedData.dateColumns.year ? row[uploadedData.dateColumns.year] : 'N/A');
-                                        console.log('  month column exists:', !!uploadedData.dateColumns.month);
-                                        console.log('  month value:', uploadedData.dateColumns.month ? row[uploadedData.dateColumns.month] : 'N/A');
-                                    }
-                                    
-                                    if (uploadedData.fechaColumn && row[uploadedData.fechaColumn] !== '' && row[uploadedData.fechaColumn] !== null && row[uploadedData.fechaColumn] !== undefined) {
-                                        period = formatExcelDate(row[uploadedData.fechaColumn]);
-                                        if (index < 3) console.log('  → Using fecha column, result:', period);
-                                    } else if (uploadedData.dateColumns.year && row[uploadedData.dateColumns.year] !== '' && row[uploadedData.dateColumns.year] !== null && row[uploadedData.dateColumns.year] !== undefined) {
-                                        const year = row[uploadedData.dateColumns.year];
-                                        if (uploadedData.dateColumns.month && row[uploadedData.dateColumns.month] !== '' && row[uploadedData.dateColumns.month] !== null && row[uploadedData.dateColumns.month] !== undefined) {
-                                            const monthNames = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-                                            const month = parseInt(row[uploadedData.dateColumns.month]);
-                                            if (month >= 1 && month <= 12) {
-                                                period = `${monthNames[month - 1]} ${year}`;
-                                            } else {
-                                                period = `${year}`;
-                                            }
-                                            if (index < 3) console.log('  → Using year+month, result:', period);
+                                    // Use detected date column if available
+                                    if (detectedDateColumn && row[detectedDateColumn.column] !== '' && 
+                                        row[detectedDateColumn.column] !== null && row[detectedDateColumn.column] !== undefined) {
+                                        const rawDate = row[detectedDateColumn.column];
+                                        const parsedDate = parseAnyDateFormat(rawDate);
+                                        
+                                        if (parsedDate) {
+                                            period = formatDateByPeriod(parsedDate, detectedPeriod, getCurrentLang());
                                         } else {
-                                            period = `${year}`;
-                                            if (index < 3) console.log('  → Using year only, result:', period);
+                                            period = `Período ${numericValues.length}`;
                                         }
                                     } else {
-                                        // Try to find any date-like values in the row
-                                        let foundDate = false;
-                                        for (const [key, value] of Object.entries(row)) {
-                                            if (value && typeof value === 'string') {
-                                                // Check for date patterns like DD/MM/YYYY, YYYY-MM-DD, etc.
-                                                const datePatterns = [
-                                                    /^\d{1,2}\/\d{1,2}\/\d{4}$/,
-                                                    /^\d{4}-\d{1,2}-\d{1,2}$/,
-                                                    /^\d{1,2}-\d{1,2}-\d{4}$/,
-                                                    /^\d{4}\/\d{1,2}\/\d{1,2}$/
-                                                ];
-                                                
-                                                if (datePatterns.some(pattern => pattern.test(value.toString()))) {
-                                                    period = value.toString();
-                                                    foundDate = true;
-                                                    if (index < 3) console.log('  → Found date pattern in column', key, ':', period);
-                                                    break;
-                                                }
-                                            }
-                                            // Check for Excel date numbers
-                                            else if (typeof value === 'number' && value > 1000 && value < 100000) {
-                                                period = formatExcelDate(value);
-                                                foundDate = true;
-                                                if (index < 3) console.log('  → Found Excel date number in column', key, ':', period);
-                                                break;
-                                            }
-                                        }
-                                        
-                                        if (!foundDate) {
-                                            period = `Período ${numericValues.length}`;
-                                            if (index < 3) console.log('  → Fallback to period number, result:', period);
-                                        }
+                                        // Fallback to sequential periods
+                                        period = `Período ${numericValues.length}`;
                                     }
+                                    
                                     periods.push(period);
                                 }
                             }
                         });
                         
-                        console.log('Final periods array (first 5):', periods.slice(0, 5));
+                        console.log('Generated periods (first 5):', periods.slice(0, 5));
+                        console.log('Generated periods (last 5):', periods.slice(-5));
                         
                         // Take only the last 24 data points
                         const last24NumericValues = numericValues.slice(-24);
                         const last24Periods = periods.slice(-24);
-                        
-                        console.log('Last 24 periods:', last24Periods);
                         
                         // Check for issues in the last 24 points
                         const totalRowsToCheck = Math.min(24, uploadedData.rawData.length);
@@ -927,7 +1107,8 @@
                             results: hasError ? null : calcSPC(last24NumericValues, last24Periods),
                             institution: uploadedData.institutionName,
                             hasError: hasError,
-                            errorMessage: errorMessage
+                            errorMessage: errorMessage,
+                            detectedPeriod: detectedPeriod
                         });
                     });
 
@@ -983,7 +1164,8 @@
 
             const results = currentData.results;
             const dataCount = results.length;
-            const finalTitle = `${metric.name} - ${institution} (${dataCount} ${getCurrentLang().points})`;
+            const periodInfo = detectedPeriod !== 'unknown' ? ` (${detectedPeriod})` : '';
+            const finalTitle = `${metric.name} - ${institution} (${dataCount} ${getCurrentLang().points})${periodInfo}`;
 
             createSPCChart(results, metric, metric.name, finalTitle);
         }
@@ -1376,7 +1558,8 @@
                         // Create the chart
                         const results = currentData.results;
                         const dataCount = results.length;
-                        const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})`;
+                        const periodInfo = currentData.detectedPeriod !== 'unknown' ? ` (${currentData.detectedPeriod})` : '';
+                        const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})${periodInfo}`;
                         
                         const tempChart = await createTempSPCChart(tempCtx, results, metric, metric.name, finalTitle);
                         
@@ -1478,7 +1661,8 @@
                         // Create the chart
                         const results = currentData.results;
                         const dataCount = results.length;
-                        const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})`;
+                        const periodInfo = currentData.detectedPeriod !== 'unknown' ? ` (${currentData.detectedPeriod})` : '';
+                        const finalTitle = `${metric.name} - ${institution} (${dataCount} ${lang.points})${periodInfo}`;
                         
                         const tempChart = await createTempSPCChart(tempCtx, results, metric, metric.name, finalTitle);
                         
@@ -1827,6 +2011,8 @@
             uploadedData = null;
             processedResults = [];
             currentChartIndex = 0;
+            detectedDateColumn = null;
+            detectedPeriod = 'unknown';
         }
 
         // Event listeners
@@ -1892,36 +2078,6 @@
         // Initialize language and event listeners
         document.addEventListener('DOMContentLoaded', function() {
             updateLanguage();
-        });
-
-        // Language toggle event listener
-        document.getElementById('langToggle').addEventListener('click', function() {
-            isEnglish = !isEnglish;
-            updateLanguage();
-        });
-
-        // Header back button event listener
-        document.getElementById('headerBackBtn').addEventListener('click', backToMenu);
-
-        // PDF download button event listener
-        document.getElementById('downloadPDF').addEventListener('click', generatePDFReport);
-
-        // ODP download button event listener
-        document.getElementById('downloadODP').addEventListener('click', generateODPPresentation);
-
-        // Back to index button event listener
-        document.getElementById('backToIndex').addEventListener('click', function() {
-            window.location.href = 'index.html';
-        });
-
-        // Navigation event listeners
-        document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
-        document.getElementById('nextChart').addEventListener('click', () => navigateChart('next'));
-        document.getElementById('metricSelector').addEventListener('change', (e) => selectMetricFromDropdown(e.target.value));
-
-         // Initialize language and event listeners
-        document.addEventListener('DOMContentLoaded', function() {
-            updateLanguage();
             
             // Add keyboard navigation
             document.addEventListener('keydown', function(e) {
@@ -1949,6 +2105,31 @@
                 }
             });
         });
+
+        // Language toggle event listener
+        document.getElementById('langToggle').addEventListener('click', function() {
+            isEnglish = !isEnglish;
+            updateLanguage();
+        });
+
+        // Header back button event listener
+        document.getElementById('headerBackBtn').addEventListener('click', backToMenu);
+
+        // PDF download button event listener
+        document.getElementById('downloadPDF').addEventListener('click', generatePDFReport);
+
+        // ODP download button event listener
+        document.getElementById('downloadODP').addEventListener('click', generateODPPresentation);
+
+        // Back to index button event listener
+        document.getElementById('backToIndex').addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+
+        // Navigation event listeners
+        document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
+        document.getElementById('nextChart').addEventListener('click', () => navigateChart('next'));
+        document.getElementById('metricSelector').addEventListener('change', (e) => selectMetricFromDropdown(e.target.value));
     </script>
 </body>
 </html>
