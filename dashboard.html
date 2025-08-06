@@ -171,6 +171,49 @@
             background: #f0f0f0;
         }
 
+        .data-points-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            margin-left: 20px;
+        }
+
+        .data-points-label {
+            color: black;
+            font-size: 0.8em;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .data-points-input {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            border-radius: 4px;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            width: 80px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .data-points-input:hover {
+            background: #f0f0f0;
+        }
+
+        .data-points-input:focus {
+            outline: none;
+            background: #f0f0f0;
+        }
+
+        .data-points-range {
+            color: black;
+            font-size: 0.7em;
+            opacity: 0.7;
+            text-align: center;
+        }
+
         .chart-counter {
             color: black;
             font-size: 0.9em;
@@ -289,6 +332,16 @@
                 text-align: center;
             }
             
+            .chart-navigation {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+            
+            .data-points-container {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
             .chart-container {
                 height: 400px;
                 padding: 15px;
@@ -347,6 +400,11 @@
                         <select id="metricSelector" class="metric-selector">
                             <!-- Will be populated dynamically -->
                         </select>
+                        <div class="data-points-container">
+                            <div class="data-points-label" id="dataPointsLabel">Puntos de datos a mostrar:</div>
+                            <input type="number" id="dataPointsInput" class="data-points-input" min="8" max="200" value="24">
+                            <div class="data-points-range" id="dataPointsRange">(8-200 puntos)</div>
+                        </div>
                     </div>
                 </div>
                 <div class="chart-container">
@@ -365,6 +423,7 @@
         let isEnglish = false;
         let detectedDateColumn = null;
         let detectedPeriod = 'unknown';
+        let selectedDataPoints = 24; // Default data points to display
 
         // Enhanced language translations
         const translations = {
@@ -383,7 +442,9 @@
                 downloadingPDF: 'Generando PDF...',
                 downloadingODP: 'Generando ODP...',
                 processing: 'Procesando archivo...',
-                errorMissingData: 'Datos faltantes o inválidos en los últimos 24 puntos',
+                dataPointsLabel: 'Puntos de datos a mostrar:',
+                dataPointsRange: '(8-200 puntos)',
+                errorMissingData: 'Datos faltantes o inválidos en los últimos puntos seleccionados',
                 errorInsufficientData: 'Insuficientes datos válidos (mínimo 8 puntos)',
                 errorNoValidMetrics: 'No se encontraron métricas válidas para SPC (se necesitan al menos 8 puntos de datos por métrica)',
                 errorFileFormat: 'Formato de archivo no soportado. Use .xlsx, .xls o .csv',
@@ -426,7 +487,9 @@
                 downloadingPDF: 'Generating PDF...',
                 downloadingODP: 'Generating ODP...',
                 processing: 'Processing file...',
-                errorMissingData: 'Missing or invalid data in the last 24 points',
+                dataPointsLabel: 'Data points to display:',
+                dataPointsRange: '(8-200 points)',
+                errorMissingData: 'Missing or invalid data in the last selected points',
                 errorInsufficientData: 'Insufficient valid data (minimum 8 points)',
                 errorNoValidMetrics: 'No valid metrics found for SPC (at least 8 data points required per metric)',
                 errorFileFormat: 'Unsupported file format. Use .xlsx, .xls or .csv',
@@ -695,6 +758,16 @@
             if (loadingSection.style.display !== 'none') {
                 loadingSection.textContent = lang.processing;
             }
+            
+            // Update data points selector labels if visible
+            const dataPointsLabel = document.getElementById('dataPointsLabel');
+            const dataPointsRange = document.getElementById('dataPointsRange');
+            if (dataPointsLabel) {
+                dataPointsLabel.textContent = lang.dataPointsLabel;
+            }
+            if (dataPointsRange) {
+                dataPointsRange.textContent = lang.dataPointsRange;
+            }
         }
 
         function reformatPeriodsInResults() {
@@ -710,10 +783,10 @@
             // Update all processed results with new period formatting
             processedResults.forEach(result => {
                 if (result.results) {
-                    const last24Periods = freshPeriods.slice(-24);
+                    const lastNPeriods = freshPeriods.slice(-selectedDataPoints);
                     result.results.forEach((r, index) => {
-                        if (index < last24Periods.length) {
-                            r.date = last24Periods[index];
+                        if (index < lastNPeriods.length) {
+                            r.date = lastNPeriods[index];
                         }
                     });
                 }
@@ -1086,29 +1159,29 @@
                         console.log('Generated periods (first 5):', periods.slice(0, 5));
                         console.log('Generated periods (last 5):', periods.slice(-5));
                         
-                        // Take only the last 24 data points
-                        const last24NumericValues = numericValues.slice(-24);
-                        const last24Periods = periods.slice(-24);
+                        // Take only the last N data points (based on user selection)
+                        const lastNNumericValues = numericValues.slice(-selectedDataPoints);
+                        const lastNPeriods = periods.slice(-selectedDataPoints);
                         
-                        // Check for issues in the last 24 points
-                        const totalRowsToCheck = Math.min(24, uploadedData.rawData.length);
+                        // Check for issues in the last N points
+                        const totalRowsToCheck = Math.min(selectedDataPoints, uploadedData.rawData.length);
                         const lastRows = uploadedData.rawData.slice(-totalRowsToCheck);
                         
-                        let validPointsInLast24 = 0;
+                        let validPointsInLastN = 0;
                         lastRows.forEach(row => {
                             const value = row[metric.column];
                             if (value !== '' && value !== null && value !== undefined) {
                                 const numValue = parseFloat(value.toString().replace(',', '.'));
                                 if (!isNaN(numValue)) {
-                                    validPointsInLast24++;
+                                    validPointsInLastN++;
                                 }
                             }
                         });
                         
-                        // Check if there are missing/invalid data points in the last 24
-                        if (validPointsInLast24 < totalRowsToCheck || last24NumericValues.length < 8) {
+                        // Check if there are missing/invalid data points in the last N points
+                        if (validPointsInLastN < totalRowsToCheck || lastNNumericValues.length < 8) {
                             hasError = true;
-                            if (last24NumericValues.length < 8) {
+                            if (lastNNumericValues.length < 8) {
                                 errorMessage = getCurrentLang().errorInsufficientData;
                             } else {
                                 errorMessage = getCurrentLang().errorMissingData;
@@ -1117,7 +1190,7 @@
                         
                         processedResults.push({
                             metric: metric,
-                            results: hasError ? null : calcSPC(last24NumericValues, last24Periods),
+                            results: hasError ? null : calcSPC(lastNNumericValues, lastNPeriods),
                             institution: uploadedData.institutionName,
                             hasError: hasError,
                             errorMessage: errorMessage,
@@ -1504,6 +1577,28 @@
             currentChartIndex = parseInt(selectedIndex);
             updateChart();
             updateNavigation();
+        }
+
+        function validateAndUpdateDataPoints() {
+            const input = document.getElementById('dataPointsInput');
+            let value = parseInt(input.value);
+            
+            // Validate range
+            if (isNaN(value) || value < 8) {
+                value = 8;
+                input.value = 8;
+            } else if (value > 200) {
+                value = 200;
+                input.value = 200;
+            }
+            
+            // Update global variable
+            selectedDataPoints = value;
+            
+            // Reprocess data if we have uploaded data
+            if (uploadedData && uploadedData.rawData) {
+                processAllMetrics();
+            }
         }
 
         async function generatePDFReport() {
@@ -2144,6 +2239,10 @@
         document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
         document.getElementById('nextChart').addEventListener('click', () => navigateChart('next'));
         document.getElementById('metricSelector').addEventListener('change', (e) => selectMetricFromDropdown(e.target.value));
+        
+        // Data points input event listener
+        document.getElementById('dataPointsInput').addEventListener('change', validateAndUpdateDataPoints);
+        document.getElementById('dataPointsInput').addEventListener('blur', validateAndUpdateDataPoints);
     </script>
 </body>
 </html>
