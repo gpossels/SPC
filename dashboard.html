@@ -272,48 +272,7 @@
             display: inline-block;
             margin-left: 10px;
         }
-.data-points-control {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-left: 15px;
-}
 
-.data-points-control label {
-    font-size: 0.9em;
-    font-weight: bold;
-    color: black;
-}
-
-.data-points-input {
-    background: white;
-    color: black;
-    border: 2px solid black;
-    border-radius: 4px;
-    padding: 6px 8px;
-    width: 60px;
-    font-size: 0.9em;
-    text-align: center;
-}
-
-.data-points-input:focus {
-    outline: none;
-    background: #f0f0f0;
-}
-
-@media (max-width: 768px) {
-    .chart-navigation {
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .data-points-control {
-        margin-left: 0;
-        order: 3;
-        width: 100%;
-        justify-content: center;
-    }
-}
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
@@ -378,21 +337,18 @@
             <div id="loadingSection" class="loading" style="display: none;">
                 Procesando archivo...
             </div>
-           <div class="chart-header">
-    <div class="chart-navigation">
-        <button id="prevChart" class="nav-btn">←</button>
-        <span id="chartCounter" class="chart-counter">1 / 1</span>
-        <button id="nextChart" class="nav-btn">→</button>
-        <select id="metricSelector" class="metric-selector">
-            <!-- Will be populated dynamically -->
-        </select>
-        <div class="data-points-control">
-            <label for="dataPointsLimit" id="dataPointsLabel">Puntos de datos:</label>
-            <input type="number" id="dataPointsLimit" class="data-points-input" min="8" max="200" value="24">
-            <button id="applyDataPoints" class="nav-btn">✓</button>
-        </div>
-    </div>
-</div>
+
+            <div id="chartSection" class="chart-section">
+                <div class="chart-header">
+                    <div class="chart-navigation">
+                        <button id="prevChart" class="nav-btn">←</button>
+                        <span id="chartCounter" class="chart-counter">1 / 1</span>
+                        <button id="nextChart" class="nav-btn">→</button>
+                        <select id="metricSelector" class="metric-selector">
+                            <!-- Will be populated dynamically -->
+                        </select>
+                    </div>
+                </div>
                 <div class="chart-container">
                     <canvas id="spcChart"></canvas>
                 </div>
@@ -409,8 +365,7 @@
         let isEnglish = false;
         let detectedDateColumn = null;
         let detectedPeriod = 'unknown';
-        let dataPointsLimit = 24;
-        
+
         // Enhanced language translations
         const translations = {
             es: {
@@ -428,12 +383,11 @@
                 downloadingPDF: 'Generando PDF...',
                 downloadingODP: 'Generando ODP...',
                 processing: 'Procesando archivo...',
-                errorMissingData: 'Datos faltantes o inválidos en los últimos {0} puntos',
+                errorMissingData: 'Datos faltantes o inválidos en los últimos 24 puntos',
                 errorInsufficientData: 'Insuficientes datos válidos (mínimo 8 puntos)',
                 errorNoValidMetrics: 'No se encontraron métricas válidas para SPC (se necesitan al menos 8 puntos de datos por métrica)',
                 errorFileFormat: 'Formato de archivo no soportado. Use .xlsx, .xls o .csv',
                 errorProcessing: 'Error al procesar el archivo: ',
-                dataPointsLabel: 'Número de Puntos de Datos:',
                 period: 'Período',
                 value: 'Valor',
                 average: 'Promedio (DPA)',
@@ -472,12 +426,11 @@
                 downloadingPDF: 'Generating PDF...',
                 downloadingODP: 'Generating ODP...',
                 processing: 'Processing file...',
-                errorMissingData: 'Missing or invalid data in the last {0} points',
+                errorMissingData: 'Missing or invalid data in the last 24 points',
                 errorInsufficientData: 'Insufficient valid data (minimum 8 points)',
                 errorNoValidMetrics: 'No valid metrics found for SPC (at least 8 data points required per metric)',
                 errorFileFormat: 'Unsupported file format. Use .xlsx, .xls or .csv',
                 errorProcessing: 'Error processing file: ',
-                dataPointsLabel: 'Númber of Data Points:',
                 period: 'Period',
                 value: 'Value',
                 average: 'Average (DPA)',
@@ -1133,12 +1086,13 @@
                         console.log('Generated periods (first 5):', periods.slice(0, 5));
                         console.log('Generated periods (last 5):', periods.slice(-5));
                         
-                        // Take only the last N data points (based on user selection)
-                        const lastNumericValues = numericValues.slice(-dataPointsLimit);
-                        const lastPeriods = periods.slice(-dataPointsLimit);
-
-                        // Check for issues in the last N points
-                        const totalRowsToCheck = Math.min(dataPointsLimit, uploadedData.rawData.length);
+                        // Take only the last 24 data points
+                        const last24NumericValues = numericValues.slice(-24);
+                        const last24Periods = periods.slice(-24);
+                        
+                        // Check for issues in the last 24 points
+                        const totalRowsToCheck = Math.min(24, uploadedData.rawData.length);
+                        const lastRows = uploadedData.rawData.slice(-totalRowsToCheck);
                         
                         let validPointsInLast24 = 0;
                         lastRows.forEach(row => {
@@ -1151,19 +1105,19 @@
                             }
                         });
                         
-                        // Check if there are missing/invalid data points in the last N
-                        if (validPointsInLast24 < totalRowsToCheck || lastNumericValues.length < 8) {
+                        // Check if there are missing/invalid data points in the last 24
+                        if (validPointsInLast24 < totalRowsToCheck || last24NumericValues.length < 8) {
                             hasError = true;
                             if (last24NumericValues.length < 8) {
                                 errorMessage = getCurrentLang().errorInsufficientData;
                             } else {
-                                errorMessage = getCurrentLang().errorMissingData.replace('{0}', dataPointsLimit);
+                                errorMessage = getCurrentLang().errorMissingData;
                             }
                         }
                         
                         processedResults.push({
                             metric: metric,
-                            results: hasError ? null : calcSPC(lastNumericValues, lastPeriods),
+                            results: hasError ? null : calcSPC(last24NumericValues, last24Periods),
                             institution: uploadedData.institutionName,
                             hasError: hasError,
                             errorMessage: errorMessage,
@@ -2138,11 +2092,6 @@
         // Initialize language and event listeners
         document.addEventListener('DOMContentLoaded', function() {
             updateLanguage();
-            // Update data points label if visible
-            const dataPointsLabel = document.getElementById('dataPointsLabel');
-            if (dataPointsLabel) {
-                dataPointsLabel.textContent = lang.dataPointsLabel;
-                }
             
             // Add keyboard navigation
             document.addEventListener('keydown', function(e) {
@@ -2195,24 +2144,6 @@
         document.getElementById('prevChart').addEventListener('click', () => navigateChart('prev'));
         document.getElementById('nextChart').addEventListener('click', () => navigateChart('next'));
         document.getElementById('metricSelector').addEventListener('change', (e) => selectMetricFromDropdown(e.target.value));
-    
-    // Data points limit control event listeners
-document.getElementById('applyDataPoints').addEventListener('click', function() {
-    const newLimit = parseInt(document.getElementById('dataPointsLimit').value);
-    if (newLimit >= 8 && newLimit <= 200 && newLimit !== dataPointsLimit) {
-        dataPointsLimit = newLimit;
-        if (uploadedData) {
-            processAllMetrics();
-        }
-    }
-});
-
-document.getElementById('dataPointsLimit').addEventListener('keypress', function(e) {
-    if (e.key === 'Enter') {
-        document.getElementById('applyDataPoints').click();
-    }
-});
-    
     </script>
 </body>
 </html>
