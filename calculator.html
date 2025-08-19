@@ -472,36 +472,15 @@
                     <div class="input-row">
                         <div class="input-col">
                             <label id="timeLabel">Unidad:</label>
-                            <div class="radio-group">
-                                <div class="radio-item">
-                                    <input type="radio" id="yearsRadio" name="timeUnit" value="years">
-                                    <label for="yearsRadio" id="yearsLabel">Años</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="semesterRadio" name="timeUnit" value="semesters">
-                                    <label for="semesterRadio" id="semesterLabel">Semestres</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="fourMonthRadio" name="timeUnit" value="fourmonths">
-                                    <label for="fourMonthRadio" id="fourMonthLabel">Cuatrimestres</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="trimesterRadio" name="timeUnit" value="trimesters">
-                                    <label for="trimesterRadio" id="trimesterLabel">Trimestres</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="monthsRadio" name="timeUnit" value="months" checked>
-                                    <label for="monthsRadio" id="monthsLabel">Meses</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="weeksRadio" name="timeUnit" value="weeks">
-                                    <label for="weeksRadio" id="weeksLabel">Semanas</label>
-                                </div>
-                                <div class="radio-item">
-                                    <input type="radio" id="daysRadio" name="timeUnit" value="days">
-                                    <label for="daysRadio" id="daysLabel">Días</label>
-                                </div>
-                            </div>
+                            <select id="timeUnitSelect">
+                                <option value="years" id="yearsOption">Años</option>
+                                <option value="semesters" id="semestersOption">Semestres</option>
+                                <option value="fourmonths" id="fourmonthsOption">Cuatrimestres</option>
+                                <option value="trimesters" id="trimestersOption">Trimestres</option>
+                                <option value="months" id="monthsOption" selected>Meses</option>
+                                <option value="weeks" id="weeksOption">Semanas</option>
+                                <option value="days" id="daysOption">Días</option>
+                            </select>
                         </div>
                         <div class="input-col">
                             <label id="periodLabel">Año, Mes, Semana o Día:</label>
@@ -1111,7 +1090,7 @@
 
         // Update period selector based on time unit
         function updatePeriodSelector() {
-            const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const timeUnit = document.getElementById('timeUnitSelect').value;
             const periodSelect = document.getElementById('periodSelect');
             const periodSelectContainer = periodSelect.parentElement;
             const currentDate = new Date();
@@ -1253,7 +1232,7 @@
             if (!currentResults) return;
             
             // Get original parameters from the UI
-            const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const timeUnit = document.getElementById('timeUnitSelect').value;
             const refPeriod = document.getElementById('periodSelect').value;
             const refYear = parseInt(document.getElementById('yearRef').value);
             const dateType = document.querySelector('input[name="dateType"]:checked').value;
@@ -1299,13 +1278,13 @@
             document.getElementById('downloadTableBtn').textContent = t.downloadTableBtn;
             document.getElementById('toggleTableBtn').textContent = isTableVisible ? t.hideTableBtn : t.showTableBtn;
             
-            document.getElementById('yearsLabel').textContent = t.years;
-            document.getElementById('monthsLabel').textContent = t.months;
-            document.getElementById('weeksLabel').textContent = t.weeks;
-            document.getElementById('daysLabel').textContent = t.days;
-            document.getElementById('semesterLabel').textContent = t.semesters;
-            document.getElementById('fourMonthLabel').textContent = t.fourmonths;
-            document.getElementById('trimesterLabel').textContent = t.trimesters;
+            document.getElementById('yearsOption').textContent = t.years;
+            document.getElementById('monthsOption').textContent = t.months;
+            document.getElementById('weeksOption').textContent = t.weeks;
+            document.getElementById('daysOption').textContent = t.days;
+            document.getElementById('semestersOption').textContent = t.semesters;
+            document.getElementById('fourmonthsOption').textContent = t.fourmonths;
+            document.getElementById('trimestersOption').textContent = t.trimesters;
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             
@@ -1336,7 +1315,7 @@
             const dataLabel = customDataName || '(DP)';
             
             // Get time unit and format period count
-            const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const timeUnit = document.getElementById('timeUnitSelect').value;
             const dataCount = currentResults.length;
             let periodText = '';
             
@@ -1752,7 +1731,7 @@
             document.getElementById('chartDiv').classList.add('hidden');
             
             const dataInput = document.getElementById('dataInput').value.trim();
-            const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+            const timeUnit = document.getElementById('timeUnitSelect').value;
             const refPeriod = document.getElementById('periodSelect').value;
             const refYear = parseInt(document.getElementById('yearRef').value);
             const dateType = document.querySelector('input[name="dateType"]:checked').value;
@@ -1791,13 +1770,11 @@
                 updateLang();
             };
             
-            document.querySelectorAll('input[name="timeUnit"]').forEach(radio => {
-                radio.onchange = updatePeriodSelector;
-            });
+            document.getElementById('timeUnitSelect').addEventListener('change', updatePeriodSelector);
             
             // Add event listener for year changes to update days selector
             document.getElementById('yearRef').addEventListener('change', function() {
-                const timeUnit = document.querySelector('input[name="timeUnit"]:checked').value;
+                const timeUnit = document.getElementById('timeUnitSelect').value;
                 if (timeUnit === 'days') {
                     updatePeriodSelector();
                 }
