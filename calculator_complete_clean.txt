@@ -99,38 +99,9 @@
             font-size: 1.1em;
         }
 
-        .data-input-container {
-            position: relative;
-        }
-
-        .data-counter {
-            position: absolute;
-            top: -25px;
-            right: 0;
-            background: white;
-            color: black;
-            border: 1px solid black;
-            padding: 4px 12px;
-            border-radius: 4px;
-            font-size: 0.9em;
-            font-weight: 600;
-            z-index: 10;
-        }
-
-        .data-counter.insufficient {
-            background: black;
-            color: white;
-        }
-
-        .data-counter.sufficient {
-            background: white;
-            color: black;
-        }
-
         .input-row {
             display: flex;
             gap: 20px;
-            align-items: end;
             flex-wrap: wrap;
         }
 
@@ -139,14 +110,33 @@
             min-width: 200px;
         }
 
+        .data-counter {
+            font-size: 0.9em;
+            margin-top: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .data-counter.insufficient {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .data-counter.sufficient {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #66bb6a;
+        }
+
         input, select, textarea {
             width: 100%;
             padding: 12px;
-            border: 1px solid black;
+            border: 2px solid black;
             border-radius: 4px;
             font-size: 1em;
-            background: white;
-            color: black;
+            font-family: inherit;
         }
 
         input:focus, select:focus, textarea:focus {
@@ -168,38 +158,45 @@
         }
 
         .calculate-btn {
-            background: #28a745;
-            color: white;
-            padding: 15px 40px;
-            border: none;
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 15px 30px;
             border-radius: 4px;
             font-size: 1.2em;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
         }
 
-        .calculate-btn:hover {
-            background: #218838;
+        .calculate-btn:hover:not(:disabled) {
+            background: #f0f0f0;
         }
 
         .calculate-btn:disabled {
-            background: #6c757d;
+            background: #f5f5f5;
+            color: #999;
+            border-color: #ccc;
             cursor: not-allowed;
         }
 
-        .clear-btn {
-            background: #dc3545;
-            color: white;
-            padding: 15px 40px;
-            border: none;
+        .secondary-btn {
+            background: white;
+            color: black;
+            border: 2px solid black;
+            padding: 10px 20px;
             border-radius: 4px;
-            font-size: 1.2em;
+            font-size: 1em;
             cursor: pointer;
             transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
         }
 
-        .clear-btn:hover {
-            background: #c82333;
+        .secondary-btn:hover {
+            background: #f0f0f0;
         }
 
         .results-section {
@@ -216,180 +213,117 @@
             font-size: 1.8em;
         }
 
-        .chart-section {
+        .chart-container {
+            position: relative;
+            height: 600px;
+            margin-bottom: 30px;
             background: white;
-            padding: 30px;
-            border: 2px solid black;
-            border-radius: 15px;
-            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
         }
 
         .chart-controls {
             display: flex;
-            gap: 20px;
-            align-items: end;
+            gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            align-items: center;
         }
 
-        .chart-controls .input-col {
+        .chart-controls input {
             flex: 1;
-            min-width: 250px;
+            min-width: 200px;
         }
 
-        .chart-controls .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .chart-container {
-            position: relative;
-            height: 500px;
-            background: white;
-            border: 1px solid black;
-            border-radius: 10px;
-            padding: 20px;
-        }
-
-        .toggle-btn {
-            background: #fd7e14;
-            color: white;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-btn:hover {
-            background: #e8690b;
-        }
-
-        .download-btn {
+        .chart-controls button {
             background: #6f42c1;
             color: white;
-            padding: 10px 30px;
             border: none;
+            padding: 10px 15px;
             border-radius: 4px;
-            font-size: 1em;
             cursor: pointer;
+            font-size: 0.9em;
             transition: all 0.3s ease;
         }
 
-        .download-btn:hover {
-            background: #5a2d91;
-        }
-
-        .update-btn {
-            background: #007bff;
-            color: white;
-            padding: 10px 30px;
-            border: none;
-            border-radius: 4px;
-            font-size: 1em;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .update-btn:hover {
-            background: #0056b3;
+        .chart-controls button:hover {
+            background: #5a359a;
         }
 
         .table-container {
             overflow-x: auto;
-            border: 1px solid black;
-            border-radius: 10px;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             background: white;
-            min-width: 800px;
         }
 
         th, td {
-            padding: 12px;
+            padding: 10px;
             text-align: center;
-            border-bottom: 1px solid black;
-            border-right: 1px solid black;
-        }
-
-        th:last-child, td:last-child {
-            border-right: none;
+            border-bottom: 1px solid #eee;
         }
 
         th {
             background: #f8f9fa;
-            color: #2c3e50;
             font-weight: 600;
-            border-bottom: 2px solid #dee2e6;
-            border-right: 1px solid #dee2e6;
-        }
-
-        th:last-child {
-            border-right: none;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
         }
 
         tr:hover {
-            background: #f8f8f8;
-        }
-
-        .baseline-row {
-            background: rgba(40, 167, 69, 0.1);
-        }
-
-        .rule-row {
-            background: rgba(255, 193, 7, 0.1);
+            background: #f8f9fa;
         }
 
         .signal-cell {
-            background: rgba(220, 53, 69, 0.1);
+            background-color: #ffebee !important;
+            color: #c62828;
             font-weight: bold;
-            color: #dc3545;
         }
 
-        .alert {
-            padding: 15px;
-            border: 2px solid black;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            background: white;
-            color: black;
+        .baseline-row {
+            background-color: #e3f2fd !important;
         }
 
-        .alert-error {
-            background: white;
-            border-color: black;
-            color: black;
+        .rule-row {
+            background-color: #fff3e0 !important;
         }
 
         .hidden {
             display: none;
         }
 
-        .results-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .alert {
+            padding: 15px;
             margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
         }
 
         .radio-group {
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            align-items: flex-start;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 5px;
         }
 
         .radio-item {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 5px;
         }
 
         .radio-item input[type="radio"] {
@@ -403,41 +337,37 @@
             cursor: pointer;
         }
 
-        .button-group {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
         @media (max-width: 768px) {
+            .input-row {
                 flex-direction: column;
             }
             
             .input-col {
-                min-width: 100%;
+                min-width: unset;
             }
             
-            .header h1 {
-                font-size: 2em;
-            }
-            
-            .main-content {
-                padding: 0;
-            }
-
             .button-row {
                 flex-direction: column;
             }
-
-            .results-header {
+            
+            .chart-controls {
                 flex-direction: column;
-                align-items: stretch;
             }
-
-            .data-counter {
-                position: static;
-                margin-bottom: 8px;
-                display: inline-block;
-                width: auto;
+            
+            .chart-controls input,
+            .chart-controls button {
+                width: 100%;
+                min-width: unset;
+            }
+            
+            .chart-container {
+                height: 400px;
+                padding: 10px;
+            }
+            
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
             }
         }
     </style>
@@ -445,27 +375,23 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1 id="title">Generador PBC</h1>
-            <p id="subtitle">Gráfico de Comportamiento de Procesos</p>
-            <p id="author" class="author">por Dr. Gustavo Possel S.</p>
-            <div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
-                <button class="lang-toggle" id="homeBtn" onclick="window.location.href='index.html'">← Inicio</button>
-                <button class="lang-toggle" id="langBtn">English</button>
-            </div>
+            <h1 id="title">Generador Rápido PBC</h1>
+            <p id="subtitle">Generador de Gráficos de Comportamiento de Proceso</p>
+            <p class="author" id="author">Dr. Gustavo Possel S. - Médico</p>
+            <button id="langBtn" class="lang-toggle">English</button>
         </div>
 
         <div class="main-content">
             <div class="input-section">
                 <div class="input-group">
-                    <label id="dataLabel">Datos (separados por espacio, tab o línea, mínimo 8, idealmente 20 y más):</label>
-                    <div class="data-input-container">
-                        <div class="data-counter" id="dataCounter">0 puntos</div>
-                        <textarea id="dataInput" placeholder="8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
-                    </div>
-                    <div style="margin-top: 10px;">
-                        <button class="calculate-btn" id="calcBtn">Generar Gráfico</button>
-                        <button class="clear-btn" id="clearBtn">Limpiar</button>
-                    </div>
+                    <label id="dataLabel">Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):</label>
+                    <textarea id="dataInput" placeholder="Ingrese sus datos aquí..."></textarea>
+                    <div id="dataCounter" class="data-counter insufficient">0 puntos de datos</div>
+                </div>
+
+                <div class="input-group">
+                    <label id="dataNameLabel">Nombre de los datos (opcional):</label>
+                    <input type="text" id="dataNameInput" placeholder="ej. Defectos por millón, Tiempo de respuesta, etc.">
                 </div>
 
                 <div class="input-group">
@@ -513,83 +439,73 @@
                 <div class="alert alert-error" id="errorMsg"></div>
             </div>
 
-            <div id="chartDiv" class="hidden">
-                <div class="chart-section">
-                    <h2 id="chartTitle">Gráfico SPC</h2>
+            <div class="button-row">
+                <button id="calcBtn" class="calculate-btn" disabled>Generar Gráfico</button>
+                <button id="clearBtn" class="secondary-btn">Limpiar</button>
+            </div>
+
+            <div id="resultsDiv" class="results-section hidden">
+                <h2 id="resultsTitle">Resultados PBC</h2>
+                
+                <div id="chartDiv">
+                    <h3 id="chartTitle">Gráfico PBC</h3>
                     <div class="chart-controls">
-                        <div class="input-col">
-                            <label id="chartTitleLabel">Título del gráfico (opcional):</label>
-                            <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
-                        </div>
-                        <div class="input-col">
-                            <label id="dataNameLabel">Nombre de los datos (opcional):</label>
-                            <input type="text" id="dataNameInput" placeholder="Ej: Defectos por millón, Tiempo de respuesta, etc.">
-                        </div>
-                        <div class="button-group">
-                            <button class="update-btn" id="updateChartBtn">Actualizar Gráfico</button>
-                            <button class="download-btn" id="downloadChartBtn">Descargar Gráfico</button>
-                            <button class="download-btn" id="copyChartBtn">Copiar Gráfico</button>
-                        </div>
+                        <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
+                        <label id="chartTitleLabel">Título del gráfico (opcional):</label>
+                        <button id="updateChartBtn">Actualizar Gráfico</button>
+                        <button id="downloadChartBtn">Descargar Gráfico</button>
+                        <button id="copyChartBtn">Copiar Gráfico</button>
+                        <button id="downloadTableBtn">Descargar Tabla</button>
+                        <button id="toggleTableBtn">Mostrar Tabla</button>
                     </div>
                     <div class="chart-container">
                         <canvas id="spcChart"></canvas>
                     </div>
                 </div>
-            </div>
 
-            <div id="resultsDiv" class="hidden">
-                <div class="results-section">
-                    <div class="results-header">
-                        <h2 id="resultsTitle">Resultados SPC</h2>
-                        <div class="button-group">
-                            <button class="toggle-btn" id="toggleTableBtn">Mostrar Tabla</button>
-                            <button class="download-btn" id="downloadTableBtn">Descargar Tabla</button>
-                        </div>
-                    </div>
-                    <div id="tableContainer" class="table-container">
-                        <table>
-                            <thead>
-                                <tr id="tableHead">
-                                    <th>Período</th>
-                                    <th>Fecha</th>
-                                    <th>DP</th>
-                                    <th>DPA</th>
-                                    <th>MR</th>
-                                    <th>MRA</th>
-                                    <th>LCL</th>
-                                    <th>DLA</th>
-                                    <th>DUA</th>
-                                    <th>UCL</th>
-                                    <th>MRUCL</th>
-                                    <th>Señal</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tableBody">
-                            </tbody>
-                        </table>
-                    </div>
+                <div id="tableContainer" class="table-container hidden">
+                    <table>
+                        <thead id="tableHead">
+                            <tr>
+                                <th>Período</th>
+                                <th>Fecha</th>
+                                <th>DP</th>
+                                <th>DPA</th>
+                                <th>MR</th>
+                                <th>MRA</th>
+                                <th>LCL</th>
+                                <th>DLA</th>
+                                <th>DUA</th>
+                                <th>UCL</th>
+                                <th>MRUCL</th>
+                                <th>Señal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        // Global variables
         let isSpanish = true;
         let spcChart = null;
         let currentResults = null;
         let isTableVisible = false;
-        
+
         // Language translations
         const lang = {
             es: {
-                title: 'Generador PBC',
-                subtitle: 'Generador Rápido de Gráfico de Comportamiento de Procesos',
+                title: 'Generador Rápido PBC',
+                subtitle: 'Generador de Gráficos de Comportamiento de Proceso',
                 author: 'Dr. Gustavo Possel S. - Médico',
-                dataLabel: 'Datos (separados por espacio, tab o línea, mínimo 8, idealmente 20 y más):',
+                dataLabel: 'Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):',
                 dataNameLabel: 'Nombre de los datos (opcional):',
-                dataNamePlaceholder: 'Ej: Defectos por millón, Tiempo de respuesta, etc.',
-                timeLabel: 'Periodo:',
+                dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
+                timeLabel: 'Período:',
                 periodLabel: 'Año, Mes, Semana o Día:',
                 yearRefLabel: 'Año:',
                 typeLabel: 'Fecha seleccionada es:',
@@ -686,51 +602,49 @@
             }
         };
 
-        // Parse input data
+        // Parse data from input
         function parseData(input) {
             let items = input.split(/[\s\t\n]+/).filter(s => s.trim());
             const result = [];
-            
-            for (const item of items) {
+
+            for (let item of items) {
                 let normalized = item.trim();
                 
-                // Detect number format and remove thousands separators
+                // Handle different decimal separators
                 if (normalized.includes(',') && normalized.includes('.')) {
-                    // Both comma and dot present - determine which is decimal separator
+                    // Determine which is decimal separator based on position
                     const lastCommaPos = normalized.lastIndexOf(',');
                     const lastDotPos = normalized.lastIndexOf('.');
                     
                     if (lastDotPos > lastCommaPos) {
-                        // US format: dot is decimal, comma is thousands separator
+                        // Dot is decimal separator, comma is thousands
                         normalized = normalized.replace(/,/g, '');
                     } else {
-                        // European format: comma is decimal, dot is thousands separator
+                        // Comma is decimal separator, dot is thousands
                         normalized = normalized.replace(/\./g, '').replace(',', '.');
                     }
                 } else if (normalized.includes(',')) {
-                    // Only comma present - could be European decimal or US thousands
+                    // Only comma - check if it's decimal separator
                     const commaPos = normalized.indexOf(',');
                     const afterComma = normalized.substring(commaPos + 1);
                     
-                    if (afterComma.length <= 3 && !afterComma.includes(',')) {
-                        // Likely European decimal separator
+                    // If after comma has 1-3 digits, it's likely decimal
+                    if (afterComma.length <= 3 && !/[,.]/.test(afterComma)) {
                         normalized = normalized.replace(',', '.');
                     } else {
-                        // Likely US thousands separator
+                        // Thousands separator
                         normalized = normalized.replace(/,/g, '');
                     }
                 } else if (normalized.includes('.')) {
-                    // Only dot present - could be US decimal or European thousands
+                    // Only dot - check if it's decimal separator
                     const dotPos = normalized.indexOf('.');
                     const afterDot = normalized.substring(dotPos + 1);
                     
-                    if (afterDot.length <= 3 && !afterDot.includes('.')) {
-                        // Likely US decimal separator - keep as is
-                        // normalized = normalized;
-                    } else {
-                        // Likely European thousands separator
+                    // If after dot has more than 3 digits, it's likely thousands separator
+                    if (afterDot.length > 3) {
                         normalized = normalized.replace(/\./g, '');
                     }
+                    // Otherwise, keep as is (decimal separator)
                 }
                 
                 const num = parseFloat(normalized);
@@ -741,7 +655,7 @@
             return result;
         }
 
-        // Update data point counter
+        // Update data counter
         function updateDataCounter() {
             const dataInput = document.getElementById('dataInput').value.trim();
             const counter = document.getElementById('dataCounter');
@@ -806,7 +720,7 @@
                         currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
                         currentPeriod = ((totalWeeks - 1) % 52) + 1;
                         periods.push(`S${currentPeriod} ${currentYear}`);
-                    } else {
+                    } else if (unit === 'months') {
                         const totalMonths = parseInt(refPeriod) + i;
                         currentYear = refYear + Math.floor((totalMonths - 1) / 12);
                         currentPeriod = ((totalMonths - 1) % 12) + 1;
@@ -858,7 +772,7 @@
                         }
                         currentPeriod = totalWeeks;
                         periods.push(`S${currentPeriod} ${currentYear}`);
-                    } else {
+                    } else if (unit === 'months') {
                         let totalMonths = parseInt(refPeriod) - offset;
                         currentYear = refYear;
                         while (totalMonths <= 0) {
@@ -869,7 +783,6 @@
                         const monthNames = isSpanish ? 
                             ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
                             ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                        periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
                         periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
                     } else if (unit === 'semesters') {
                         let totalSemesters = parseInt(refPeriod) - offset;
@@ -1144,7 +1057,7 @@
                     } else {
                         periodSelect.value = 52; // If different year, default to last week
                     }
-                } else {
+                } else if (timeUnit === 'months') {
                     const monthNames = isSpanish ? 
                         ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] :
                         ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -1185,7 +1098,7 @@
                     }
                 } else if (timeUnit === 'fourmonths') {
                     const fourMonthNames = isSpanish ? 
-                        ['1er Cuatrimestre', '2o Cuatrimestre', '3er Cuatrimestre'] : 
+                        ['1er Cuatrimestre', '2o Cuatrimestre', '3er Cuatrimestre'] :
                         ['1st Third', '2nd Third', '3rd Third'];
                     
                     let options = '';
@@ -1205,7 +1118,7 @@
                     }
                 } else if (timeUnit === 'trimesters') {
                     const trimesterNames = isSpanish ? 
-                        ['1er Trimestre', '2o Trimestre', '3er Trimestre', '4o Trimestre'] : 
+                        ['1er Trimestre', '2o Trimestre', '3er Trimestre', '4o Trimestre'] :
                         ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
                     
                     let options = '';
@@ -1325,7 +1238,7 @@
                 periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
             } else if (timeUnit === 'weeks') {
                 periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
-            } else {
+            } else if (timeUnit === 'days') {
                 periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
             } else if (timeUnit === 'semesters') {
                 periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
@@ -1566,6 +1479,7 @@
                     'Could not copy chart. Right-click on the chart and select "Copy image".');
             }
         }
+
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;

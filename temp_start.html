@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBC Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            background: white;
+            color: black;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: black;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: black;
+        }
+
+        .header .author {
+            position: static;
+            font-size: 0.75em !important;
+            color: black;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .lang-toggle {
+            position: static;
+            background: white;
+            border: 2px solid black;
+            color: black;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .lang-toggle:hover {
+            background: #f0f0f0;
+        }
+
+        .main-content {
+            padding: 0;
+        }
+
+        .input-section {
+            background: white;
+            padding: 30px;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: black;
+            font-size: 1.1em;
+        }
+
+        .data-input-container {
+            position: relative;
+        }
+
+        .data-counter {
+            position: absolute;
+            top: -25px;
+            right: 0;
+            background: white;
+            color: black;
+            border: 1px solid black;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: 600;
+            z-index: 10;
+        }
+
+        .data-counter.insufficient {
+            background: black;
+            color: white;
+        }
+
+        .data-counter.sufficient {
+            background: white;
+            color: black;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            flex-wrap: wrap;
+        }
+
+        .input-col {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid black;
+            border-radius: 4px;
+            font-size: 1em;
+            background: white;
+            color: black;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border: 2px solid black;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .calculate-btn {
+            background: #28a745;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            background: #218838;
+        }
+
+        .calculate-btn:disabled {
+            background: #6c757d;
+            cursor: not-allowed;
+        }
+
+        .clear-btn {
+            background: #dc3545;
+            color: white;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .clear-btn:hover {
+            background: #c82333;
+        }
+
+        .results-section {
+            background: white;
+            padding: 30px;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .results-section h2 {
+            color: black;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .chart-section {
+            background: white;
+            padding: 30px;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 20px;
+            align-items: end;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .chart-controls .input-col {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .chart-controls .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 500px;
+            background: white;
+            border: 1px solid black;
+            border-radius: 10px;
+            padding: 20px;
+        }
+
+        .toggle-btn {
+            background: #fd7e14;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: #e8690b;
+        }
+
+        .download-btn {
+            background: #6f42c1;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #5a2d91;
+        }
+
+        .update-btn {
+            background: #007bff;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .update-btn:hover {
+            background: #0056b3;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            border: 1px solid black;
+            border-radius: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            min-width: 800px;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid black;
+            border-right: 1px solid black;
+        }
+
+        th:last-child, td:last-child {
+            border-right: none;
+        }
+
+        th {
+            background: #f8f9fa;
+            color: #2c3e50;
+            font-weight: 600;
+            border-bottom: 2px solid #dee2e6;
+            border-right: 1px solid #dee2e6;
+        }
+
+        th:last-child {
+            border-right: none;
+        }
+
+        tr:hover {
+            background: #f8f8f8;
+        }
+
+        .baseline-row {
+            background: rgba(40, 167, 69, 0.1);
+        }
+
+        .rule-row {
+            background: rgba(255, 193, 7, 0.1);
+        }
+
+        .signal-cell {
+            background: rgba(220, 53, 69, 0.1);
+            font-weight: bold;
+            color: #dc3545;
+        }
+
+        .alert {
+            padding: 15px;
+            border: 2px solid black;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            background: white;
+            color: black;
+        }
+
+        .alert-error {
+            background: white;
+            border-color: black;
+            color: black;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .radio-item input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .radio-item label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        @media (max-width: 768px) {
+                flex-direction: column;
+            }
+            
+            .input-col {
+                min-width: 100%;
+            }
+            
+            .header h1 {
+                font-size: 2em;
+            }
+            
+            .main-content {
+                padding: 0;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            .results-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .data-counter {
+                position: static;
+                margin-bottom: 8px;
+                display: inline-block;
+                width: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="title">Generador PBC</h1>
+            <p id="subtitle">Gráfico de Comportamiento de Procesos</p>
+            <p id="author" class="author">por Dr. Gustavo Possel S.</p>
+            <div style="display: flex; gap: 10px; justify-content: space-between; flex-wrap: wrap;">
+                <button class="lang-toggle" id="homeBtn" onclick="window.location.href='index.html'">← Inicio</button>
+                <button class="lang-toggle" id="langBtn">English</button>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label id="dataLabel">Datos (separados por espacio, tab o línea, mínimo 8, idealmente 20 y más):</label>
+                    <div class="data-input-container">
+                        <div class="data-counter" id="dataCounter">0 puntos</div>
+                        <textarea id="dataInput" placeholder="8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12">8,13 12,26 8,72 12,20 9,06 12,04 9,54 18,14 17,20 23,65 39,24 33,27 15,63 19,25 9,12</textarea>
+                    </div>
+                    <div style="margin-top: 10px;">
+                        <button class="calculate-btn" id="calcBtn">Generar Gráfico</button>
+                        <button class="clear-btn" id="clearBtn">Limpiar</button>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-row">
+                        <div class="input-col">
+                            <label id="timeLabel">Unidad:</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="yearsRadio" name="timeUnit" value="years">
+                                    <label for="yearsRadio" id="yearsLabel">Años</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="monthsRadio" name="timeUnit" value="months" checked>
+                                    <label for="monthsRadio" id="monthsLabel">Meses</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="weeksRadio" name="timeUnit" value="weeks">
+                                    <label for="weeksRadio" id="weeksLabel">Semanas</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="daysRadio" name="timeUnit" value="days">
+                                    <label for="daysRadio" id="daysLabel">Días</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="semesterRadio" name="timeUnit" value="semesters">
+                                    <label for="semesterRadio" id="semesterLabel">Semestres</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="fourMonthRadio" name="timeUnit" value="fourmonths">
+                                    <label for="fourMonthRadio" id="fourMonthLabel">Cuatrimestres</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="trimesterRadio" name="timeUnit" value="trimesters">
+                                    <label for="trimesterRadio" id="trimesterLabel">Trimestres</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-col">
+                            <label id="periodLabel">Año, Mes, Semana o Día:</label>
+                            <select id="periodSelect">
+                                <!-- Will be populated based on time unit -->
+                            </select>
+                        </div>
+                        <div class="input-col">
+                            <label id="yearRefLabel">Año:</label>
+                            <input type="number" id="yearRef" min="1900" max="2100" value="2023">
+                        </div>
+                        <div class="input-col">
+                            <label id="typeLabel">Fecha seleccionada es:</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="startRadio" name="dateType" value="start">
+                                    <label for="startRadio" id="startLabel">Primera de la serie</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="endRadio" name="dateType" value="end" checked>
+                                    <label for="endRadio" id="endLabel">Última de la serie</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorDiv" class="hidden">
+                <div class="alert alert-error" id="errorMsg"></div>
+            </div>
+
+            <div id="chartDiv" class="hidden">
+                <div class="chart-section">
+                    <h2 id="chartTitle">Gráfico SPC</h2>
+                    <div class="chart-controls">
+                        <div class="input-col">
+                            <label id="chartTitleLabel">Título del gráfico (opcional):</label>
+                            <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
+                        </div>
+                        <div class="input-col">
+                            <label id="dataNameLabel">Nombre de los datos (opcional):</label>
+                            <input type="text" id="dataNameInput" placeholder="Ej: Defectos por millón, Tiempo de respuesta, etc.">
+                        </div>
+                        <div class="button-group">
+                            <button class="update-btn" id="updateChartBtn">Actualizar Gráfico</button>
+                            <button class="download-btn" id="downloadChartBtn">Descargar Gráfico</button>
+                            <button class="download-btn" id="copyChartBtn">Copiar Gráfico</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="spcChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div id="resultsDiv" class="hidden">
+                <div class="results-section">
+                    <div class="results-header">
+                        <h2 id="resultsTitle">Resultados SPC</h2>
+                        <div class="button-group">
+                            <button class="toggle-btn" id="toggleTableBtn">Mostrar Tabla</button>
+                            <button class="download-btn" id="downloadTableBtn">Descargar Tabla</button>
+                        </div>
+                    </div>
+                    <div id="tableContainer" class="table-container">
+                        <table>
+                            <thead>
+                                <tr id="tableHead">
+                                    <th>Período</th>
+                                    <th>Fecha</th>
+                                    <th>DP</th>
+                                    <th>DPA</th>
+                                    <th>MR</th>
+                                    <th>MRA</th>
+                                    <th>LCL</th>
+                                    <th>DLA</th>
+                                    <th>DUA</th>
+                                    <th>UCL</th>
+                                    <th>MRUCL</th>
+                                    <th>Señal</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let isSpanish = true;
+        let spcChart = null;
+        let currentResults = null;
+        let isTableVisible = false;
+        
+        // Language translations
+        const lang = {
+            es: {
+                title: 'Generador PBC',
+                subtitle: 'Generador Rápido de Gráfico de Comportamiento de Procesos',
+                author: 'Dr. Gustavo Possel S. - Médico',
+                dataLabel: 'Datos (separados por espacio, tab o línea, mínimo 8, idealmente 20 y más):',
+                dataNameLabel: 'Nombre de los datos (opcional):',
+                dataNamePlaceholder: 'Ej: Defectos por millón, Tiempo de respuesta, etc.',
+                timeLabel: 'Periodo:',
+                periodLabel: 'Año, Mes, Semana o Día:',
+                yearRefLabel: 'Año:',
+                typeLabel: 'Fecha seleccionada es:',
+                calcBtn: 'Generar Gráfico',
+                clearBtn: 'Limpiar',
+                resultsTitle: 'Resultados PBC',
+                chartTitle: 'Gráfico PBC',
+                chartTitleLabel: 'Título del gráfico (opcional):',
+                chartTitlePlaceholder: 'Ingrese el título del gráfico',
+                updateChartBtn: 'Actualizar Gráfico',
+                downloadChartBtn: 'Descargar Gráfico',
+                copyChartBtn: 'Copiar Gráfico',
+                downloadTableBtn: 'Descargar Tabla',
+                hideTableBtn: 'Ocultar Tabla',
+                showTableBtn: 'Mostrar Tabla',
+                years: 'Años',
+                weeks: 'Semanas',
+                months: 'Meses',
+                days: 'Días',
