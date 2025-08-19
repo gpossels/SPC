@@ -630,9 +630,6 @@
                 weeks: 'Semanas',
                 months: 'Meses',
                 days: 'Días',
-                semesters: 'Semestres',
-                fourmonths: 'Cuatrimestres',
-                trimesters: 'Trimestres',
                 start: 'Primera de la serie',
                 end: 'Última de la serie',
                 headers: ['Período', 'Fecha', 'DP', 'DPA', 'MR', 'MRA', 'LCL', 'DLA', 'DUA', 'UCL', 'MRUCL', 'Señal'],
@@ -681,9 +678,6 @@
                 weeks: 'Weeks',
                 months: 'Months',
                 days: 'Days',
-                semesters: 'Semesters',
-                fourmonths: 'Four-Month Periods',
-                trimesters: 'Quarters',
                 start: 'First in series',
                 end: 'Last in series',
                 headers: ['Period', 'Date', 'DP', 'DPA', 'MR', 'MRA', 'LCL', 'DLA', 'DUA', 'UCL', 'MRUCL', 'Signal'],
@@ -835,24 +829,6 @@
                             ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
                             ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                         periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
-                    } else if (unit === 'semesters') {
-                        const totalSemesters = parseInt(refPeriod) + i;
-                        currentYear = refYear + Math.floor((totalSemesters - 1) / 2);
-                        currentPeriod = ((totalSemesters - 1) % 2) + 1;
-                        const semesterNames = isSpanish ? ['I', 'II'] : ['I', 'II'];
-                        periods.push(`${semesterNames[currentPeriod - 1]} ${currentYear}`);
-                    } else if (unit === 'fourmonths') {
-                        const totalFourMonths = parseInt(refPeriod) + i;
-                        currentYear = refYear + Math.floor((totalFourMonths - 1) / 3);
-                        currentPeriod = ((totalFourMonths - 1) % 3) + 1;
-                        const fourMonthNames = isSpanish ? ['I', 'II', 'III'] : ['I', 'II', 'III'];
-                        periods.push(`${fourMonthNames[currentPeriod - 1]} ${currentYear}`);
-                    } else if (unit === 'trimesters') {
-                        const totalTrimesters = parseInt(refPeriod) + i;
-                        currentYear = refYear + Math.floor((totalTrimesters - 1) / 4);
-                        currentPeriod = ((totalTrimesters - 1) % 4) + 1;
-                        const trimesterNames = isSpanish ? ['T1', 'T2', 'T3', 'T4'] : ['Q1', 'Q2', 'Q3', 'Q4'];
-                        periods.push(`${trimesterNames[currentPeriod - 1]} ${currentYear}`);
                     }
                 } else {
                     const offset = count - 1 - i;
@@ -891,37 +867,6 @@
                             ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
                             ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                         periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
-                        periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
-                    } else if (unit === 'semesters') {
-                        let totalSemesters = parseInt(refPeriod) - offset;
-                        currentYear = refYear;
-                        while (totalSemesters <= 0) {
-                            totalSemesters += 2;
-                            currentYear--;
-                        }
-                        currentPeriod = totalSemesters;
-                        const semesterNames = isSpanish ? ['I', 'II'] : ['I', 'II'];
-                        periods.push(`${semesterNames[currentPeriod - 1]} ${currentYear}`);
-                    } else if (unit === 'fourmonths') {
-                        let totalFourMonths = parseInt(refPeriod) - offset;
-                        currentYear = refYear;
-                        while (totalFourMonths <= 0) {
-                            totalFourMonths += 3;
-                            currentYear--;
-                        }
-                        currentPeriod = totalFourMonths;
-                        const fourMonthNames = isSpanish ? ['I', 'II', 'III'] : ['I', 'II', 'III'];
-                        periods.push(`${fourMonthNames[currentPeriod - 1]} ${currentYear}`);
-                    } else if (unit === 'trimesters') {
-                        let totalTrimesters = parseInt(refPeriod) - offset;
-                        currentYear = refYear;
-                        while (totalTrimesters <= 0) {
-                            totalTrimesters += 4;
-                            currentYear--;
-                        }
-                        currentPeriod = totalTrimesters;
-                        const trimesterNames = isSpanish ? ['T1', 'T2', 'T3', 'T4'] : ['Q1', 'Q2', 'Q3', 'Q4'];
-                        periods.push(`${trimesterNames[currentPeriod - 1]} ${currentYear}`);
                     }
                 }
             }
@@ -1184,66 +1129,6 @@
                     } else {
                         periodSelect.value = 12; // If different year, default to December
                     }
-                } else if (timeUnit === 'semesters') {
-                    const semesterNames = isSpanish ? 
-                        ['1er Semestre', '2o Semestre'] : 
-                        ['1st Semester', '2nd Semester'];
-                    
-                    let options = '';
-                    semesterNames.forEach((semester, index) => {
-                        options += `<option value="${index + 1}">${semester}</option>`;
-                    });
-                    periodSelect.innerHTML = options;
-                    
-                    // Set to previous semester by default
-                    if (currentYear === currentDate.getFullYear()) {
-                        const currentMonth = currentDate.getMonth() + 1;
-                        const currentSemester = currentMonth <= 6 ? 1 : 2;
-                        const previousSemester = currentSemester === 1 ? 2 : 1;
-                        periodSelect.value = previousSemester;
-                    } else {
-                        periodSelect.value = 2; // If different year, default to second semester
-                    }
-                } else if (timeUnit === 'fourmonths') {
-                    const fourMonthNames = isSpanish ? 
-                        ['1er Cuatrimestre', '2o Cuatrimestre', '3er Cuatrimestre'] : 
-                        ['1st Third', '2nd Third', '3rd Third'];
-                    
-                    let options = '';
-                    fourMonthNames.forEach((fourMonth, index) => {
-                        options += `<option value="${index + 1}">${fourMonth}</option>`;
-                    });
-                    periodSelect.innerHTML = options;
-                    
-                    // Set to previous four-month period by default
-                    if (currentYear === currentDate.getFullYear()) {
-                        const currentMonth = currentDate.getMonth() + 1;
-                        const currentFourMonth = currentMonth <= 4 ? 1 : (currentMonth <= 8 ? 2 : 3);
-                        const previousFourMonth = currentFourMonth === 1 ? 3 : currentFourMonth - 1;
-                        periodSelect.value = previousFourMonth;
-                    } else {
-                        periodSelect.value = 3; // If different year, default to third four-month period
-                    }
-                } else if (timeUnit === 'trimesters') {
-                    const trimesterNames = isSpanish ? 
-                        ['1er Trimestre', '2o Trimestre', '3er Trimestre', '4o Trimestre'] : 
-                        ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
-                    
-                    let options = '';
-                    trimesterNames.forEach((trimester, index) => {
-                        options += `<option value="${index + 1}">${trimester}</option>`;
-                    });
-                    periodSelect.innerHTML = options;
-                    
-                    // Set to previous quarter by default
-                    if (currentYear === currentDate.getFullYear()) {
-                        const currentMonth = currentDate.getMonth() + 1;
-                        const currentQuarter = Math.ceil(currentMonth / 3);
-                        const previousQuarter = currentQuarter === 1 ? 4 : currentQuarter - 1;
-                        periodSelect.value = previousQuarter;
-                    } else {
-                        periodSelect.value = 4; // If different year, default to fourth quarter
-                    }
                 }
             }
         }
@@ -1303,9 +1188,6 @@
             document.getElementById('monthsLabel').textContent = t.months;
             document.getElementById('weeksLabel').textContent = t.weeks;
             document.getElementById('daysLabel').textContent = t.days;
-            document.getElementById('semesterLabel').textContent = t.semesters;
-            document.getElementById('fourMonthLabel').textContent = t.fourmonths;
-            document.getElementById('trimesterLabel').textContent = t.trimesters;
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             
@@ -1348,12 +1230,6 @@
                 periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
             } else {
                 periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
-            } else if (timeUnit === 'semesters') {
-                periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
-            } else if (timeUnit === 'fourmonths') {
-                periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
-            } else if (timeUnit === 'trimesters') {
-                periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
             }
             
             // Prepare data
