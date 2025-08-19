@@ -822,7 +822,7 @@
                 dataNameLabel: 'Data name (optional):',
                 dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
                 timeLabel: 'Period:',
-                periodLabel: 'Year, Trimester, Month, Week, or Day:',
+                periodLabel: 'Year, Quarter, Month, Week, or Day:',
                 yearRefLabel: 'Year:',
                 typeLabel: 'Selected date is:',
                 calcBtn: 'Generate Chart',
@@ -838,7 +838,7 @@
                 hideTableBtn: 'Hide Table',
                 showTableBtn: 'Show Table',
                 years: 'Years',
-                trimesters: 'Trimesters',
+                trimesters: 'Quarters',
                 weeks: 'Weeks',
                 months: 'Months',
                 days: 'Days',
@@ -972,7 +972,9 @@
                         const totalTrimesters = parseInt(refPeriod) + i;
                         currentYear = refYear + Math.floor((totalTrimesters - 1) / 4);
                         currentPeriod = ((totalTrimesters - 1) % 4) + 1;
-                        periods.push(`T${currentPeriod}-${currentYear}`);
+                        const trimesterPrefix = state.isSpanish ? 'T' : `${currentPeriod}Q`;
+                        const trimesterFormat = state.isSpanish ? `T${currentPeriod}-${currentYear}` : `${currentPeriod}Q-${currentYear}`;
+                        periods.push(trimesterFormat);
                     } else if (unit === 'days') {
                         const totalDays = parseInt(refPeriod) + i;
                         const daysInYear = utils.isLeapYear(refYear) ? 366 : 365;
@@ -1007,7 +1009,8 @@
                             currentYear--;
                         }
                         currentPeriod = totalTrimesters;
-                        periods.push(`T${currentPeriod}-${currentYear}`);
+                        const trimesterFormat = state.isSpanish ? `T${currentPeriod}-${currentYear}` : `${currentPeriod}Q-${currentYear}`;
+                        periods.push(trimesterFormat);
                     } else if (unit === 'days') {
                         let totalDays = parseInt(refPeriod) - offset;
                         currentYear = refYear;
@@ -1240,7 +1243,7 @@
                     let options = '';
                     const trimesterNames = state.isSpanish ? 
                         ['Trimestre 1', 'Trimestre 2', 'Trimestre 3', 'Trimestre 4'] :
-                        ['Trimester 1', 'Trimester 2', 'Trimester 3', 'Trimester 4'];
+                        ['Quarter 1', 'Quarter 2', 'Quarter 3', 'Quarter 4'];
                     
                     for (let i = 1; i <= 4; i++) {
                         options += `<option value="${i}">${trimesterNames[i-1]}</option>`;
@@ -1413,7 +1416,7 @@
             
             const periodLabels = {
                 years: state.isSpanish ? 'años' : 'years',
-                trimesters: state.isSpanish ? 'trimestres' : 'trimesters',
+                trimesters: state.isSpanish ? 'trimestres' : 'quarters',
                 months: state.isSpanish ? 'meses' : 'months',
                 weeks: state.isSpanish ? 'semanas' : 'weeks',
                 days: state.isSpanish ? 'días' : 'days'
