@@ -1202,7 +1202,6 @@
             document.getElementById('copyChartBtn').textContent = t.copyChartBtn;
             document.getElementById('downloadTableBtn').textContent = t.downloadTableBtn;
             document.getElementById('toggleTableBtn').textContent = isTableVisible ? t.hideTableBtn : t.showTableBtn;
-
             document.getElementById('yearsOption').textContent = t.years;
             document.getElementById('monthsOption').textContent = t.months;
             document.getElementById('weeksOption').textContent = t.weeks;
@@ -1226,6 +1225,9 @@
 
             // Update existing results with new language
             updateExistingResults();
+
+            // Update toggle labels button text
+            document.getElementById('toggleLabelsBtn').textContent = showLabels ? t.hideLabelsBtn : t.showLabelsBtn;
         }
 
         // Create or update chart
