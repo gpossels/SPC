@@ -459,6 +459,7 @@
                         <div>
                             <button id="updateChartBtn">Actualizar Gráfico</button>
                             <button id="toggleLabelsBtn">Hide Labels</button>
+                            <button id="toggleDecimalsBtn">Hide Decimals</button>
                             <button id="downloadChartBtn">Descargar Gráfico</button>
                             <button id="copyChartBtn">Copiar Gráfico</button>
                             <button id="downloadTableBtn">Descargar Tabla</button>
@@ -504,7 +505,8 @@
         let currentResults = null;
         let isTableVisible = false;
         let showLabels = true;
-
+        let showDecimals = true;
+        
         // Language translations
         const lang = {
             es: {
@@ -527,6 +529,8 @@
                 updateChartBtn: 'Actualizar Gráfico',
                 hideLabelsBtn: 'Ocultar Etiquetas',
                 showLabelsBtn: 'Mostrar Etiquetas',
+                hideDecimalsBtn: 'Ocultar Decimales',
+                showDecimalsBtn: 'Mostrar Decimales',
                 downloadChartBtn: 'Descargar Gráfico',
                 copyChartBtn: 'Copiar Gráfico',
                 downloadTableBtn: 'Descargar Tabla',
@@ -580,6 +584,8 @@
                 updateChartBtn: 'Update Chart',
                 hideLabelsBtn: 'Hide Labels',
                 showLabelsBtn: 'Show Labels',
+                hideDecimalsBtn: 'Hide Decimals',
+                showDecimalsBtn: 'Show Decimals',
                 downloadChartBtn: 'Download Chart',
                 copyChartBtn: 'Copy Chart',
                 downloadTableBtn: 'Download Table',
@@ -845,6 +851,7 @@
 
         // Format number with appropriate decimal marker based on language
         function fmt(num) {
+            const formatted = showDecimals ? num.toFixed(2) : Math.round(num).toString();
             if (isSpanish) {
                 return num.toFixed(2).replace('.', ',');
             } else {
@@ -1220,7 +1227,8 @@
             document.getElementById('trimestersOption').textContent = t.trimesters;
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
-
+            document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+            
             updatePeriodSelector();
             updateDataCounter(); // Update counter text with new language
 
@@ -1503,6 +1511,17 @@
             }
         }
 
+        // Toggle decimals on and off in chart
+        function toggleDecimals() {
+            showDecimals = !showDecimals;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+    
+        if (spcChart && currentResults) {
+            updateChart();
+            }    
+        }
+
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;
@@ -1721,6 +1740,7 @@
             document.getElementById('toggleTableBtn').onclick = toggleTable;
             document.getElementById('updateChartBtn').onclick = updateChart;
             document.getElementById('toggleLabelsBtn').onclick = toggleLabels;
+            document.getElementById('toggleDecimalsBtn').onclick = toggleDecimals;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
