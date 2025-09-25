@@ -458,6 +458,7 @@
                     <div class="chart-controls">
                         <div>
                             <button id="updateChartBtn">Actualizar Gráfico</button>
+                            <button id="toggleDecimalsBtn">Hide Decimals</button>
                             <button id="downloadChartBtn">Descargar Gráfico</button>
                             <button id="copyChartBtn">Copiar Gráfico</button>
                             <button id="downloadTableBtn">Descargar Tabla</button>
@@ -502,6 +503,7 @@
         let spcChart = null;
         let currentResults = null;
         let isTableVisible = false;
+        let showDecimals = true;
 
         // Language translations
         const lang = {
@@ -523,6 +525,8 @@
                 chartTitle: 'Gráfico PBC',
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
                 updateChartBtn: 'Actualizar Gráfico',
+                hideDecimalsBtn: 'Ocultar Decimales',
+                showDecimalsBtn: 'Mostrar Decimales',
                 downloadChartBtn: 'Descargar Gráfico',
                 copyChartBtn: 'Copiar Gráfico',
                 downloadTableBtn: 'Descargar Tabla',
@@ -574,6 +578,8 @@
                 chartTitle: 'PBC Chart',
                 chartTitlePlaceholder: 'Enter chart title',
                 updateChartBtn: 'Update Chart',
+                hideDecimalsBtn: 'Hide Decimals',
+                showDecimalsBtn: 'Show Decimals',
                 downloadChartBtn: 'Download Chart',
                 copyChartBtn: 'Copy Chart',
                 downloadTableBtn: 'Download Table',
@@ -830,10 +836,22 @@
 
         // Format number with appropriate decimal marker based on language
         function fmt(num) {
+            const formatted = showDecimals ? num.toFixed(2) : Math.round(num).toString();
             if (isSpanish) {
-                return num.toFixed(2).replace('.', ',');
+                return formatted.replace('.', ',');
             } else {
-                return num.toFixed(2);
+                return formatted;
+            }
+        }
+     
+        // Format number with appropriate decimal marker based on language
+        function toggleDecimals() {
+            showDecimals = !showDecimals;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+    
+            if (spcChart && currentResults) {
+                updateChart();
             }
         }
 
@@ -1684,7 +1702,10 @@
 
             // Add event listener for data input changes
             document.getElementById('dataInput').addEventListener('input', updateDataCounter);
-
+            
+            // Update toggle decimals button text
+            document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+            
             document.getElementById('langBtn').onclick = function() {
                 isSpanish = !isSpanish;
                 updateLang();
@@ -1706,6 +1727,7 @@
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
+            document.getElementById('toggleDecimalsBtn').onclick = toggleDecimals;
         });
     </script>
 </body>
