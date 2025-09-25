@@ -462,6 +462,7 @@
                     <div class="chart-controls">
                         <div>
                             <button id="updateChartBtn">Actualizar Gráfico</button>
+                            <button id="toggleYAxisBtn">Start from 0</button>
                             <button id="toggleLabelsBtn">Hide Labels</button>
                             <button id="toggleDecimalsBtn">Hide Decimals</button>
                             <button id="downloadChartBtn">Descargar Gráfico</button>
@@ -510,6 +511,7 @@
         let isTableVisible = false;
         let showLabels = true;
         let showDecimals = true;
+        let yAxisFromZero = false;
         
         // Language translations
         const lang = {
@@ -532,6 +534,8 @@
                 chartTitle: 'Gráfico PBC',
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
                 updateChartBtn: 'Actualizar Gráfico',
+                startFromZeroBtn: 'Eje Y comienza en 0',
+                autoScaleBtn: 'Escala automática',
                 hideLabelsBtn: 'Ocultar Etiquetas',
                 showLabelsBtn: 'Mostrar Etiquetas',
                 hideDecimalsBtn: 'Ocultar Decimales',
@@ -588,6 +592,8 @@
                 chartTitle: 'PBC Chart',
                 chartTitlePlaceholder: 'Enter chart title',
                 updateChartBtn: 'Update Chart',
+                startFromZeroBtn: 'Y axis starts from 0',
+                autoScaleBtn: 'Auto Scale',
                 hideLabelsBtn: 'Hide Labels',
                 showLabelsBtn: 'Show Labels',
                 hideDecimalsBtn: 'Hide Decimals',
@@ -1235,6 +1241,7 @@
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+            document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
             
             updatePeriodSelector();
@@ -1462,6 +1469,7 @@
                         },
                         y: {
                             display: true,
+                            beginAtZero: yAxisFromZero,
                             title: {
                                 display: true,
                                 text: isSpanish ? 'Valor' : 'Value',
@@ -1530,6 +1538,16 @@
             }    
         }
 
+        function toggleYAxis() {
+            yAxisFromZero = !yAxisFromZero;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
+    
+        if (spcChart && currentResults) {
+            updateChart();
+            }
+        }
+        
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;
@@ -1748,6 +1766,7 @@
             document.getElementById('toggleTableBtn').onclick = toggleTable;
             document.getElementById('updateChartBtn').onclick = updateChart;
             document.getElementById('toggleLabelsBtn').onclick = toggleLabels;
+            document.getElementById('toggleYAxisBtn').onclick = toggleYAxis;
             document.getElementById('toggleDecimalsBtn').onclick = toggleDecimals;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
