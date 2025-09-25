@@ -851,13 +851,13 @@
 
         // Format number with appropriate decimal marker based on language
         function fmt(num) {
-            const formatted = showDecimals ? num.toFixed(2) : Math.round(num).toString();
-            if (isSpanish) {
-                return num.toFixed(2).replace('.', ',');
-            } else {
-                return num.toFixed(2);
-            }
+           const formatted = showDecimals ? num.toFixed(2) : Math.round(num).toString();
+        if (isSpanish) {
+            return formatted.replace('.', ',');
+        } else {
+            return formatted;
         }
+    }
 
         // Calculate SPC
         function calcSPC(data, periods) {
