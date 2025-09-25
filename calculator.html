@@ -705,6 +705,15 @@
             }
         }
 
+        function toggleLabels() {
+           showLabels = !showLabels;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleLabelsBtn').textContent = showLabels ? t.hideLabelsBtn : t.showLabelsBtn;
+    
+        if (spcChart && currentResults) {
+            updateChart();
+            }
+        }
         // Check if year is leap year
         function isLeapYear(year) {
             return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
@@ -1711,6 +1720,7 @@
             document.getElementById('clearBtn').onclick = clearAll;
             document.getElementById('toggleTableBtn').onclick = toggleTable;
             document.getElementById('updateChartBtn').onclick = updateChart;
+            document.getElementById('toggleLabelsBtn').onclick = toggleLabels;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
