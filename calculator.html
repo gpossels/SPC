@@ -144,7 +144,7 @@
             border: 2px solid black;
         }
 
-        textarea {
+         {
             resize: vertical;
             min-height: 120px;
             font-family: 'Courier New', monospace;
@@ -391,7 +391,7 @@
             <div class="input-section">
                 <div class="input-group">
                     <label id="dataLabel">Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):</label>
-                    <textarea id="dataInput" placeholder="Ingresa tus datos aquí..."></textarea>
+                    <textarea id="dataInput"></textarea>
                     <div id="dataCounter" class="data-counter insufficient">0 puntos de datos</div>
                 </div>
 
@@ -514,7 +514,7 @@
                 subtitle: 'Generador de Gráficos de Comportamiento de Proceso',
                 author: 'Dr. Gustavo Possel S. - Médico',
                 dataLabel: 'Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):',
-                dataImputPlaceholder: 'Ingresa tus datos aquí...',
+                dataImputPlaceholder: 'Ingresa tus datos aquí',
                 dataNameLabel: 'Nombre de los datos (opcional):',
                 dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
                 timeLabel: 'Período:',
@@ -569,7 +569,7 @@
                 subtitle: 'Process Behavior Chart Generator',
                 author: 'Dr. Gustavo Possel S. - MD.',
                 dataLabel: 'Data (separated by space, tab or line, at least 8, ideally 20 and more):',
-                dataImputPlaceholder: 'Enter your data here...',
+                dataImputPlaceholder: 'Enter your data here',
                 dataNameLabel: 'Data name (optional):',
                 dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
                 timeLabel: 'Period:',
@@ -1204,6 +1204,7 @@
             document.getElementById('dataLabel').textContent = t.dataLabel;
             document.getElementById('dataNameLabel').textContent = t.dataNameLabel;
             document.getElementById('dataNameInput').placeholder = t.dataNamePlaceholder;
+            document.getElementById('dataInput').placeholder = t.dataInputPlaceholder;
             document.getElementById('timeLabel').textContent = t.timeLabel;
             document.getElementById('periodLabel').textContent = t.periodLabel;
             document.getElementById('yearRefLabel').textContent = t.yearRefLabel;
@@ -1228,7 +1229,7 @@
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
-            
+                        
             updatePeriodSelector();
             updateDataCounter(); // Update counter text with new language
 
