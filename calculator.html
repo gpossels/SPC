@@ -516,6 +516,7 @@
                 title: 'Generador Rápido PBC',
                 subtitle: 'Generador de Gráficos de Comportamiento de Proceso',
                 author: 'Dr. Gustavo Possel S. - Médico',
+                backToIndex: '← Inicio',
                 dataLabel: 'Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):',
                 dataInputPlaceholder: 'Ingresa tus datos aquí',
                 dataNameLabel: 'Nombre de los datos (opcional):',
@@ -571,6 +572,7 @@
                 title: 'PBC Fast Generator',
                 subtitle: 'Process Behavior Chart Generator',
                 author: 'Dr. Gustavo Possel S. - MD.',
+                backToIndex: '← Home',
                 dataLabel: 'Data (separated by space, tab or line, at least 8, ideally 20 and more):',
                 dataInputPlaceholder: 'Enter your data here',
                 dataNameLabel: 'Data name (optional):',
@@ -1232,7 +1234,8 @@
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
-                        
+            document.getElementById('backToIndex').textContent = t.backToIndex;
+            
             updatePeriodSelector();
             updateDataCounter(); // Update counter text with new language
 
@@ -1724,7 +1727,7 @@
 
             // Add event listener for data input changes
             document.getElementById('dataInput').addEventListener('input', updateDataCounter);
-
+            
             document.getElementById('langBtn').onclick = function() {
                 isSpanish = !isSpanish;
                 updateLang();
@@ -1748,6 +1751,9 @@
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
+            document.getElementById('backToIndex').onclick = function() {
+                window.location.href = 'https://gpossels.github.io/SPC/index.html';
+            };
         });
     </script>
 </body>
