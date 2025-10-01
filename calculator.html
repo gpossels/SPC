@@ -624,7 +624,7 @@
                 resultsTitle: 'Resultados PBC',
                 chartTitle: 'Gráfico PBC',
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
-                viewingPoints: 'Visualizando puntos'
+                viewingPoints: 'Visualizando puntos',
                 updateChartBtn: 'Actualizar Gráfico',
                 startFromZeroBtn: 'Eje Y comienza en 0',
                 autoScaleBtn: 'Escala automática',
@@ -683,7 +683,7 @@
                 resultsTitle: 'PBC Results',
                 chartTitle: 'PBC Chart',
                 chartTitlePlaceholder: 'Enter chart title',
-                viewingPoints: 'Viewing points'
+                viewingPoints: 'Viewing points',
                 updateChartBtn: 'Update Chart',
                 startFromZeroBtn: 'Y axis starts from 0',
                 autoScaleBtn: 'Auto Scale',
@@ -2008,10 +2008,10 @@
             document.getElementById('downloadTableBtn').onclick = downloadTable;
             document.getElementById('backToIndex').onclick = function() {
                 window.location.href = 'https://gpossels.github.io/SPC/index.html';
-            // Range slider controls
+            };
+               // Range slider controls
             document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
             document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
-            };
         });
     </script>
 </body>
