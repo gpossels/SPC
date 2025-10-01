@@ -372,6 +372,87 @@
                 flex-direction: column;
                 gap: 10px;
             }
+        
+            .view-controls {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                border: 1px solid #ddd;
+            }
+
+            .view-controls h4 {
+                margin-top: 0;
+                margin-bottom: 10px;
+                color: #2c3e50;
+            }
+
+            .range-info {
+                margin-bottom: 15px;
+                font-size: 0.95em;
+                color: #555;
+                font-weight: 500;
+            }
+    
+            .range-slider-container {
+                position: relative;
+                padding: 10px 0;
+            }
+    
+            .range-slider-wrapper {
+                position: relative;
+                height: 40px;
+            }
+    
+            .range-slider-container input[type="range"] {
+                width: 100%;
+                position: absolute;
+                pointer-events: none;
+                -webkit-appearance: none;
+                background: transparent;
+            }
+    
+            .range-slider-container input[type="range"]::-webkit-slider-thumb {
+                pointer-events: all;
+                -webkit-appearance: none;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #6f42c1;
+                cursor: pointer;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+    
+            .range-slider-container input[type="range"]::-moz-range-thumb {
+                pointer-events: all;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #6f42c1;
+                cursor: pointer;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+    
+            .range-slider-track {
+                position: absolute;
+                height: 6px;
+                background: #ddd;
+                width: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                border-radius: 3px;
+            }
+    
+            .range-slider-fill {
+                position: absolute;
+                height: 6px;
+                background: #6f42c1;
+                top: 50%;
+                transform: translateY(-50%);
+                border-radius: 3px;
+            }
         }
     </style>
 </head>
@@ -472,6 +553,17 @@
                     <div class="chart-container">
                         <canvas id="spcChart"></canvas>
                     </div>
+                <div id="viewControls" class="view-controls hidden">
+                    <h4 id="viewControlsTitle">Ventana de Visualización</h4>
+                    <div class="range-info" id="rangeInfo">Visualizando puntos 1 a 8 de 8 totales</div>
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <div class="range-slider-track"></div>
+                            <div class="range-slider-fill" id="rangeFill"></div>
+                            <input type="range" id="rangeStartSlider" min="1" value="1">
+                            <input type="range" id="rangeEndSlider" min="1" value="8">
+                        </div>
+                    </div>
                 </div>
 
                 <div id="tableContainer" class="table-container hidden">
@@ -509,6 +601,8 @@
         let showLabels = true;
         let showDecimals = true;
         let yAxisFromZero = false;
+        let rangeStart = 1;
+        let rangeEnd = 1;
         
         // Language translations
         const lang = {
@@ -530,6 +624,7 @@
                 resultsTitle: 'Resultados PBC',
                 chartTitle: 'Gráfico PBC',
                 chartTitlePlaceholder: 'Ingrese el título del gráfico',
+                viewingPoints: 'Visualizando puntos'
                 updateChartBtn: 'Actualizar Gráfico',
                 startFromZeroBtn: 'Eje Y comienza en 0',
                 autoScaleBtn: 'Escala automática',
@@ -588,6 +683,7 @@
                 resultsTitle: 'PBC Results',
                 chartTitle: 'PBC Chart',
                 chartTitlePlaceholder: 'Enter chart title',
+                viewingPoints: 'Viewing points'
                 updateChartBtn: 'Update Chart',
                 startFromZeroBtn: 'Y axis starts from 0',
                 autoScaleBtn: 'Auto Scale',
@@ -1240,7 +1336,9 @@
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
-            
+            // View controls
+            document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
+            updateRangeInfo();
             updatePeriodSelector();
             updateDataCounter(); // Update counter text with new language
 
@@ -1259,49 +1357,208 @@
             document.getElementById('toggleLabelsBtn').textContent = showLabels ? t.hideLabelsBtn : t.showLabelsBtn;
         }
 
+            // Get filtered results based on range
+            function getFilteredResults() {
+                if (!currentResults) return null;
+            
+                const start = Math.max(0, rangeStart - 1);
+                const end = Math.min(currentResults.length, rangeEnd);
+                
+                return currentResults.slice(start, end);
+            }
+            
+            // Update range display info
+            function updateRangeInfo() {
+                if (!currentResults) return;
+            
+                const t = isSpanish ? lang.es : lang.en;
+                const totalPoints = currentResults.length;
+                const info = `${t.viewingPoints} ${rangeStart} - ${rangeEnd} ${isSpanish ? 'de' : 'of'} ${totalPoints} ${isSpanish ? 'totales' : 'total'}`;
+                
+                document.getElementById('rangeInfo').textContent = info;
+                
+                // Update slider fill visual
+                updateSliderFill();
+            }
+            
+            // Update the visual fill between slider handles
+            function updateSliderFill() {
+                if (!currentResults) return;
+                
+                const totalPoints = currentResults.length;
+                const startPercent = ((rangeStart - 1) / (totalPoints - 1)) * 100;
+                const endPercent = ((rangeEnd - 1) / (totalPoints - 1)) * 100;
+                
+                const fill = document.getElementById('rangeFill');
+                fill.style.left = startPercent + '%';
+                fill.style.width = (endPercent - startPercent) + '%';
+            }
+            
+            // Update range values from sliders
+            function updateRange() {
+                const startSlider = document.getElementById('rangeStartSlider');
+                const endSlider = document.getElementById('rangeEndSlider');
+            
+                if (!currentResults) return;
+            
+                const totalPoints = currentResults.length;
+                let start = parseInt(startSlider.value);
+                let end = parseInt(endSlider.value);
+            
+                // Ensure minimum 8-point span
+                if (end - start < 7) {
+                    // Determine which slider was moved last by comparing to current values
+                    if (start !== rangeStart) {
+                        // Start slider was moved, adjust end
+                        end = Math.min(start + 7, totalPoints);
+                        endSlider.value = end;
+                    } else {
+                        // End slider was moved, adjust start
+                        start = Math.max(end - 7, 1);
+                        startSlider.value = start;
+                    }
+                }
+            
+                rangeStart = start;
+                rangeEnd = end;
+            
+                updateRangeInfo();
+            
+                if (currentResults) {
+                    updateChart();
+                    updateTableDisplay();
+                }
+            }
+            
+            // Initialize range controls
+            function initializeRangeControls() {
+                if (!currentResults) return;
+            
+                const totalPoints = currentResults.length;
+                const startSlider = document.getElementById('rangeStartSlider');
+                const endSlider = document.getElementById('rangeEndSlider');
+            
+                // Set max values
+                startSlider.max = totalPoints;
+                endSlider.max = totalPoints;
+            
+                // Set initial values to show all
+                rangeStart = 1;
+                rangeEnd = totalPoints;
+            
+                startSlider.value = 1;
+                endSlider.value = totalPoints;
+            
+                updateRangeInfo();
+            }
+            
+            // Update table display based on filtered results
+            function updateTableDisplay() {
+                const filteredResults = getFilteredResults();
+                if (!filteredResults) return;
+            
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+            
+                const t = isSpanish ? lang.es : lang.en;
+            
+                filteredResults.forEach(row => {
+                    const tr = document.createElement('tr');
+                    if (!isSpanish) {
+                        if (row.ruleApplied === t.baseline) tr.classList.add('baseline-row');
+                        else if (row.ruleApplied === t.rule2 || row.ruleApplied === t.rule3) tr.classList.add('rule-row');
+                    }
+            
+                    const cells = [
+                        row.period,
+                        row.date,
+                        fmt(row.dp),
+                        row.dpa ? fmt(row.dpa) : '',
+                        row.mr ? fmt(row.mr) : '',
+                        row.mra ? fmt(row.mra) : '',
+                        row.lcl ? fmt(row.lcl) : '',
+                        row.dla ? fmt(row.dla) : '',
+                        row.dua ? fmt(row.dua) : '',
+                        row.ucl ? fmt(row.ucl) : '',
+                        row.mrucl ? fmt(row.mrucl) : '',
+                        row.signal || ''
+                    ];
+            
+                    cells.forEach((cell, i) => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        if (i === 11 && cell) td.classList.add('signal-cell');
+                        tr.appendChild(td);
+                    });
+            
+                    tbody.appendChild(tr);
+                });
+            }
+        
         // Create or update chart
         function updateChart() {
             if (!currentResults) return;
-
+        
+            const filteredResults = getFilteredResults();
+            if (!filteredResults || filteredResults.length === 0) return;
+        
             const t = isSpanish ? lang.es : lang.en;
             const ctx = document.getElementById('spcChart').getContext('2d');
-
+        
             // Get custom data name or use default
             const customDataName = document.getElementById('dataNameInput').value.trim();
             const dataLabel = customDataName || '(DP)';
-
+        
             // Get time unit and format period count
             const timeUnit = document.getElementById('timeUnitSelect').value;
-            const dataCount = currentResults.length;
+            const dataCount = filteredResults.length;
+            const totalCount = currentResults.length;
             let periodText = '';
-
+        
+            // Only show "X of Y" if filtered
+            const isFiltered = dataCount !== totalCount;
+        
             if (timeUnit === 'years') {
-                periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
+                periodText = isFiltered 
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} años)` : `(${dataCount} of ${totalCount} years)`)
+                    : (isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`);
             } else if (timeUnit === 'months') {
-                periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
+                periodText = isFiltered
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} meses)` : `(${dataCount} of ${totalCount} months)`)
+                    : (isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`);
             } else if (timeUnit === 'weeks') {
-                periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
+                periodText = isFiltered
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} semanas)` : `(${dataCount} of ${totalCount} weeks)`)
+                    : (isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`);
             } else if (timeUnit === 'days') {
-                periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
+                periodText = isFiltered
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} días)` : `(${dataCount} of ${totalCount} days)`)
+                    : (isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`);
             } else if (timeUnit === 'semesters') {
-                periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
+                periodText = isFiltered
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} semestres)` : `(${dataCount} of ${totalCount} semesters)`)
+                    : (isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`);
             } else if (timeUnit === 'fourmonths') {
-                periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
+                periodText = isFiltered
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} cuatrimestres)` : `(${dataCount} of ${totalCount} four-month periods)`)
+                    : (isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`);
             } else if (timeUnit === 'trimesters') {
-                periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
+                periodText = isFiltered
+                    ? (isSpanish ? `(${dataCount} de ${totalCount} trimestres)` : `(${dataCount} of ${totalCount} quarters)`)
+                    : (isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`);
             }
-
+        
             // Prepare data
-            const labels = currentResults.map(r => r.date);
-            const dpData = currentResults.map(r => r.dp);
-            const dpaData = currentResults.map(r => r.dpa);
-            const uclData = currentResults.map(r => r.ucl);
-            const lclData = currentResults.map(r => r.lcl);
-
+            const labels = filteredResults.map(r => r.date);
+            const dpData = filteredResults.map(r => r.dp);
+            const dpaData = filteredResults.map(r => r.dpa);
+            const uclData = filteredResults.map(r => r.ucl);
+            const lclData = filteredResults.map(r => r.lcl);
+        
             // Prepare point colors for DP line (red for signals, blue for normal)
-            const dpPointColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
-            const dpPointBorderColors = currentResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
-
+            const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+            const dpPointBorderColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+        
             // Custom title from input with period count
             const customTitle = document.getElementById('chartTitleInput').value.trim();
             const baseTitle = customTitle || t.chartTitle;
@@ -1612,51 +1869,27 @@
 
         // Display results
         function showResults(results) {
-            const tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-
-            const t = isSpanish ? lang.es : lang.en;
-
-            results.forEach(row => {
-                const tr = document.createElement('tr');
-                if (!isSpanish) {
-                    if (row.ruleApplied === t.baseline) tr.classList.add('baseline-row');
-                    else if (row.ruleApplied === t.rule2 || row.ruleApplied === t.rule3) tr.classList.add('rule-row');
-                }
-
-                const cells = [
-                    row.period,
-                    row.date,
-                    fmt(row.dp),
-                    row.dpa ? fmt(row.dpa) : '',
-                    row.mr ? fmt(row.mr) : '',
-                    row.mra ? fmt(row.mra) : '',
-                    row.lcl ? fmt(row.lcl) : '',
-                    row.dla ? fmt(row.dla) : '',
-                    row.dua ? fmt(row.dua) : '',
-                    row.ucl ? fmt(row.ucl) : '',
-                    row.mrucl ? fmt(row.mrucl) : '',
-                    row.signal || ''
-                ];
-
-                cells.forEach((cell, i) => {
-                    const td = document.createElement('td');
-                    td.textContent = cell;
-                    if (i === 11 && cell) td.classList.add('signal-cell');
-                    tr.appendChild(td);
-                });
-
-                tbody.appendChild(tr);
-            });
-
             currentResults = results;
-
+        
+            // Show view controls if more than 8 points
+            const viewControls = document.getElementById('viewControls');
+            if (results.length > 8) {
+                viewControls.classList.remove('hidden');
+                initializeRangeControls();
+            } else {
+                viewControls.classList.add('hidden');
+            }
+        
+            // Update table display
+            updateTableDisplay();
+        
             document.getElementById('resultsDiv').classList.remove('hidden');
             document.getElementById('chartDiv').classList.remove('hidden');
-
+        
+            const t = isSpanish ? lang.es : lang.en;
             const tableContainer = document.getElementById('tableContainer');
             const toggleBtn = document.getElementById('toggleTableBtn');
-
+        
             if (isTableVisible) {
                 tableContainer.style.display = 'block';
                 toggleBtn.textContent = t.hideTableBtn;
@@ -1668,7 +1901,7 @@
             updateChart();
         }
 
-        // Show error
+       // Show error
         function showError(msg) {
             document.getElementById('errorMsg').textContent = msg;
             document.getElementById('errorDiv').classList.remove('hidden');
@@ -1685,6 +1918,10 @@
             document.getElementById('errorDiv').classList.add('hidden');
             document.getElementById('resultsDiv').classList.add('hidden');
             document.getElementById('chartDiv').classList.add('hidden');
+            document.getElementById('viewControls').classList.add('hidden');
+            // Reset range
+            rangeStart = 1;
+            rangeEnd = 1;
 
             // Reset to current month/week and year
             const currentDate = new Date();
@@ -1771,6 +2008,9 @@
             document.getElementById('downloadTableBtn').onclick = downloadTable;
             document.getElementById('backToIndex').onclick = function() {
                 window.location.href = 'https://gpossels.github.io/SPC/index.html';
+            // Range slider controls
+            document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
+            document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
             };
         });
     </script>
