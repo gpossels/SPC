@@ -1759,7 +1759,7 @@
                             align: 'top',
                             offset: 8,
                             color: function(context) {
-                                const result = currentResults[context.dataIndex];
+                                const result = filteredResults[context.dataIndex];
                                 return result.signal === 1 ? '#FF0000' : '#4169E1';
                             },
                             font: {
