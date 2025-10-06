@@ -394,7 +394,32 @@
                 margin-bottom: 10px;
                 color: #2c3e50;
             }
-
+            .range-buttons {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 15px;
+                flex-wrap: wrap;
+            }
+            
+            .range-btn {
+                background: #6f42c1;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: all 0.3s ease;
+            }
+            
+            .range-btn:hover {
+                background: #5a359a;
+            }
+            
+            .range-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
             .range-info {
                 margin-bottom: 15px;
                 font-size: 0.95em;
@@ -563,6 +588,10 @@
                     </div>
                 <div id="viewControls" class="view-controls hidden">
                     <h4 id="viewControlsTitle">Ventana de Visualización</h4>
+                    <div class="range-buttons">
+                        <button id="showAllBtn" class="range-btn">Show All</button>
+                        <button id="showLast24Btn" class="range-btn">Last 24</button>
+                    </div>
                     <div class="range-info" id="rangeInfo">Visualizando puntos 1 a 8 de 8 totales</div>
                     <div class="range-slider-container">
                         <div class="range-slider-wrapper">
@@ -641,6 +670,8 @@
                 hideDecimalsBtn: 'Ocultar Decimales',
                 showDecimalsBtn: 'Mostrar Decimales',
                 downloadChartBtn: 'Descargar Gráfico',
+                showAllBtn: 'Mostrar Todo',
+                showLast24Btn: 'Últimos 24 puntos',
                 copyChartBtn: 'Copiar Gráfico',
                 downloadTableBtn: 'Descargar Tabla',
                 hideTableBtn: 'Ocultar Tabla',
@@ -700,6 +731,8 @@
                 hideDecimalsBtn: 'Hide Decimals',
                 showDecimalsBtn: 'Show Decimals',
                 downloadChartBtn: 'Download Chart',
+                showAllBtn: 'Show All',
+                showLast24Btn: 'Last 24 points',
                 copyChartBtn: 'Copy Chart',
                 downloadTableBtn: 'Download Table',
                 hideTableBtn: 'Hide Table',
@@ -1344,6 +1377,8 @@
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
+            document.getElementById('showAllBtn').textContent = t.showAllBtn;
+            document.getElementById('showLast24Btn').textContent = t.showLast24Btn;
             // View controls
             document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
             updateRangeInfo();
@@ -1437,7 +1472,46 @@
                     updateTableDisplay();
                 }
             }
+
+            // Show all data points
+            function showAllPoints() {
+                if (!currentResults) return;
+                
+                const totalPoints = currentResults.length;
+                rangeStart = 1;
+                rangeEnd = totalPoints;
+                
+                document.getElementById('rangeStartSlider').value = 1;
+                document.getElementById('rangeEndSlider').value = totalPoints;
+                
+                updateRangeInfo();
+                updateChart();
+                updateTableDisplay();
+            }
             
+            // Show last 24 points
+            function showLast24Points() {
+                if (!currentResults) return;
+                
+                const totalPoints = currentResults.length;
+                
+                if (totalPoints <= 24) {
+                    // If 24 or fewer points, just show all
+                    showAllPoints();
+                    return;
+                }
+                
+                rangeStart = totalPoints - 23; // -23 because we want to include the last point (24 total)
+                rangeEnd = totalPoints;
+                
+                document.getElementById('rangeStartSlider').value = rangeStart;
+                document.getElementById('rangeEndSlider').value = rangeEnd;
+                
+                updateRangeInfo();
+                updateChart();
+                updateTableDisplay();
+            }
+
             // Initialize range controls
             function initializeRangeControls() {
                 if (!currentResults) return;
@@ -1996,6 +2070,8 @@
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
+            document.getElementById('showAllBtn').textContent = t.showAllBtn;
+            document.getElementById('showLast24Btn').textContent = t.showLast24Btn;
             document.getElementById('backToIndex').onclick = function() {
                 window.location.href = 'https://gpossels.github.io/SPC/index.html';
             };
