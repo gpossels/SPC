@@ -1365,6 +1365,8 @@
             document.getElementById('updateChartBtn').textContent = t.updateChartBtn;
             document.getElementById('downloadChartBtn').textContent = t.downloadChartBtn;
             document.getElementById('copyChartBtn').textContent = t.copyChartBtn;
+            document.getElementById('showAllBtn').textContent = t.showAllBtn;
+            document.getElementById('showLast24Btn').textContent = t.showLast24Btn;
             document.getElementById('downloadTableBtn').textContent = t.downloadTableBtn;
             document.getElementById('toggleTableBtn').textContent = isTableVisible ? t.hideTableBtn : t.showTableBtn;
             document.getElementById('yearsOption').textContent = t.years;
@@ -1379,8 +1381,7 @@
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
-            document.getElementById('showAllBtn').addEventListener('click', showAllPoints);
-            document.getElementById('showLast24Btn').addEventListener('click', showLast24Points);
+            
             // View controls
             document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
             updateRangeInfo();
@@ -2072,8 +2073,8 @@
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
-            document.getElementById('showAllBtn').textContent = t.showAllBtn;
-            document.getElementById('showLast24Btn').textContent = t.showLast24Btn;
+            document.getElementById('showAllBtn').addEventListener('click', showAllPoints);
+            document.getElementById('showLast24Btn').addEventListener('click', showLast24Points);
             document.getElementById('backToIndex').onclick = function() {
                 window.location.href = 'https://gpossels.github.io/SPC/index.html';
             };
