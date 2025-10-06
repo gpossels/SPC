@@ -2041,7 +2041,7 @@
             const currentDate = new Date();
             document.getElementById('yearRef').value = currentDate.getFullYear();
 
-            updateLang();
+        
             updatePeriodSelector(); // Set current month/week by default
             updateDataCounter(); // Initialize counter
 
@@ -2081,6 +2081,9 @@
             document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
             document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
         });
+            // Initialize language (must be last to ensure all elements exist)
+       updateLang();
+});
     </script>
 </body>
 </html>
