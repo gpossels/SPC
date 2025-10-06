@@ -1512,40 +1512,22 @@
             // Get time unit and format period count
             const timeUnit = document.getElementById('timeUnitSelect').value;
             const dataCount = filteredResults.length;
-            const totalCount = currentResults.length;
             let periodText = '';
             
-            // Only show "X of Y" if filtered
-            const isFiltered = dataCount !== totalCount;
-            
             if (timeUnit === 'years') {
-                periodText = isFiltered 
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} años)` : `(${dataCount} of ${totalCount} years)`)
-                    : (isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`);
+                periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
             } else if (timeUnit === 'months') {
-                periodText = isFiltered
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} meses)` : `(${dataCount} of ${totalCount} months)`)
-                    : (isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`);
+                periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
             } else if (timeUnit === 'weeks') {
-                periodText = isFiltered
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} semanas)` : `(${dataCount} of ${totalCount} weeks)`)
-                    : (isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`);
+                periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
             } else if (timeUnit === 'days') {
-                periodText = isFiltered
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} días)` : `(${dataCount} of ${totalCount} days)`)
-                    : (isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`);
+                periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
             } else if (timeUnit === 'semesters') {
-                periodText = isFiltered
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} semestres)` : `(${dataCount} of ${totalCount} semesters)`)
-                    : (isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`);
+                periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
             } else if (timeUnit === 'fourmonths') {
-                periodText = isFiltered
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} cuatrimestres)` : `(${dataCount} of ${totalCount} four-month periods)`)
-                    : (isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`);
+                periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
             } else if (timeUnit === 'trimesters') {
-                periodText = isFiltered
-                    ? (isSpanish ? `(${dataCount} de ${totalCount} trimestres)` : `(${dataCount} of ${totalCount} quarters)`)
-                    : (isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`);
+                periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
             }
         
             // Prepare data
