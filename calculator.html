@@ -1514,10 +1514,10 @@
             const dataCount = filteredResults.length;
             const totalCount = currentResults.length;
             let periodText = '';
-        
+            
             // Only show "X of Y" if filtered
             const isFiltered = dataCount !== totalCount;
-        
+            
             if (timeUnit === 'years') {
                 periodText = isFiltered 
                     ? (isSpanish ? `(${dataCount} de ${totalCount} años)` : `(${dataCount} of ${totalCount} years)`)
