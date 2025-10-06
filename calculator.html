@@ -348,40 +348,7 @@
             cursor: pointer;
         }
 
-        @media (max-width: 768px) {
-            .input-row {
-                flex-direction: column;
-            }
-
-            .input-col {
-                min-width: unset;
-            }
-
-            .button-row {
-                flex-direction: column;
-            }
-
-            .chart-controls {
-                flex-direction: column;
-            }
-
-            .chart-controls input,
-            .chart-controls button {
-                width: 100%;
-                min-width: unset;
-            }
-
-            .chart-container {
-                height: 400px;
-                padding: 10px;
-            }
-
-            .radio-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-        
-            .view-controls {
+        .view-controls {
                 background: #f8f9fa;
                 padding: 20px;
                 border-radius: 8px;
@@ -426,6 +393,41 @@
                 color: #555;
                 font-weight: 500;
             }
+        
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+            }
+
+            .input-col {
+                min-width: unset;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            .chart-controls {
+                flex-direction: column;
+            }
+
+            .chart-controls input,
+            .chart-controls button {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .chart-container {
+                height: 400px;
+                padding: 10px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        
+            
     
             .range-slider-container {
                 position: relative;
@@ -1377,8 +1379,8 @@
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
-            document.getElementById('showAllBtn').textContent = t.showAllBtn;
-            document.getElementById('showLast24Btn').textContent = t.showLast24Btn;
+            document.getElementById('showAllBtn').addEventListener('click', showAllPoints);
+            document.getElementById('showLast24Btn').addEventListener('click', showLast24Points);
             // View controls
             document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
             updateRangeInfo();
