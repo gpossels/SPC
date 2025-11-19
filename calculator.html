@@ -518,6 +518,17 @@
                 </div>
 
                 <div class="input-group">
+                    <label id="dataLabel2">Datos para Comparación (opcional, separados por espacio, tabulación o línea):</label>
+                    <textarea id="dataInput2"></textarea>
+                    <div id="dataCounter2" class="data-counter insufficient">0 puntos de datos</div>
+                </div>
+                
+                <div class="input-group">
+                    <label id="dataNameLabel2">Nombre de los datos de comparación (opcional):</label>
+                    <input type="text" id="dataNameInput2" placeholder="ej. Datos anteriores, Grupo control, etc.">
+                </div>
+                
+                <div class="input-group">
                     <div class="input-row">
                         <div class="input-col">
                             <label id="timeLabel">Unidad:</label>
@@ -583,6 +594,15 @@
                             <button id="downloadTableBtn">Descargar Tabla</button>
                             <button id="toggleTableBtn">Mostrar Tabla</button>
                         </div>
+
+                        <div id="comparisonToggles" class="hidden" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                            <strong id="comparisonTogglesTitle">Mostrar/Ocultar Líneas:</strong>
+                            <button id="toggleDataset1DPBtn" style="margin-left: 10px;">Dataset 1 DP</button>
+                            <button id="toggleDataset1DPABtn">Dataset 1 DPA</button>
+                            <button id="toggleDataset2DPBtn">Dataset 2 DP</button>
+                            <button id="toggleDataset2DPABtn">Dataset 2 DPA</button>
+                        </div>
+                        
                         <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
                     </div>
                     <div class="chart-container">
@@ -642,6 +662,11 @@
         let yAxisFromZero = false;
         let rangeStart = 1;
         let rangeEnd = 1;
+        let currentResults2 = null;
+        let showDataset1DP = true;
+        let showDataset1DPA = true;
+        let showDataset2DP = true;
+        let showDataset2DPA = true;
         
         // Language translations
         const lang = {
@@ -654,6 +679,9 @@
                 dataInputPlaceholder: 'Ingresa tus datos aquí',
                 dataNameLabel: 'Nombre de los datos (opcional):',
                 dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
+                dataLabel2: 'Datos para Comparación (opcional, separados por espacio, tabulación o línea):',
+                dataNameLabel2: 'Nombre de los datos de comparación (opcional):',
+                dataNamePlaceholder2: 'ej. Datos anteriores, Grupo control, etc.',
                 timeLabel: 'Período:',
                 periodLabel: 'Año, Mes, Semana o Día:',
                 yearRefLabel: 'Año:',
@@ -704,8 +732,13 @@
                     lcl: '(Límite de Control Inferior)',
                     dua: '(DUA)',
                     dla: '(DLA)'
-                }
-            },
+                },
+                comparisonTogglesTitle: 'Mostrar/Ocultar Líneas:',
+                    toggleDataset1DP: 'Conjunto 1 DP',
+                    toggleDataset1DPA: 'Conjunto 1 DPA',
+                    toggleDataset2DP: 'Conjunto 2 DP',
+                    toggleDataset2DPA: 'Conjunto 2 DPA'
+                },
             en: {
                 title: 'PBC Fast Generator',
                 subtitle: 'Process Behavior Chart Generator',
@@ -715,6 +748,9 @@
                 dataInputPlaceholder: 'Enter your data here',
                 dataNameLabel: 'Data name (optional):',
                 dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
+                dataLabel2: 'Comparison Data (optional, separated by space, tab or line):',
+                dataNameLabel2: 'Comparison data name (optional):',
+                dataNamePlaceholder2: 'e.g. Previous data, Control group, etc.',
                 timeLabel: 'Period:',
                 periodLabel: 'Year, Month, Week, or Day:',
                 yearRefLabel: 'Year:',
@@ -765,7 +801,12 @@
                     lcl: '(Lower Control Limit)',
                     dua: '(DUA)',
                     dla: '(DLA)',
-                }
+                },
+                comparisonTogglesTitle: 'Show/Hide Lines:',
+                    toggleDataset1DP: 'Dataset 1 DP',
+                    toggleDataset1DPA: 'Dataset 1 DPA',
+                    toggleDataset2DP: 'Dataset 2 DP',
+                    toggleDataset2DPA: 'Dataset 2 DPA'
             }
         };
 
@@ -825,10 +866,13 @@
         // Update data counter
         function updateDataCounter() {
             const dataInput = document.getElementById('dataInput').value.trim();
+            const dataInput2 = document.getElementById('dataInput2').value.trim();
             const counter = document.getElementById('dataCounter');
+            const counter2 = document.getElementById('dataCounter2');
             const calcBtn = document.getElementById('calcBtn');
             const t = isSpanish ? lang.es : lang.en;
-
+        
+            // First dataset
             let count = 0;
             if (dataInput) {
                 try {
@@ -838,25 +882,46 @@
                     count = 0;
                 }
             }
-
-            // Update counter text
+        
             const pointWord = count === 1 ? t.dataPointsSingular : t.dataPointsPlural;
             const counterText = `${count} ${pointWord}`;
             counter.textContent = counterText;
-
-            // Update counter styling and button state
             counter.className = 'data-counter';
-
+        
             if (count === 0) {
                 counter.classList.add('insufficient');
-                calcBtn.disabled = true;
             } else if (count < 8) {
                 counter.classList.add('insufficient');
-                calcBtn.disabled = true;
             } else {
                 counter.classList.add('sufficient');
-                calcBtn.disabled = false;
             }
+        
+            // Second dataset
+            let count2 = 0;
+            if (dataInput2) {
+                try {
+                    const data2 = parseData(dataInput2);
+                    count2 = data2.length;
+                } catch (e) {
+                    count2 = 0;
+                }
+            }
+        
+            const pointWord2 = count2 === 1 ? t.dataPointsSingular : t.dataPointsPlural;
+            const counterText2 = `${count2} ${pointWord2}`;
+            counter2.textContent = counterText2;
+            counter2.className = 'data-counter';
+        
+            if (count2 === 0) {
+                counter2.classList.add('insufficient');
+            } else if (count2 < 8) {
+                counter2.classList.add('insufficient');
+            } else {
+                counter2.classList.add('sufficient');
+            }
+        
+            // Enable button if first dataset has at least 8 points
+            calcBtn.disabled = count < 8;
         }
 
         function toggleLabels() {
@@ -1353,6 +1418,9 @@
             document.getElementById('dataNameLabel').textContent = t.dataNameLabel;
             document.getElementById('dataNameInput').placeholder = t.dataNamePlaceholder;
             document.getElementById('dataInput').placeholder = t.dataInputPlaceholder;
+            document.getElementById('dataLabel2').textContent = t.dataLabel2;
+            document.getElementById('dataNameLabel2').textContent = t.dataNameLabel2;
+            document.getElementById('dataNameInput2').placeholder = t.dataNamePlaceholder2;
             document.getElementById('timeLabel').textContent = t.timeLabel;
             document.getElementById('periodLabel').textContent = t.periodLabel;
             document.getElementById('yearRefLabel').textContent = t.yearRefLabel;
@@ -1381,6 +1449,12 @@
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
+            document.getElementById('comparisonTogglesTitle').textContent = t.comparisonTogglesTitle;
+            document.getElementById('toggleDataset1DPBtn').textContent = t.toggleDataset1DP;
+            document.getElementById('toggleDataset1DPABtn').textContent = t.toggleDataset1DPA;
+            document.getElementById('toggleDataset2DPBtn').textContent = t.toggleDataset2DP;
+            document.getElementById('toggleDataset2DPABtn').textContent = t.toggleDataset2DPA;
+
             
             // View controls
             document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
@@ -1581,235 +1655,443 @@
             }
         
         // Create or update chart
-        function updateChart() {
-            if (!currentResults) return;
-        
-            const filteredResults = getFilteredResults();
-            if (!filteredResults || filteredResults.length === 0) return;
-        
-            const t = isSpanish ? lang.es : lang.en;
-            const ctx = document.getElementById('spcChart').getContext('2d');
-        
-            // Get custom data name or use default
-            const customDataName = document.getElementById('dataNameInput').value.trim();
-            const dataLabel = customDataName || '(DP)';
-        
-            // Get time unit and format period count
-            const timeUnit = document.getElementById('timeUnitSelect').value;
-            const dataCount = filteredResults.length;
-            let periodText = '';
-            
-            if (timeUnit === 'years') {
-                periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
-            } else if (timeUnit === 'months') {
-                periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
-            } else if (timeUnit === 'weeks') {
-                periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
-            } else if (timeUnit === 'days') {
-                periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
-            } else if (timeUnit === 'semesters') {
-                periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
-            } else if (timeUnit === 'fourmonths') {
-                periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
-            } else if (timeUnit === 'trimesters') {
-                periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
-            }
-        
-            // Prepare data
-            const labels = filteredResults.map(r => r.date);
-            const dpData = filteredResults.map(r => r.dp);
-            const dpaData = filteredResults.map(r => r.dpa);
-            const uclData = filteredResults.map(r => r.ucl);
-            const lclData = filteredResults.map(r => r.lcl);
-        
-            // Prepare point colors for DP line (red for signals, blue for normal)
-            const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
-            const dpPointBorderColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
-        
-            // Custom title from input with period count
-            const customTitle = document.getElementById('chartTitleInput').value.trim();
-            const baseTitle = customTitle || t.chartTitle;
-            const chartTitle = `${baseTitle} ${periodText}`;
+        // Create or update chart
+function updateChart() {
+    if (!currentResults) return;
 
-            // Destroy existing chart
-            if (spcChart) {
-                spcChart.destroy();
-            }
+    const t = isSpanish ? lang.es : lang.en;
+    const ctx = document.getElementById('spcChart').getContext('2d');
 
-            // Create new chart
-            spcChart = new Chart(ctx, {
-                type: 'line',
-                plugins: [ChartDataLabels],
-                data: {
-                    labels: labels,
-                    datasets: [
-                        {
-                            label: dataLabel,
-                            data: dpData,
-                            borderColor: '#4169E1',
-                            backgroundColor: 'rgba(65, 105, 225, 0.1)',
-                            borderWidth: 2,
-                            pointBackgroundColor: dpPointColors,
-                            pointBorderColor: dpPointBorderColors,
-                            pointRadius: 3,
-                            pointHoverRadius: 4,
-                            tension: 0
-                        },
-                        {
-                            label: t.chartLabels.dpa,
-                            data: dpaData,
-                            borderColor: '#228B22',
-                            backgroundColor: 'rgba(34, 139, 34, 0.1)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0
-                        },
-                        {
-                            label: t.chartLabels.ucl,
-                            data: uclData,
-                            borderColor: '#DC143C',
-                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0
-                        },
-                        {
-                            label: t.chartLabels.lcl,
-                            data: lclData,
-                            borderColor: '#DC143C',
-                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: chartTitle,
-                            font: {
-                                size: 16,
-                                weight: 'bold'
-                            },
-                            color: '#2c3e50'
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top',
-                            labels: {
-                                usePointStyle: false,
-                                padding: 20,
-                                boxWidth: 20,
-                                boxHeight: 8,
-                                generateLabels: function(chart) {
-                                    const original = Chart.defaults.plugins.legend.labels.generateLabels;
-                                    const labels = original.call(this, chart);
+    // Destroy existing chart
+    if (spcChart) {
+        spcChart.destroy();
+    }
 
-                                    return labels.map(label => {
-                                        label.fillStyle = label.strokeStyle;
-                                        return label;
-                                    });
-                                }
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            usePointStyle: false,
-                            boxWidth: 20,
-                            boxHeight: 8,
-                            filter: function(tooltipItem) {
-                                // Hide DUA and DLA from tooltip (they're no longer in chart)
-                                return true;
-                            },
-                            itemSort: function(a, b) {
-                                // Custom sort order: UCL, DP/custom, DPA, LCL
-                                const getOrder = (label) => {
-                                    if (label.includes('UCL')) return 1;
-                                    if (label.includes('DP') || (!label.includes('DPA') && !label.includes('UCL') && !label.includes('LCL'))) return 2;
-                                    if (label.includes('DPA')) return 3;
-                                    if (label.includes('LCL')) return 4;
-                                    return 5;
-                                };
-                                return getOrder(a.dataset.label) - getOrder(b.dataset.label);
-                            },
-                            callbacks: {
-                                label: function(context) {
-                                    const value = context.parsed.y;
-                                    return context.dataset.label + ': ' + fmt(value);
-                                },
-                                labelColor: function(context) {
-                                    return {
-                                        borderColor: context.dataset.borderColor,
-                                        backgroundColor: context.dataset.borderColor,
-                                        borderWidth: 1,
-                                        borderRadius: 0
-                                    };
-                                }
-                            }
-                        },
-                        datalabels: {
-                            display: function(context) {
-                                return context.datasetIndex === 0 && showLabels;
-                            },
-                            align: 'top',
-                            offset: 8,
-                            color: function(context) {
-                                const result = filteredResults[context.dataIndex];
-                                return result.signal === 1 ? '#FF0000' : '#4169E1';
-                            },
-                            font: {
-                                size: 10,
-                                weight: 'bold'
-                            },
-                            formatter: function(value) {
-                                return fmt(value);
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            display: true,
-                            title: {
-                                display: true,
-                                text: isSpanish ? 'Período' : 'Period',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            },
-                            ticks: {
-                                maxRotation: 45
-                            },
-                            grid: {
-                                display: false
-                            }
-                        },
-                        y: {
-                            display: true,
-                            beginAtZero: yAxisFromZero,
-                            min: yAxisFromZero ? 0 : undefined,
-                            title: {
-                                display: true,
-                                text: isSpanish ? 'Valor' : 'Value',
-                                font: {
-                                    weight: 'bold'
-                                }
-                            }
-                        }
-                    },
-                    interaction: {
-                        mode: 'nearest',
-                        axis: 'x',
-                        intersect: false
-                    }
-                }
+    // Check if we're in comparison mode
+    if (currentResults2) {
+        // COMPARISON MODE - No control limits, just DP and DPA lines
+        const customDataName = document.getElementById('dataNameInput').value.trim() || (isSpanish ? 'Conjunto 1' : 'Dataset 1');
+        const customDataName2 = document.getElementById('dataNameInput2').value.trim() || (isSpanish ? 'Conjunto 2' : 'Dataset 2');
+
+        const labels1 = currentResults.map(r => r.date);
+        const labels2 = currentResults2.map(r => r.date);
+        
+        // Use the longer dataset's labels
+        const labels = labels1.length >= labels2.length ? labels1 : labels2;
+
+        const dpData1 = currentResults.map(r => r.dp);
+        const dpaData1 = currentResults.map(r => r.dpa);
+        const dpData2 = currentResults2.map(r => r.dp);
+        const dpaData2 = currentResults2.map(r => r.dpa);
+
+        // Get time unit and format period count
+        const timeUnit = document.getElementById('timeUnitSelect').value;
+        const dataCount1 = currentResults.length;
+        const dataCount2 = currentResults2.length;
+        let periodText = '';
+        
+        if (timeUnit === 'years') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} años)` : `(${dataCount1} & ${dataCount2} years)`;
+        } else if (timeUnit === 'months') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} meses)` : `(${dataCount1} & ${dataCount2} months)`;
+        } else if (timeUnit === 'weeks') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} semanas)` : `(${dataCount1} & ${dataCount2} weeks)`;
+        } else if (timeUnit === 'days') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} días)` : `(${dataCount1} & ${dataCount2} days)`;
+        } else if (timeUnit === 'semesters') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} semestres)` : `(${dataCount1} & ${dataCount2} semesters)`;
+        } else if (timeUnit === 'fourmonths') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} cuatrimestres)` : `(${dataCount1} & ${dataCount2} four-month periods)`;
+        } else if (timeUnit === 'trimesters') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} trimestres)` : `(${dataCount1} & ${dataCount2} quarters)`;
+        }
+
+        const customTitle = document.getElementById('chartTitleInput').value.trim();
+        const baseTitle = customTitle || (isSpanish ? 'Gráfico de Comparación' : 'Comparison Chart');
+        const chartTitle = `${baseTitle} ${periodText}`;
+
+        const datasets = [];
+
+        // Dataset 1 DP (solid blue)
+        if (showDataset1DP) {
+            datasets.push({
+                label: `${customDataName} - DP`,
+                data: dpData1,
+                borderColor: '#4169E1',
+                backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#4169E1',
+                pointBorderColor: '#4169E1',
+                pointRadius: 3,
+                pointHoverRadius: 4,
+                tension: 0,
+                borderDash: []
             });
         }
 
+        // Dataset 1 DPA (solid green)
+        if (showDataset1DPA) {
+            datasets.push({
+                label: `${customDataName} - DPA`,
+                data: dpaData1,
+                borderColor: '#228B22',
+                backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: []
+            });
+        }
+
+        // Dataset 2 DP (dashed blue)
+        if (showDataset2DP) {
+            datasets.push({
+                label: `${customDataName2} - DP`,
+                data: dpData2,
+                borderColor: '#4169E1',
+                backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#4169E1',
+                pointBorderColor: '#4169E1',
+                pointRadius: 3,
+                pointHoverRadius: 4,
+                tension: 0,
+                borderDash: [5, 5]
+            });
+        }
+
+        // Dataset 2 DPA (dashed green)
+        if (showDataset2DPA) {
+            datasets.push({
+                label: `${customDataName2} - DPA`,
+                data: dpaData2,
+                borderColor: '#228B22',
+                backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: [5, 5]
+            });
+        }
+
+        spcChart = new Chart(ctx, {
+            type: 'line',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chartTitle,
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: false,
+                            padding: 20,
+                            boxWidth: 20,
+                            boxHeight: 8,
+                            generateLabels: function(chart) {
+                                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                const labels = original.call(this, chart);
+                                return labels.map(label => {
+                                    label.fillStyle = label.strokeStyle;
+                                    return label;
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        usePointStyle: false,
+                        boxWidth: 20,
+                        boxHeight: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                return context.dataset.label + ': ' + fmt(value);
+                            },
+                            labelColor: function(context) {
+                                return {
+                                    borderColor: context.dataset.borderColor,
+                                    backgroundColor: context.dataset.borderColor,
+                                    borderWidth: 1,
+                                    borderRadius: 0
+                                };
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Período' : 'Period',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: yAxisFromZero,
+                        min: yAxisFromZero ? 0 : undefined,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Valor' : 'Value',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+    } else {
+        // NORMAL MODE - Original chart with control limits
+        const filteredResults = getFilteredResults();
+        if (!filteredResults || filteredResults.length === 0) return;
+
+        // Get custom data name or use default
+        const customDataName = document.getElementById('dataNameInput').value.trim();
+        const dataLabel = customDataName || '(DP)';
+
+        // Get time unit and format period count
+        const timeUnit = document.getElementById('timeUnitSelect').value;
+        const dataCount = filteredResults.length;
+        let periodText = '';
+        
+        if (timeUnit === 'years') {
+            periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
+        } else if (timeUnit === 'months') {
+            periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
+        } else if (timeUnit === 'weeks') {
+            periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
+        } else if (timeUnit === 'days') {
+            periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
+        } else if (timeUnit === 'semesters') {
+            periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
+        } else if (timeUnit === 'fourmonths') {
+            periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
+        } else if (timeUnit === 'trimesters') {
+            periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
+        }
+
+        // Prepare data
+        const labels = filteredResults.map(r => r.date);
+        const dpData = filteredResults.map(r => r.dp);
+        const dpaData = filteredResults.map(r => r.dpa);
+        const uclData = filteredResults.map(r => r.ucl);
+        const lclData = filteredResults.map(r => r.lcl);
+
+        // Prepare point colors for DP line (red for signals, blue for normal)
+        const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+        const dpPointBorderColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+
+        // Custom title from input with period count
+        const customTitle = document.getElementById('chartTitleInput').value.trim();
+        const baseTitle = customTitle || t.chartTitle;
+        const chartTitle = `${baseTitle} ${periodText}`;
+
+        spcChart = new Chart(ctx, {
+            type: 'line',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: dataLabel,
+                        data: dpData,
+                        borderColor: '#4169E1',
+                        backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: dpPointColors,
+                        pointBorderColor: dpPointBorderColors,
+                        pointRadius: 3,
+                        pointHoverRadius: 4,
+                        tension: 0
+                    },
+                    {
+                        label: t.chartLabels.dpa,
+                        data: dpaData,
+                        borderColor: '#228B22',
+                        backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0
+                    },
+                    {
+                        label: t.chartLabels.ucl,
+                        data: uclData,
+                        borderColor: '#DC143C',
+                        backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0
+                    },
+                    {
+                        label: t.chartLabels.lcl,
+                        data: lclData,
+                        borderColor: '#DC143C',
+                        backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chartTitle,
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: false,
+                            padding: 20,
+                            boxWidth: 20,
+                            boxHeight: 8,
+                            generateLabels: function(chart) {
+                                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                const labels = original.call(this, chart);
+
+                                return labels.map(label => {
+                                    label.fillStyle = label.strokeStyle;
+                                    return label;
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        usePointStyle: false,
+                        boxWidth: 20,
+                        boxHeight: 8,
+                        filter: function(tooltipItem) {
+                            return true;
+                        },
+                        itemSort: function(a, b) {
+                            const getOrder = (label) => {
+                                if (label.includes('UCL')) return 1;
+                                if (label.includes('DP') || (!label.includes('DPA') && !label.includes('UCL') && !label.includes('LCL'))) return 2;
+                                if (label.includes('DPA')) return 3;
+                                if (label.includes('LCL')) return 4;
+                                return 5;
+                            };
+                            return getOrder(a.dataset.label) - getOrder(b.dataset.label);
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                return context.dataset.label + ': ' + fmt(value);
+                            },
+                            labelColor: function(context) {
+                                return {
+                                    borderColor: context.dataset.borderColor,
+                                    backgroundColor: context.dataset.borderColor,
+                                    borderWidth: 1,
+                                    borderRadius: 0
+                                };
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return context.datasetIndex === 0 && showLabels;
+                        },
+                        align: 'top',
+                        offset: 8,
+                        color: function(context) {
+                            const result = filteredResults[context.dataIndex];
+                            return result.signal === 1 ? '#FF0000' : '#4169E1';
+                        },
+                        font: {
+                            size: 10,
+                            weight: 'bold'
+                        },
+                        formatter: function(value) {
+                            return fmt(value);
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Período' : 'Period',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: yAxisFromZero,
+                        min: yAxisFromZero ? 0 : undefined,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Valor' : 'Value',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+}
         // Copy chart to clipboard
         async function copyChart() {
             if (!spcChart) return;
@@ -1935,38 +2217,48 @@
         }
 
         // Display results
-        function showResults(results) {
-            currentResults = results;
-        
-            // Show view controls if more than 8 points
-            const viewControls = document.getElementById('viewControls');
-            if (results.length > 8) {
-                viewControls.classList.remove('hidden');
-                initializeRangeControls();
-            } else {
-                viewControls.classList.add('hidden');
-            }
-        
-            // Update table display
-            updateTableDisplay();
-        
-            document.getElementById('resultsDiv').classList.remove('hidden');
-            document.getElementById('chartDiv').classList.remove('hidden');
-        
-            const t = isSpanish ? lang.es : lang.en;
-            const tableContainer = document.getElementById('tableContainer');
-            const toggleBtn = document.getElementById('toggleTableBtn');
-        
-            if (isTableVisible) {
-                tableContainer.style.display = 'block';
-                toggleBtn.textContent = t.hideTableBtn;
-            } else {
-                tableContainer.style.display = 'none';
-                toggleBtn.textContent = t.showTableBtn;
-            }
+        // Display results
+function showResults(results, results2 = null) {
+    currentResults = results;
+    currentResults2 = results2;
 
-            updateChart();
-        }
+    // Show/hide comparison toggles
+    const comparisonToggles = document.getElementById('comparisonToggles');
+    if (results2) {
+        comparisonToggles.classList.remove('hidden');
+    } else {
+        comparisonToggles.classList.add('hidden');
+    }
+
+    // Show view controls if more than 8 points
+    const viewControls = document.getElementById('viewControls');
+    if (results.length > 8) {
+        viewControls.classList.remove('hidden');
+        initializeRangeControls();
+    } else {
+        viewControls.classList.add('hidden');
+    }
+
+    // Update table display
+    updateTableDisplay();
+
+    document.getElementById('resultsDiv').classList.remove('hidden');
+    document.getElementById('chartDiv').classList.remove('hidden');
+
+    const t = isSpanish ? lang.es : lang.en;
+    const tableContainer = document.getElementById('tableContainer');
+    const toggleBtn = document.getElementById('toggleTableBtn');
+
+    if (isTableVisible) {
+        tableContainer.style.display = 'block';
+        toggleBtn.textContent = t.hideTableBtn;
+    } else {
+        tableContainer.style.display = 'none';
+        toggleBtn.textContent = t.showTableBtn;
+    }
+
+    updateChart();
+}
 
        // Show error
         function showError(msg) {
@@ -2004,39 +2296,57 @@
                 spcChart = null;
             }
             currentResults = null;
+            currentResults2 = null;
         }
 
         // Main calculation function
-        function calculate() {
-            const t = isSpanish ? lang.es : lang.en;
+function calculate() {
+    const t = isSpanish ? lang.es : lang.en;
 
-            document.getElementById('errorDiv').classList.add('hidden');
-            document.getElementById('resultsDiv').classList.add('hidden');
-            document.getElementById('chartDiv').classList.add('hidden');
+    document.getElementById('errorDiv').classList.add('hidden');
+    document.getElementById('resultsDiv').classList.add('hidden');
+    document.getElementById('chartDiv').classList.add('hidden');
 
-            const dataInput = document.getElementById('dataInput').value.trim();
-            const timeUnit = document.getElementById('timeUnitSelect').value;
-            const refPeriod = document.getElementById('periodSelect').value;
-            const refYear = parseInt(document.getElementById('yearRef').value);
-            const dateType = document.querySelector('input[name="dateType"]:checked').value;
+    const dataInput = document.getElementById('dataInput').value.trim();
+    const dataInput2 = document.getElementById('dataInput2').value.trim();
+    const timeUnit = document.getElementById('timeUnitSelect').value;
+    const refPeriod = document.getElementById('periodSelect').value;
+    const refYear = parseInt(document.getElementById('yearRef').value);
+    const dateType = document.querySelector('input[name="dateType"]:checked').value;
 
-            if (!dataInput) return showError(t.errorNoData);
-            if (!refPeriod || !refYear || refYear < 1900 || refYear > 2100) return showError(t.errorDate);
+    if (!dataInput) return showError(t.errorNoData);
+    if (!refPeriod || !refYear || refYear < 1900 || refYear > 2100) return showError(t.errorDate);
 
-            let data;
-            try {
-                data = parseData(dataInput);
-            } catch (e) {
-                return showError(t.errorInvalidData);
-            }
+    let data;
+    try {
+        data = parseData(dataInput);
+    } catch (e) {
+        return showError(t.errorInvalidData);
+    }
 
-            if (data.length < 8) return showError(t.errorMinData);
+    if (data.length < 8) return showError(t.errorMinData);
 
-            const periods = genPeriods(refPeriod, refYear, timeUnit, dateType, data.length);
-            const results = calcSPC(data, periods);
-            showResults(results);
+    const periods = genPeriods(refPeriod, refYear, timeUnit, dateType, data.length);
+    const results = calcSPC(data, periods);
+
+    // Process second dataset if provided
+    let results2 = null;
+    if (dataInput2) {
+        let data2;
+        try {
+            data2 = parseData(dataInput2);
+        } catch (e) {
+            return showError(t.errorInvalidData);
         }
 
+        if (data2.length >= 8) {
+            const periods2 = genPeriods(refPeriod, refYear, timeUnit, dateType, data2.length);
+            results2 = calcSPC(data2, periods2);
+        }
+    }
+
+    showResults(results, results2);
+}
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             const currentDate = new Date();
@@ -2048,7 +2358,7 @@
 
             // Add event listener for data input changes
             document.getElementById('dataInput').addEventListener('input', updateDataCounter);
-            
+            document.getElementById('dataInput2').addEventListener('input', updateDataCounter);
             document.getElementById('langBtn').onclick = function() {
                 isSpanish = !isSpanish;
                 updateLang();
@@ -2078,6 +2388,26 @@
             document.getElementById('backToIndex').onclick = function() {
                 window.location.href = 'https://gpossels.github.io/SPC/index.html';
             };
+            // Comparison toggle buttons
+document.getElementById('toggleDataset1DPBtn').onclick = function() {
+    showDataset1DP = !showDataset1DP;
+    if (currentResults2) updateChart();
+};
+
+document.getElementById('toggleDataset1DPABtn').onclick = function() {
+    showDataset1DPA = !showDataset1DPA;
+    if (currentResults2) updateChart();
+};
+
+document.getElementById('toggleDataset2DPBtn').onclick = function() {
+    showDataset2DP = !showDataset2DP;
+    if (currentResults2) updateChart();
+};
+
+document.getElementById('toggleDataset2DPABtn').onclick = function() {
+    showDataset2DPA = !showDataset2DPA;
+    if (currentResults2) updateChart();
+};
                // Range slider controls
             document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
             document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
