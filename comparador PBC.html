@@ -1,0 +1,2419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PBC Calculator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-datalabels/2.2.0/chartjs-plugin-datalabels.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            min-height: 100vh;
+            padding: 20px;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+        }
+
+        .header {
+            background: white;
+            color: black;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: black;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: black;
+        }
+
+        .header .author {
+            position: static;
+            font-size: 0.75em !important;
+            color: black;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        .lang-toggle {
+            position: static;
+            background: white;
+            border: 2px solid black;
+            color: black;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .lang-toggle:hover {
+            background: #f0f0f0;
+        }
+
+        .main-content {
+            padding: 0;
+        }
+
+        .input-section {
+            background: white;
+            padding: 30px;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 25px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: black;
+            font-size: 1.1em;
+        }
+
+        .input-row {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .input-col {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .data-counter {
+            font-size: 0.9em;
+            margin-top: 5px;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .data-counter.insufficient {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .data-counter.sufficient {
+            background-color: #e8f5e8;
+            color: #2e7d32;
+            border: 1px solid #66bb6a;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid black;
+            border-radius: 4px;
+            font-size: 1em;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border: 2px solid black;
+        }
+
+         textarea {
+            resize: vertical;
+            min-height: 120px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            column-gap: 10px;
+            row-gap: 10px;
+        }
+
+        .calculate-btn {
+            background: green;
+            color: white;
+            border: 2px solid black;
+            padding: 15px 30px;
+            border-radius: 4px;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 150px;
+        }
+         
+        .calculate-btn:hover:not(:disabled) {
+            background: #32CD32;
+        }
+        
+        .calculate-btn:disabled {
+            background: #f5f5f5;
+            color: #999;
+            border-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        .secondary-btn {
+            background: red;
+            color: white;
+            border: 2px solid black;
+            padding: 10px 20px;
+            border-radius: 4px;
+            font-size: 1em;
+            font-size: 1.2em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .secondary-btn:hover {
+            background: #FFCCCB;
+        }
+
+        .results-section {
+            background: white;
+            padding: 30px;
+            border: 2px solid black;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+
+        .results-section h2 {
+            color: black;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 600px;
+            margin-bottom: 30px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            align-items: center;
+            row-gap: 10px;
+        }
+
+        .chart-controls input {
+            flex-basis: 100%;
+            order: 999;
+        }
+        .chart-controls > div {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            row-gap: 10px;
+        }
+        .chart-controls button {
+            background: #6f42c1;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+
+         button:hover {
+            background: #5a359a;
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            position: sticky;
+            top: 0;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .signal-cell {
+            background-color: #ffebee !important;
+            color: #c62828;
+            font-weight: bold;
+        }
+
+        .baseline-row {
+            background-color: #e3f2fd !important;
+        }
+
+        .rule-row {
+            background-color: #fff3e0 !important;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        .alert-error {
+            background-color: #ffebee;
+            color: #c62828;
+            border: 1px solid #ef5350;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 5px;
+        }
+
+        .radio-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .radio-item input[type="radio"] {
+            width: auto;
+            margin: 0;
+        }
+
+        .radio-item label {
+            margin: 0;
+            font-weight: normal;
+            cursor: pointer;
+        }
+
+        .view-controls {
+                background: #f8f9fa;
+                padding: 20px;
+                border-radius: 8px;
+                margin-bottom: 20px;
+                border: 1px solid #ddd;
+            }
+
+            .view-controls h4 {
+                margin-top: 0;
+                margin-bottom: 10px;
+                color: #2c3e50;
+            }
+            .range-buttons {
+                display: flex;
+                gap: 10px;
+                margin-bottom: 15px;
+                flex-wrap: wrap;
+            }
+            
+            .range-btn {
+                background: #6f42c1;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 0.9em;
+                transition: all 0.3s ease;
+            }
+            
+            .range-btn:hover {
+                background: #5a359a;
+            }
+            
+            .range-btn:disabled {
+                background: #ccc;
+                cursor: not-allowed;
+            }
+            .range-info {
+                margin-bottom: 15px;
+                font-size: 0.95em;
+                color: #555;
+                font-weight: 500;
+            }
+        
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+            }
+
+            .input-col {
+                min-width: unset;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            .chart-controls {
+                flex-direction: column;
+            }
+
+            .chart-controls input,
+            .chart-controls button {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .chart-container {
+                height: 400px;
+                padding: 10px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+        
+            
+    
+            .range-slider-container {
+                position: relative;
+                padding: 10px 0;
+            }
+    
+            .range-slider-wrapper {
+                position: relative;
+                height: 40px;
+            }
+    
+            .range-slider-container input[type="range"] {
+                width: 100%;
+                position: absolute;
+                pointer-events: none;
+                -webkit-appearance: none;
+                background: transparent;
+            }
+    
+            .range-slider-container input[type="range"]::-webkit-slider-thumb {
+                pointer-events: all;
+                -webkit-appearance: none;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #6f42c1;
+                cursor: pointer;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+    
+            .range-slider-container input[type="range"]::-moz-range-thumb {
+                pointer-events: all;
+                height: 20px;
+                width: 20px;
+                border-radius: 50%;
+                background: #6f42c1;
+                cursor: pointer;
+                border: 2px solid white;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            }
+    
+            .range-slider-track {
+                position: absolute;
+                height: 6px;
+                background: #ddd;
+                width: 100%;
+                top: 50%;
+                transform: translateY(-50%);
+                border-radius: 3px;
+            }
+    
+            .range-slider-fill {
+                position: absolute;
+                height: 6px;
+                background: #6f42c1;
+                top: 50%;
+                transform: translateY(-50%);
+                border-radius: 3px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 id="title">Generador Rápido PBC</h1>
+            <p id="subtitle">Generador de Gráficos de Comportamiento de Proceso</p>
+            <p class="author" id="author">Dr. Gustavo Possel S. - Médico</p>
+            <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 15px;">
+                <button id="backToIndex" class="lang-toggle btn-green">← Inicio</button>
+                <button id="langBtn" class="lang-toggle">English</button>
+            </div>
+            
+        </div>
+
+        <div class="main-content">
+            <div class="input-section">
+                <div class="input-group">
+                    <label id="dataLabel">Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):</label>
+                    <textarea id="dataInput"></textarea>
+                    <div id="dataCounter" class="data-counter insufficient">0 puntos de datos</div>
+                </div>
+
+                <div class="input-group">
+                    <label id="dataNameLabel">Nombre de los datos (opcional):</label>
+                    <input type="text" id="dataNameInput" placeholder="ej. Defectos por millón, Tiempo de respuesta, etc.">
+                </div>
+
+                <div class="input-group">
+                    <label id="dataLabel2">Datos para Comparación (opcional, separados por espacio, tabulación o línea):</label>
+                    <textarea id="dataInput2"></textarea>
+                    <div id="dataCounter2" class="data-counter insufficient">0 puntos de datos</div>
+                </div>
+                
+                <div class="input-group">
+                    <label id="dataNameLabel2">Nombre de los datos de comparación (opcional):</label>
+                    <input type="text" id="dataNameInput2" placeholder="ej. Datos anteriores, Grupo control, etc.">
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-row">
+                        <div class="input-col">
+                            <label id="timeLabel">Unidad:</label>
+                            <select id="timeUnitSelect">
+                                <option value="years" id="yearsOption">Años</option>
+                                <option value="semesters" id="semestersOption">Semestres</option>
+                                <option value="fourmonths" id="fourmonthsOption">Cuatrimestres</option>
+                                <option value="trimesters" id="trimestersOption">Trimestres</option>
+                                <option value="months" id="monthsOption" selected>Meses</option>
+                                <option value="weeks" id="weeksOption">Semanas</option>
+                                <option value="days" id="daysOption">Días</option>
+                            </select>
+                        </div>
+                        <div class="input-col">
+                            <label id="periodLabel">Año, Mes, Semana o Día:</label>
+                            <select id="periodSelect">
+                                <!-- Will be populated based on time unit -->
+                            </select>
+                        </div>
+                        <div class="input-col">
+                            <label id="yearRefLabel">Año:</label>
+                            <input type="number" id="yearRef" min="1900" max="2100" value="2023">
+                        </div>
+                        <div class="input-col">
+                            <label id="typeLabel">Fecha seleccionada es:</label>
+                            <div class="radio-group">
+                                <div class="radio-item">
+                                    <input type="radio" id="startRadio" name="dateType" value="start">
+                                    <label for="startRadio" id="startLabel">Primera de la serie</label>
+                                </div>
+                                <div class="radio-item">
+                                    <input type="radio" id="endRadio" name="dateType" value="end" checked>
+                                    <label for="endRadio" id="endLabel">Última de la serie</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorDiv" class="hidden">
+                <div class="alert alert-error" id="errorMsg"></div>
+            </div>
+
+            <div class="button-row">
+                <button id="calcBtn" class="calculate-btn" disabled>Generar Gráfico</button>
+                <button id="clearBtn" class="secondary-btn">Limpiar</button>
+            </div>
+
+            <div id="resultsDiv" class="results-section hidden">
+                <h2 id="resultsTitle">Resultados PBC</h2>
+
+                <div id="chartDiv">
+                    <h3 id="chartTitle">Gráfico PBC</h3>
+                    <div class="chart-controls">
+                        <div>
+                            <button id="updateChartBtn">Actualizar Gráfico</button>
+                            <button id="toggleYAxisBtn">Start from 0</button>
+                            <button id="toggleLabelsBtn">Hide Labels</button>
+                            <button id="toggleDecimalsBtn">Hide Decimals</button>
+                            <button id="downloadChartBtn">Descargar Gráfico</button>
+                            <button id="copyChartBtn">Copiar Gráfico</button>
+                            <button id="downloadTableBtn">Descargar Tabla</button>
+                            <button id="toggleTableBtn">Mostrar Tabla</button>
+                        </div>
+
+                        <div id="comparisonToggles" class="hidden" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                            <strong id="comparisonTogglesTitle">Mostrar/Ocultar Líneas:</strong>
+                            <button id="toggleDataset1DPBtn" style="margin-left: 10px;">Dataset 1 DP</button>
+                            <button id="toggleDataset1DPABtn">Dataset 1 DPA</button>
+                            <button id="toggleDataset2DPBtn">Dataset 2 DP</button>
+                            <button id="toggleDataset2DPABtn">Dataset 2 DPA</button>
+                        </div>
+                        
+                        <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="spcChart"></canvas>
+                    </div>
+                <div id="viewControls" class="view-controls hidden">
+                    <h4 id="viewControlsTitle">Ventana de Visualización</h4>
+                    <div class="range-buttons">
+                        <button id="showAllBtn" class="range-btn">Show All</button>
+                        <button id="showLast24Btn" class="range-btn">Last 24</button>
+                    </div>
+                    <div class="range-info" id="rangeInfo">Visualizando puntos 1 a 8 de 8 totales</div>
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <div class="range-slider-track"></div>
+                            <div class="range-slider-fill" id="rangeFill"></div>
+                            <input type="range" id="rangeStartSlider" min="1" value="1">
+                            <input type="range" id="rangeEndSlider" min="1" value="8">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="tableContainer" class="table-container hidden">
+                    <table>
+                        <thead id="tableHead">
+                            <tr>
+                                <th>Período</th>
+                                <th>Fecha</th>
+                                <th>DP</th>
+                                <th>DPA</th>
+                                <th>MR</th>
+                                <th>MRA</th>
+                                <th>LCL</th>
+                                <th>DLA</th>
+                                <th>DUA</th>
+                                <th>UCL</th>
+                                <th>MRUCL</th>
+                                <th>Señal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <!-- Results will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isSpanish = true;
+        let spcChart = null;
+        let currentResults = null;
+        let isTableVisible = false;
+        let showLabels = true;
+        let showDecimals = true;
+        let yAxisFromZero = false;
+        let rangeStart = 1;
+        let rangeEnd = 1;
+        let currentResults2 = null;
+        let showDataset1DP = true;
+        let showDataset1DPA = true;
+        let showDataset2DP = true;
+        let showDataset2DPA = true;
+        
+        // Language translations
+        const lang = {
+            es: {
+                title: 'Generador Rápido PBC',
+                subtitle: 'Generador de Gráficos de Comportamiento de Proceso',
+                author: 'Dr. Gustavo Possel S. - Médico',
+                backToIndex: '← Inicio',
+                dataLabel: 'Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):',
+                dataInputPlaceholder: 'Ingresa tus datos aquí',
+                dataNameLabel: 'Nombre de los datos (opcional):',
+                dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
+                dataLabel2: 'Datos para Comparación (opcional, separados por espacio, tabulación o línea):',
+                dataNameLabel2: 'Nombre de los datos de comparación (opcional):',
+                dataNamePlaceholder2: 'ej. Datos anteriores, Grupo control, etc.',
+                timeLabel: 'Período:',
+                periodLabel: 'Año, Mes, Semana o Día:',
+                yearRefLabel: 'Año:',
+                typeLabel: 'Fecha seleccionada es:',
+                calcBtn: 'Generar Gráfico',
+                clearBtn: 'Limpiar',
+                resultsTitle: 'Resultados PBC',
+                chartTitle: 'Gráfico PBC',
+                chartTitlePlaceholder: 'Ingrese el título del gráfico',
+                viewingPoints: 'Visualizando puntos',
+                updateChartBtn: 'Actualizar Gráfico',
+                startFromZeroBtn: 'Eje Y comienza en 0',
+                autoScaleBtn: 'Escala automática',
+                hideLabelsBtn: 'Ocultar Etiquetas',
+                showLabelsBtn: 'Mostrar Etiquetas',
+                hideDecimalsBtn: 'Ocultar Decimales',
+                showDecimalsBtn: 'Mostrar Decimales',
+                downloadChartBtn: 'Descargar Gráfico',
+                showAllBtn: 'Mostrar Todo',
+                showLast24Btn: 'Últimos 24 puntos',
+                copyChartBtn: 'Copiar Gráfico',
+                downloadTableBtn: 'Descargar Tabla',
+                hideTableBtn: 'Ocultar Tabla',
+                showTableBtn: 'Mostrar Tabla',
+                years: 'Años',
+                weeks: 'Semanas',
+                months: 'Meses',
+                days: 'Días',
+                semesters: 'Semestres',
+                fourmonths: 'Cuatrimestres',
+                trimesters: 'Trimestres',
+                start: 'Primera de la serie',
+                end: 'Última de la serie',
+                headers: ['Período', 'Fecha', 'DP', 'DPA', 'MR', 'MRA', 'LCL', 'DLA', 'DUA', 'UCL', 'MRUCL', 'Señal'],
+                baseline: 'Línea Base',
+                rule2: 'Regla 2',
+                rule3: 'Regla 3',
+                errorMinData: 'Se necesitan al menos 8 puntos de datos.',
+                errorInvalidData: 'Datos numéricos inválidos.',
+                errorNoData: 'Ingrese algunos datos.',
+                errorDate: 'Seleccione un período y año válidos.',
+                dataPointsSingular: 'punto de datos',
+                dataPointsPlural: 'puntos de datos',
+                chartLabels: {
+                    dp: '(DP)',
+                    dpa: '(Línea Central)',
+                    ucl: '(Límite de Control Superior)',
+                    lcl: '(Límite de Control Inferior)',
+                    dua: '(DUA)',
+                    dla: '(DLA)'
+                },
+                comparisonTogglesTitle: 'Mostrar/Ocultar Líneas:',
+                    toggleDataset1DP: 'Conjunto 1 DP',
+                    toggleDataset1DPA: 'Conjunto 1 DPA',
+                    toggleDataset2DP: 'Conjunto 2 DP',
+                    toggleDataset2DPA: 'Conjunto 2 DPA'
+                },
+            en: {
+                title: 'PBC Fast Generator',
+                subtitle: 'Process Behavior Chart Generator',
+                author: 'Dr. Gustavo Possel S. - MD.',
+                backToIndex: '← Home',
+                dataLabel: 'Data (separated by space, tab or line, at least 8, ideally 20 and more):',
+                dataInputPlaceholder: 'Enter your data here',
+                dataNameLabel: 'Data name (optional):',
+                dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
+                dataLabel2: 'Comparison Data (optional, separated by space, tab or line):',
+                dataNameLabel2: 'Comparison data name (optional):',
+                dataNamePlaceholder2: 'e.g. Previous data, Control group, etc.',
+                timeLabel: 'Period:',
+                periodLabel: 'Year, Month, Week, or Day:',
+                yearRefLabel: 'Year:',
+                typeLabel: 'Selected date is:',
+                calcBtn: 'Generate Chart',
+                clearBtn: 'Clear',
+                resultsTitle: 'PBC Results',
+                chartTitle: 'PBC Chart',
+                chartTitlePlaceholder: 'Enter chart title',
+                viewingPoints: 'Viewing points',
+                updateChartBtn: 'Update Chart',
+                startFromZeroBtn: 'Y axis starts from 0',
+                autoScaleBtn: 'Auto Scale',
+                hideLabelsBtn: 'Hide Labels',
+                showLabelsBtn: 'Show Labels',
+                hideDecimalsBtn: 'Hide Decimals',
+                showDecimalsBtn: 'Show Decimals',
+                downloadChartBtn: 'Download Chart',
+                showAllBtn: 'Show All',
+                showLast24Btn: 'Last 24 points',
+                copyChartBtn: 'Copy Chart',
+                downloadTableBtn: 'Download Table',
+                hideTableBtn: 'Hide Table',
+                showTableBtn: 'Show Table',
+                years: 'Years',
+                weeks: 'Weeks',
+                months: 'Months',
+                days: 'Days',
+                semesters: 'Semesters',
+                fourmonths: 'Four-Month Periods',
+                trimesters: 'Quarters',
+                start: 'First in series',
+                end: 'Last in series',
+                headers: ['Period', 'Date', 'DP', 'DPA', 'MR', 'MRA', 'LCL', 'DLA', 'DUA', 'UCL', 'MRUCL', 'Signal'],
+                baseline: 'Baseline',
+                rule2: 'Rule 2',
+                rule3: 'Rule 3',
+                errorMinData: 'At least 8 data points required.',
+                errorInvalidData: 'Invalid numeric data.',
+                errorNoData: 'Enter some data.',
+                errorDate: 'Select a valid period and year.',
+                dataPointsSingular: 'data point',
+                dataPointsPlural: 'data points',
+                chartLabels: {
+                    dp: '(DP)',
+                    dpa: '(Center Line)',
+                    ucl: '(Upper Control Limit)',
+                    lcl: '(Lower Control Limit)',
+                    dua: '(DUA)',
+                    dla: '(DLA)',
+                },
+                comparisonTogglesTitle: 'Show/Hide Lines:',
+                    toggleDataset1DP: 'Dataset 1 DP',
+                    toggleDataset1DPA: 'Dataset 1 DPA',
+                    toggleDataset2DP: 'Dataset 2 DP',
+                    toggleDataset2DPA: 'Dataset 2 DPA'
+            }
+        };
+
+        // Parse data from input
+        function parseData(input) {
+            let items = input.split(/[\s\t\n]+/).filter(s => s.trim());
+            const result = [];
+
+            for (let item of items) {
+                let normalized = item.trim();
+
+                // Handle different decimal separators
+                if (normalized.includes(',') && normalized.includes('.')) {
+                    // Determine which is decimal separator based on position
+                    const lastCommaPos = normalized.lastIndexOf(',');
+                    const lastDotPos = normalized.lastIndexOf('.');
+
+                    if (lastDotPos > lastCommaPos) {
+                        // Dot is decimal separator, comma is thousands
+                        normalized = normalized.replace(/,/g, '');
+                    } else {
+                        // Comma is decimal separator, dot is thousands
+                        normalized = normalized.replace(/\./g, '').replace(',', '.');
+                    }
+                } else if (normalized.includes(',')) {
+                    // Only comma - check if it's decimal separator
+                    const commaPos = normalized.indexOf(',');
+                    const afterComma = normalized.substring(commaPos + 1);
+
+                    // If after comma has 1-3 digits, it's likely decimal
+                    if (afterComma.length <= 3 && !/[,.]/.test(afterComma)) {
+                        normalized = normalized.replace(',', '.');
+                    } else {
+                        // Thousands separator
+                        normalized = normalized.replace(/,/g, '');
+                    }
+                } else if (normalized.includes('.')) {
+                    // Only dot - check if it's decimal separator
+                    const dotPos = normalized.indexOf('.');
+                    const afterDot = normalized.substring(dotPos + 1);
+
+                    // If after dot has more than 3 digits, it's likely thousands separator
+                    if (afterDot.length > 3) {
+                        normalized = normalized.replace(/\./g, '');
+                    }
+                    // Otherwise, keep as is (decimal separator)
+                }
+
+                const num = parseFloat(normalized);
+                if (isNaN(num)) throw new Error('Invalid number: ' + item);
+                result.push(num);
+            }
+
+            return result;
+        }
+
+        // Update data counter
+        function updateDataCounter() {
+            const dataInput = document.getElementById('dataInput').value.trim();
+            const dataInput2 = document.getElementById('dataInput2').value.trim();
+            const counter = document.getElementById('dataCounter');
+            const counter2 = document.getElementById('dataCounter2');
+            const calcBtn = document.getElementById('calcBtn');
+            const t = isSpanish ? lang.es : lang.en;
+        
+            // First dataset
+            let count = 0;
+            if (dataInput) {
+                try {
+                    const data = parseData(dataInput);
+                    count = data.length;
+                } catch (e) {
+                    count = 0;
+                }
+            }
+        
+            const pointWord = count === 1 ? t.dataPointsSingular : t.dataPointsPlural;
+            const counterText = `${count} ${pointWord}`;
+            counter.textContent = counterText;
+            counter.className = 'data-counter';
+        
+            if (count === 0) {
+                counter.classList.add('insufficient');
+            } else if (count < 8) {
+                counter.classList.add('insufficient');
+            } else {
+                counter.classList.add('sufficient');
+            }
+        
+            // Second dataset
+            let count2 = 0;
+            if (dataInput2) {
+                try {
+                    const data2 = parseData(dataInput2);
+                    count2 = data2.length;
+                } catch (e) {
+                    count2 = 0;
+                }
+            }
+        
+            const pointWord2 = count2 === 1 ? t.dataPointsSingular : t.dataPointsPlural;
+            const counterText2 = `${count2} ${pointWord2}`;
+            counter2.textContent = counterText2;
+            counter2.className = 'data-counter';
+        
+            if (count2 === 0) {
+                counter2.classList.add('insufficient');
+            } else if (count2 < 8) {
+                counter2.classList.add('insufficient');
+            } else {
+                counter2.classList.add('sufficient');
+            }
+        
+            // Enable button if first dataset has at least 8 points
+            calcBtn.disabled = count < 8;
+        }
+
+        function toggleLabels() {
+           showLabels = !showLabels;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleLabelsBtn').textContent = showLabels ? t.hideLabelsBtn : t.showLabelsBtn;
+    
+        if (spcChart && currentResults) {
+            updateChart();
+            }
+        }
+        // Check if year is leap year
+        function isLeapYear(year) {
+            return (year % 4 === 0 && year % 100 !== 0) || (year % 400 === 0);
+        }
+
+        // Generate periods
+        function genPeriods(refPeriod, refYear, unit, type, count) {
+            const periods = [];
+
+            for (let i = 0; i < count; i++) {
+                let currentPeriod, currentYear;
+
+                if (type === 'start') {
+                    if (unit === 'years') {
+                        currentYear = refYear + i;
+                        periods.push(`${currentYear}`);
+                    } else if (unit === 'days') {
+                        const totalDays = parseInt(refPeriod) + i;
+                        const daysInYear = isLeapYear(refYear) ? 366 : 365;
+                        currentYear = refYear + Math.floor((totalDays - 1) / daysInYear);
+                        currentPeriod = ((totalDays - 1) % daysInYear) + 1;
+                        const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
+                        periods.push(`${dayLabel} ${currentYear}`);
+                    } else if (unit === 'weeks') {
+                        const totalWeeks = parseInt(refPeriod) + i;
+                        currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
+                        currentPeriod = ((totalWeeks - 1) % 52) + 1;
+                        periods.push(`S${currentPeriod} ${currentYear}`);
+                    } else if (unit === 'months') {
+                        const totalMonths = parseInt(refPeriod) + i;
+                        currentYear = refYear + Math.floor((totalMonths - 1) / 12);
+                        currentPeriod = ((totalMonths - 1) % 12) + 1;
+                        const monthNames = isSpanish ? 
+                            ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
+                            ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
+                    } else if (unit === 'semesters') {
+                        const totalSemesters = parseInt(refPeriod) + i;
+                        currentYear = refYear + Math.floor((totalSemesters - 1) / 2);
+                        currentPeriod = ((totalSemesters - 1) % 2) + 1;
+                        const semesterNames = isSpanish ? ['I', 'II'] : ['I', 'II'];
+                        periods.push(`${semesterNames[currentPeriod - 1]} ${currentYear}`);
+                    } else if (unit === 'fourmonths') {
+                        const totalFourMonths = parseInt(refPeriod) + i;
+                        currentYear = refYear + Math.floor((totalFourMonths - 1) / 3);
+                        currentPeriod = ((totalFourMonths - 1) % 3) + 1;
+                        const fourMonthNames = isSpanish ? ['I', 'II', 'III'] : ['I', 'II', 'III'];
+                        periods.push(`${fourMonthNames[currentPeriod - 1]} ${currentYear}`);
+                    } else if (unit === 'trimesters') {
+                        const totalTrimesters = parseInt(refPeriod) + i;
+                        currentYear = refYear + Math.floor((totalTrimesters - 1) / 4);
+                        currentPeriod = ((totalTrimesters - 1) % 4) + 1;
+                        const trimesterNames = isSpanish ? ['T1', 'T2', 'T3', 'T4'] : ['Q1', 'Q2', 'Q3', 'Q4'];
+                        periods.push(`${trimesterNames[currentPeriod - 1]} ${currentYear}`);
+                    }
+                } else {
+                    const offset = count - 1 - i;
+                    if (unit === 'years') {
+                        currentYear = refYear - offset;
+                        periods.push(`${currentYear}`);
+                    } else if (unit === 'days') {
+                        let totalDays = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalDays <= 0) {
+                            currentYear--;
+                            const daysInPrevYear = isLeapYear(currentYear) ? 366 : 365;
+                            totalDays += daysInPrevYear;
+                        }
+                        currentPeriod = totalDays;
+                        const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
+                        periods.push(`${dayLabel} ${currentYear}`);
+                    } else if (unit === 'weeks') {
+                        let totalWeeks = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalWeeks <= 0) {
+                            totalWeeks += 52;
+                            currentYear--;
+                        }
+                        currentPeriod = totalWeeks;
+                        periods.push(`S${currentPeriod} ${currentYear}`);
+                    } else if (unit === 'months') {
+                        let totalMonths = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalMonths <= 0) {
+                            totalMonths += 12;
+                            currentYear--;
+                        }
+                        currentPeriod = totalMonths;
+                        const monthNames = isSpanish ? 
+                            ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'] :
+                            ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                        periods.push(`${monthNames[currentPeriod - 1]} ${currentYear}`);
+                    } else if (unit === 'semesters') {
+                        let totalSemesters = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalSemesters <= 0) {
+                            totalSemesters += 2;
+                            currentYear--;
+                        }
+                        currentPeriod = totalSemesters;
+                        const semesterNames = isSpanish ? ['I', 'II'] : ['I', 'II'];
+                        periods.push(`${semesterNames[currentPeriod - 1]} ${currentYear}`);
+                    } else if (unit === 'fourmonths') {
+                        let totalFourMonths = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalFourMonths <= 0) {
+                            totalFourMonths += 3;
+                            currentYear--;
+                        }
+                        currentPeriod = totalFourMonths;
+                        const fourMonthNames = isSpanish ? ['I', 'II', 'III'] : ['I', 'II', 'III'];
+                        periods.push(`${fourMonthNames[currentPeriod - 1]} ${currentYear}`);
+                    } else if (unit === 'trimesters') {
+                        let totalTrimesters = parseInt(refPeriod) - offset;
+                        currentYear = refYear;
+                        while (totalTrimesters <= 0) {
+                            totalTrimesters += 4;
+                            currentYear--;
+                        }
+                        currentPeriod = totalTrimesters;
+                        const trimesterNames = isSpanish ? ['T1', 'T2', 'T3', 'T4'] : ['Q1', 'Q2', 'Q3', 'Q4'];
+                        periods.push(`${trimesterNames[currentPeriod - 1]} ${currentYear}`);
+                    }
+                }
+            }
+
+            return periods;
+        }
+
+        // Format number with appropriate decimal marker based on language
+        function fmt(num) {
+           const formatted = showDecimals ? num.toFixed(2) : Math.round(num).toString();
+        if (isSpanish) {
+            return formatted.replace('.', ',');
+        } else {
+            return formatted;
+        }
+    }
+
+        // Calculate SPC
+        function calcSPC(data, periods) {
+            const t = isSpanish ? lang.es : lang.en;
+            const results = data.map((dp, i) => ({
+                period: i + 1,
+                date: periods[i],
+                dp: dp,
+                dpa: null, mr: null, mra: null,
+                lcl: null, dla: null, dua: null, ucl: null, mrucl: null,
+                rule: null, ruleApplied: null, signal: null
+            }));
+
+            // Baseline calculation (first 8 points)
+            const dpa = data.slice(0, 8).reduce((a, b) => a + b) / 8;
+            const mrs = [];
+            for (let i = 1; i < 8; i++) {
+                mrs.push(Math.abs(data[i] - data[i-1]));
+            }
+            const mra = mrs.reduce((a, b) => a + b) / mrs.length;
+
+            const factor = Math.round((3/1.128) * 100000000) / 100000000;
+            const lcl = dpa - (mra * factor);
+            const ucl = dpa + (mra * factor);
+            const mrucl = mra * 3.27;
+            const dla = (lcl + dpa) / 2;
+            const dua = (dpa + ucl) / 2;
+
+            // Apply baseline to first 8 rows
+            for (let i = 0; i < 8; i++) {
+                results[i].dpa = dpa;
+                results[i].mra = mra;
+                results[i].lcl = lcl;
+                results[i].dla = dla;
+                results[i].dua = dua;
+                results[i].ucl = ucl;
+                results[i].mrucl = mrucl;
+                results[i].ruleApplied = t.baseline;
+                if (i > 0) results[i].mr = Math.abs(data[i] - data[i-1]);
+            }
+
+            // Process remaining points
+            for (let i = 8; i < data.length; i++) {
+                const curr = data[i];
+                const prev = data[i-1];
+                const mr = Math.abs(curr - prev);
+                results[i].mr = mr;
+
+                const currentResult = results[i-1];
+                const currentDPA = currentResult.dpa;
+                const currentMRA = currentResult.mra;
+                const currentLCL = currentResult.lcl;
+                const currentDLA = currentResult.dla;
+                const currentDUA = currentResult.dua;
+                const currentUCL = currentResult.ucl;
+                const currentMRUCL = currentResult.mrucl;
+
+                let ruleTriggered = false;
+
+                // Rule 1: DP outside control limits AND MR > MRUCL
+                if ((curr > currentUCL || curr < currentLCL) && mr > currentMRUCL) {
+                    results[i].signal = 1;
+                }
+
+                // Rule 2: All 8 recent DPs above or below current DPA
+                if (i >= 7) {
+                    const last8 = data.slice(i-7, i+1);
+                    const allAboveDPA = last8.every(dp => dp > currentDPA);
+                    const allBelowDPA = last8.every(dp => dp < currentDPA);
+
+                    if (allAboveDPA || allBelowDPA) {
+                        ruleTriggered = true;
+
+                        const newDPA = last8.reduce((a, b) => a + b) / 8;
+
+                        // Calculate 8 MR values: from (i-7) to i, including transition MR
+                        const newMRs = [];
+                        // First MR: transition from previous DP to first DP of the 8-point window
+                        if (i-8 >= 0) {
+                            newMRs.push(Math.abs(data[i-7] - data[i-8]));
+                        } else {
+                            newMRs.push(0); // No previous DP available
+                        }
+                        // Remaining 7 MRs: within the 8-point window
+                        for (let j = 1; j < 8; j++) {
+                            newMRs.push(Math.abs(last8[j] - last8[j-1]));
+                        }
+
+                        const newMRA = newMRs.reduce((a, b) => a + b) / newMRs.length;
+                        const newLCL = newDPA - (newMRA * factor);
+                        const newUCL = newDPA + (newMRA * factor);
+                        const newMRUCL = newMRA * 3.27;
+                        const newDLA = (newLCL + newDPA) / 2;
+                        const newDUA = (newDPA + newUCL) / 2;
+
+                        // Apply to ALL 8 rows involved
+                        for (let j = i-7; j <= i; j++) {
+                            results[j].dpa = newDPA;
+                            results[j].mra = newMRA;
+                            results[j].lcl = newLCL;
+                            results[j].dla = newDLA;
+                            results[j].dua = newDUA;
+                            results[j].ucl = newUCL;
+                            results[j].mrucl = newMRUCL;
+                            results[j].ruleApplied = t.rule2;
+                        }
+                        results[i].rule = t.rule2;
+                    }
+                }
+
+                // Rule 3: At least 3 of last 4 DPs above DUA or below DLA
+                if (!ruleTriggered && i >= 3) {
+                    const last4 = data.slice(i-3, i+1);
+                    const aboveDUA = last4.filter(dp => dp > currentDUA).length;
+                    const belowDLA = last4.filter(dp => dp < currentDLA).length;
+
+                    if (aboveDUA >= 3 || belowDLA >= 3) {
+                        ruleTriggered = true;
+
+                        const newDPA = last4.reduce((a, b) => a + b) / 4;
+
+                        // Calculate 4 MR values: from (i-3) to i, including transition MR
+                        const newMRs = [];
+                        // First MR: transition from previous DP to first DP of the 4-point window
+                        if (i-4 >= 0) {
+                            newMRs.push(Math.abs(data[i-3] - data[i-4]));
+                        } else {
+                            newMRs.push(0); // No previous DP available
+                        }
+                        // Remaining 3 MRs: within the 4-point window
+                        for (let j = 1; j < 4; j++) {
+                            newMRs.push(Math.abs(last4[j] - last4[j-1]));
+                        }
+
+                        const newMRA = newMRs.reduce((a, b) => a + b) / newMRs.length;
+                        const newLCL = newDPA - (newMRA * factor);
+                        const newUCL = newDPA + (newMRA * factor);
+                        const newMRUCL = newMRA * 3.27;
+                        const newDLA = (newLCL + newDPA) / 2;
+                        const newDUA = (newDPA + newUCL) / 2;
+
+                        // Apply to ALL 4 rows involved
+                        for (let j = i-3; j <= i; j++) {
+                            results[j].dpa = newDPA;
+                            results[j].mra = newMRA;
+                            results[j].lcl = newLCL;
+                            results[j].dla = newDLA;
+                            results[j].dua = newDUA;
+                            results[j].ucl = newUCL;
+                            results[j].mrucl = newMRUCL;
+                            results[j].ruleApplied = t.rule3;
+                        }
+                        results[i].rule = t.rule3;
+                    }
+                }
+
+                // If no rules triggered, copy current baseline
+                if (!ruleTriggered) {
+                    results[i].dpa = currentDPA;
+                    results[i].mra = currentMRA;
+                    results[i].lcl = currentLCL;
+                    results[i].dla = currentDLA;
+                    results[i].dua = currentDUA;
+                    results[i].ucl = currentUCL;
+                    results[i].mrucl = currentMRUCL;
+                    results[i].ruleApplied = currentResult.ruleApplied;
+                }
+            }
+
+            return results;
+        }
+
+        // Update period selector based on time unit
+        function updatePeriodSelector() {
+            const timeUnit = document.getElementById('timeUnitSelect').value;
+            const periodSelect = document.getElementById('periodSelect');
+            const periodSelectContainer = periodSelect.parentElement;
+            const currentDate = new Date();
+            let currentYear = parseInt(document.getElementById('yearRef').value) || currentDate.getFullYear();
+
+            if (timeUnit === 'years') {
+                // Hide the period selector when years is selected
+                periodSelectContainer.style.display = 'none';
+                // Set a default value for internal use
+                periodSelect.innerHTML = '<option value="1">Year</option>';
+                periodSelect.value = '1';
+                // Set year to previous year when years is selected
+                document.getElementById('yearRef').value = currentDate.getFullYear() - 1;
+            } else {
+                // Show the period selector for other time units
+                periodSelectContainer.style.display = 'block';
+                // Reset year to current year when switching from years to other units
+                currentYear = currentDate.getFullYear();
+                document.getElementById('yearRef').value = currentYear;
+
+                if (timeUnit === 'days') {
+                    let options = '';
+                    const daysInYear = isLeapYear(currentYear) ? 366 : 365;
+                    const dayLabel = isSpanish ? 'Día' : 'Day';
+                    for (let i = 1; i <= daysInYear; i++) {
+                        options += `<option value="${i}">${dayLabel} ${i}</option>`;
+                    }
+                    periodSelect.innerHTML = options;
+
+                    // Set to yesterday (previous day) by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentDay = Math.floor((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (24 * 60 * 60 * 1000)) + 1;
+                        const previousDay = currentDay > 1 ? currentDay - 1 : daysInYear;
+                        periodSelect.value = previousDay;
+                    } else {
+                        periodSelect.value = daysInYear; // If different year, default to last day
+                    }
+                } else if (timeUnit === 'weeks') {
+                    let options = '';
+                    const weekLabel = isSpanish ? 'Semana' : 'Week';
+                    for (let i = 1; i <= 52; i++) {
+                        options += `<option value="${i}">${weekLabel} ${i}</option>`;
+                    }
+                    periodSelect.innerHTML = options;
+
+                    // Set to previous week by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentWeek = Math.ceil((currentDate - new Date(currentDate.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+                        const previousWeek = currentWeek > 1 ? currentWeek - 1 : 52;
+                        periodSelect.value = previousWeek;
+                    } else {
+                        periodSelect.value = 52; // If different year, default to last week
+                    }
+                } else if (timeUnit === 'months') {
+                    const monthNames = isSpanish ? 
+                        ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'] :
+                        ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+                    let options = '';
+                    monthNames.forEach((month, index) => {
+                        options += `<option value="${index + 1}">${month}</option>`;
+                    });
+                    periodSelect.innerHTML = options;
+
+                    // Set to previous month by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const previousMonth = currentMonth > 1 ? currentMonth - 1 : 12;
+                        periodSelect.value = previousMonth;
+                    } else {
+                        periodSelect.value = 12; // If different year, default to December
+                    }
+                } else if (timeUnit === 'semesters') {
+                    const semesterNames = isSpanish ? 
+                        ['1er Semestre', '2o Semestre'] : 
+                        ['1st Semester', '2nd Semester'];
+
+                    let options = '';
+                    semesterNames.forEach((semester, index) => {
+                        options += `<option value="${index + 1}">${semester}</option>`;
+                    });
+                    periodSelect.innerHTML = options;
+
+                    // Set to previous semester by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const currentSemester = currentMonth <= 6 ? 1 : 2;
+                        const previousSemester = currentSemester === 1 ? 2 : 1;
+                        periodSelect.value = previousSemester;
+                    } else {
+                        periodSelect.value = 2; // If different year, default to second semester
+                    }
+                } else if (timeUnit === 'fourmonths') {
+                    const fourMonthNames = isSpanish ? 
+                        ['1er Cuatrimestre', '2o Cuatrimestre', '3er Cuatrimestre'] :
+                        ['1st Third', '2nd Third', '3rd Third'];
+
+                    let options = '';
+                    fourMonthNames.forEach((fourMonth, index) => {
+                        options += `<option value="${index + 1}">${fourMonth}</option>`;
+                    });
+                    periodSelect.innerHTML = options;
+
+                    // Set to previous four-month period by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const currentFourMonth = currentMonth <= 4 ? 1 : (currentMonth <= 8 ? 2 : 3);
+                        const previousFourMonth = currentFourMonth === 1 ? 3 : currentFourMonth - 1;
+                        periodSelect.value = previousFourMonth;
+                    } else {
+                        periodSelect.value = 3; // If different year, default to third four-month period
+                    }
+                } else if (timeUnit === 'trimesters') {
+                    const trimesterNames = isSpanish ? 
+                        ['1er Trimestre', '2o Trimestre', '3er Trimestre', '4o Trimestre'] :
+                        ['1st Quarter', '2nd Quarter', '3rd Quarter', '4th Quarter'];
+
+                    let options = '';
+                    trimesterNames.forEach((trimester, index) => {
+                        options += `<option value="${index + 1}">${trimester}</option>`;
+                    });
+                    periodSelect.innerHTML = options;
+
+                    // Set to previous quarter by default
+                    if (currentYear === currentDate.getFullYear()) {
+                        const currentMonth = currentDate.getMonth() + 1;
+                        const currentQuarter = Math.ceil(currentMonth / 3);
+                        const previousQuarter = currentQuarter === 1 ? 4 : currentQuarter - 1;
+                        periodSelect.value = previousQuarter;
+                    } else {
+                        periodSelect.value = 4; // If different year, default to fourth quarter
+                    }
+                }
+            }
+        }
+
+        // Update existing table and chart when language changes
+        function updateExistingResults() {
+            if (!currentResults) return;
+
+            // Get original parameters from the UI
+            const timeUnit = document.getElementById('timeUnitSelect').value;
+            const refPeriod = document.getElementById('periodSelect').value;
+            const refYear = parseInt(document.getElementById('yearRef').value);
+            const dateType = document.querySelector('input[name="dateType"]:checked').value;
+
+            // Regenerate periods with new language
+            const newPeriods = genPeriods(refPeriod, refYear, timeUnit, dateType, currentResults.length);
+
+            // Update the results with new periods
+            currentResults.forEach((result, index) => {
+                result.date = newPeriods[index];
+            });
+
+            // Update table if visible
+            if (currentResults) {
+                showResults(currentResults);
+            }
+        }
+
+        // Update interface language
+        function updateLang() {
+            const t = isSpanish ? lang.es : lang.en;
+
+            document.getElementById('langBtn').textContent = isSpanish ? 'English' : 'Español';
+            document.getElementById('title').textContent = t.title;
+            document.getElementById('subtitle').textContent = t.subtitle;
+            document.getElementById('author').textContent = t.author;
+            document.getElementById('dataLabel').textContent = t.dataLabel;
+            document.getElementById('dataNameLabel').textContent = t.dataNameLabel;
+            document.getElementById('dataNameInput').placeholder = t.dataNamePlaceholder;
+            document.getElementById('dataInput').placeholder = t.dataInputPlaceholder;
+            document.getElementById('dataLabel2').textContent = t.dataLabel2;
+            document.getElementById('dataNameLabel2').textContent = t.dataNameLabel2;
+            document.getElementById('dataNameInput2').placeholder = t.dataNamePlaceholder2;
+            document.getElementById('timeLabel').textContent = t.timeLabel;
+            document.getElementById('periodLabel').textContent = t.periodLabel;
+            document.getElementById('yearRefLabel').textContent = t.yearRefLabel;
+            document.getElementById('typeLabel').textContent = t.typeLabel;
+            document.getElementById('calcBtn').textContent = t.calcBtn;
+            document.getElementById('clearBtn').textContent = t.clearBtn;
+            document.getElementById('resultsTitle').textContent = t.resultsTitle;
+            document.getElementById('chartTitle').textContent = t.chartTitle;
+            document.getElementById('chartTitleInput').placeholder = t.chartTitlePlaceholder;
+            document.getElementById('updateChartBtn').textContent = t.updateChartBtn;
+            document.getElementById('downloadChartBtn').textContent = t.downloadChartBtn;
+            document.getElementById('copyChartBtn').textContent = t.copyChartBtn;
+            document.getElementById('showAllBtn').textContent = t.showAllBtn;
+            document.getElementById('showLast24Btn').textContent = t.showLast24Btn;
+            document.getElementById('downloadTableBtn').textContent = t.downloadTableBtn;
+            document.getElementById('toggleTableBtn').textContent = isTableVisible ? t.hideTableBtn : t.showTableBtn;
+            document.getElementById('yearsOption').textContent = t.years;
+            document.getElementById('monthsOption').textContent = t.months;
+            document.getElementById('weeksOption').textContent = t.weeks;
+            document.getElementById('daysOption').textContent = t.days;
+            document.getElementById('semestersOption').textContent = t.semesters;
+            document.getElementById('fourmonthsOption').textContent = t.fourmonths;
+            document.getElementById('trimestersOption').textContent = t.trimesters;
+            document.getElementById('startLabel').textContent = t.start;
+            document.getElementById('endLabel').textContent = t.end;
+            document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+            document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
+            document.getElementById('backToIndex').textContent = t.backToIndex;
+            document.getElementById('comparisonTogglesTitle').textContent = t.comparisonTogglesTitle;
+            document.getElementById('toggleDataset1DPBtn').textContent = t.toggleDataset1DP;
+            document.getElementById('toggleDataset1DPABtn').textContent = t.toggleDataset1DPA;
+            document.getElementById('toggleDataset2DPBtn').textContent = t.toggleDataset2DP;
+            document.getElementById('toggleDataset2DPABtn').textContent = t.toggleDataset2DPA;
+
+            
+            // View controls
+            document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
+            updateRangeInfo();
+            updatePeriodSelector();
+            updateDataCounter(); // Update counter text with new language
+
+            const headers = document.getElementById('tableHead');
+            headers.innerHTML = t.headers.map(h => `<th>${h}</th>`).join('');
+
+            // Update chart if it exists
+            if (spcChart && currentResults) {
+                updateChart();
+            }
+
+            // Update existing results with new language
+            updateExistingResults();
+
+            // Update toggle labels button text
+            document.getElementById('toggleLabelsBtn').textContent = showLabels ? t.hideLabelsBtn : t.showLabelsBtn;
+        }
+
+            // Get filtered results based on range
+            function getFilteredResults() {
+                if (!currentResults) return null;
+            
+                const start = Math.max(0, rangeStart - 1);
+                const end = Math.min(currentResults.length, rangeEnd);
+                
+                return currentResults.slice(start, end);
+            }
+            
+            // Update range display info
+            function updateRangeInfo() {
+                if (!currentResults) return;
+            
+                const t = isSpanish ? lang.es : lang.en;
+                const totalPoints = currentResults.length;
+                const info = `${t.viewingPoints} ${rangeStart} - ${rangeEnd} ${isSpanish ? 'de' : 'of'} ${totalPoints} ${isSpanish ? 'totales' : 'total'}`;
+                
+                document.getElementById('rangeInfo').textContent = info;
+                
+                // Update slider fill visual
+                updateSliderFill();
+            }
+            
+            // Update the visual fill between slider handles
+            function updateSliderFill() {
+                if (!currentResults) return;
+                
+                const totalPoints = currentResults.length;
+                const startPercent = ((rangeStart - 1) / (totalPoints - 1)) * 100;
+                const endPercent = ((rangeEnd - 1) / (totalPoints - 1)) * 100;
+                
+                const fill = document.getElementById('rangeFill');
+                fill.style.left = startPercent + '%';
+                fill.style.width = (endPercent - startPercent) + '%';
+            }
+            
+            // Update range values from sliders
+            function updateRange() {
+                const startSlider = document.getElementById('rangeStartSlider');
+                const endSlider = document.getElementById('rangeEndSlider');
+            
+                if (!currentResults) return;
+            
+                const totalPoints = currentResults.length;
+                let start = parseInt(startSlider.value);
+                let end = parseInt(endSlider.value);
+            
+                // Ensure minimum 8-point span
+                if (end - start < 7) {
+                    // Determine which slider was moved last by comparing to current values
+                    if (start !== rangeStart) {
+                        // Start slider was moved, adjust end
+                        end = Math.min(start + 7, totalPoints);
+                        endSlider.value = end;
+                    } else {
+                        // End slider was moved, adjust start
+                        start = Math.max(end - 7, 1);
+                        startSlider.value = start;
+                    }
+                }
+            
+                rangeStart = start;
+                rangeEnd = end;
+            
+                updateRangeInfo();
+            
+                if (currentResults) {
+                    updateChart();
+                    updateTableDisplay();
+                }
+            }
+
+            // Show all data points
+            function showAllPoints() {
+                if (!currentResults) return;
+                
+                const totalPoints = currentResults.length;
+                rangeStart = 1;
+                rangeEnd = totalPoints;
+                
+                document.getElementById('rangeStartSlider').value = 1;
+                document.getElementById('rangeEndSlider').value = totalPoints;
+                
+                updateRangeInfo();
+                updateChart();
+                updateTableDisplay();
+            }
+            
+            // Show last 24 points
+            function showLast24Points() {
+                if (!currentResults) return;
+                
+                const totalPoints = currentResults.length;
+                
+                if (totalPoints <= 24) {
+                    // If 24 or fewer points, just show all
+                    showAllPoints();
+                    return;
+                }
+                
+                rangeStart = totalPoints - 23; // -23 because we want to include the last point (24 total)
+                rangeEnd = totalPoints;
+                
+                document.getElementById('rangeStartSlider').value = rangeStart;
+                document.getElementById('rangeEndSlider').value = rangeEnd;
+                
+                updateRangeInfo();
+                updateChart();
+                updateTableDisplay();
+            }
+
+            // Initialize range controls
+            function initializeRangeControls() {
+                if (!currentResults) return;
+            
+                const totalPoints = currentResults.length;
+                const startSlider = document.getElementById('rangeStartSlider');
+                const endSlider = document.getElementById('rangeEndSlider');
+            
+                // Set max values
+                startSlider.max = totalPoints;
+                endSlider.max = totalPoints;
+            
+                // Set initial values to show all
+                rangeStart = 1;
+                rangeEnd = totalPoints;
+            
+                startSlider.value = 1;
+                endSlider.value = totalPoints;
+            
+                updateRangeInfo();
+            }
+            
+            // Update table display based on filtered results
+            function updateTableDisplay() {
+                const filteredResults = getFilteredResults();
+                if (!filteredResults) return;
+            
+                const tbody = document.getElementById('tableBody');
+                tbody.innerHTML = '';
+            
+                const t = isSpanish ? lang.es : lang.en;
+            
+                filteredResults.forEach(row => {
+                    const tr = document.createElement('tr');
+                    if (!isSpanish) {
+                        if (row.ruleApplied === t.baseline) tr.classList.add('baseline-row');
+                        else if (row.ruleApplied === t.rule2 || row.ruleApplied === t.rule3) tr.classList.add('rule-row');
+                    }
+            
+                    const cells = [
+                        row.period,
+                        row.date,
+                        fmt(row.dp),
+                        row.dpa ? fmt(row.dpa) : '',
+                        row.mr ? fmt(row.mr) : '',
+                        row.mra ? fmt(row.mra) : '',
+                        row.lcl ? fmt(row.lcl) : '',
+                        row.dla ? fmt(row.dla) : '',
+                        row.dua ? fmt(row.dua) : '',
+                        row.ucl ? fmt(row.ucl) : '',
+                        row.mrucl ? fmt(row.mrucl) : '',
+                        row.signal || ''
+                    ];
+            
+                    cells.forEach((cell, i) => {
+                        const td = document.createElement('td');
+                        td.textContent = cell;
+                        if (i === 11 && cell) td.classList.add('signal-cell');
+                        tr.appendChild(td);
+                    });
+            
+                    tbody.appendChild(tr);
+                });
+            }
+        
+        // Create or update chart
+        // Create or update chart
+function updateChart() {
+    if (!currentResults) return;
+
+    const t = isSpanish ? lang.es : lang.en;
+    const ctx = document.getElementById('spcChart').getContext('2d');
+
+    // Destroy existing chart
+    if (spcChart) {
+        spcChart.destroy();
+    }
+
+    // Check if we're in comparison mode
+    if (currentResults2) {
+        // COMPARISON MODE - No control limits, just DP and DPA lines
+        const customDataName = document.getElementById('dataNameInput').value.trim() || (isSpanish ? 'Conjunto 1' : 'Dataset 1');
+        const customDataName2 = document.getElementById('dataNameInput2').value.trim() || (isSpanish ? 'Conjunto 2' : 'Dataset 2');
+
+        const labels1 = currentResults.map(r => r.date);
+        const labels2 = currentResults2.map(r => r.date);
+        
+        // Use the longer dataset's labels
+        const labels = labels1.length >= labels2.length ? labels1 : labels2;
+
+        const dpData1 = currentResults.map(r => r.dp);
+        const dpaData1 = currentResults.map(r => r.dpa);
+        const dpData2 = currentResults2.map(r => r.dp);
+        const dpaData2 = currentResults2.map(r => r.dpa);
+
+        // Get time unit and format period count
+        const timeUnit = document.getElementById('timeUnitSelect').value;
+        const dataCount1 = currentResults.length;
+        const dataCount2 = currentResults2.length;
+        let periodText = '';
+        
+        if (timeUnit === 'years') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} años)` : `(${dataCount1} & ${dataCount2} years)`;
+        } else if (timeUnit === 'months') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} meses)` : `(${dataCount1} & ${dataCount2} months)`;
+        } else if (timeUnit === 'weeks') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} semanas)` : `(${dataCount1} & ${dataCount2} weeks)`;
+        } else if (timeUnit === 'days') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} días)` : `(${dataCount1} & ${dataCount2} days)`;
+        } else if (timeUnit === 'semesters') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} semestres)` : `(${dataCount1} & ${dataCount2} semesters)`;
+        } else if (timeUnit === 'fourmonths') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} cuatrimestres)` : `(${dataCount1} & ${dataCount2} four-month periods)`;
+        } else if (timeUnit === 'trimesters') {
+            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} trimestres)` : `(${dataCount1} & ${dataCount2} quarters)`;
+        }
+
+        const customTitle = document.getElementById('chartTitleInput').value.trim();
+        const baseTitle = customTitle || (isSpanish ? 'Gráfico de Comparación' : 'Comparison Chart');
+        const chartTitle = `${baseTitle} ${periodText}`;
+
+        const datasets = [];
+
+        // Dataset 1 DP (solid blue)
+        if (showDataset1DP) {
+            datasets.push({
+                label: `${customDataName} - DP`,
+                data: dpData1,
+                borderColor: '#4169E1',
+                backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#4169E1',
+                pointBorderColor: '#4169E1',
+                pointRadius: 3,
+                pointHoverRadius: 4,
+                tension: 0,
+                borderDash: []
+            });
+        }
+
+        // Dataset 1 DPA (solid green)
+        if (showDataset1DPA) {
+            datasets.push({
+                label: `${customDataName} - DPA`,
+                data: dpaData1,
+                borderColor: '#228B22',
+                backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: []
+            });
+        }
+
+        // Dataset 2 DP (dashed blue)
+        if (showDataset2DP) {
+            datasets.push({
+                label: `${customDataName2} - DP`,
+                data: dpData2,
+                borderColor: '#4169E1',
+                backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: '#4169E1',
+                pointBorderColor: '#4169E1',
+                pointRadius: 3,
+                pointHoverRadius: 4,
+                tension: 0,
+                borderDash: [5, 5]
+            });
+        }
+
+        // Dataset 2 DPA (dashed green)
+        if (showDataset2DPA) {
+            datasets.push({
+                label: `${customDataName2} - DPA`,
+                data: dpaData2,
+                borderColor: '#228B22',
+                backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: [5, 5]
+            });
+        }
+
+        spcChart = new Chart(ctx, {
+            type: 'line',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chartTitle,
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: false,
+                            padding: 20,
+                            boxWidth: 20,
+                            boxHeight: 8,
+                            generateLabels: function(chart) {
+                                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                const labels = original.call(this, chart);
+                                return labels.map(label => {
+                                    label.fillStyle = label.strokeStyle;
+                                    return label;
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        usePointStyle: false,
+                        boxWidth: 20,
+                        boxHeight: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                return context.dataset.label + ': ' + fmt(value);
+                            },
+                            labelColor: function(context) {
+                                return {
+                                    borderColor: context.dataset.borderColor,
+                                    backgroundColor: context.dataset.borderColor,
+                                    borderWidth: 1,
+                                    borderRadius: 0
+                                };
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: false
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Período' : 'Period',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: yAxisFromZero,
+                        min: yAxisFromZero ? 0 : undefined,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Valor' : 'Value',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+
+    } else {
+        // NORMAL MODE - Original chart with control limits
+        const filteredResults = getFilteredResults();
+        if (!filteredResults || filteredResults.length === 0) return;
+
+        // Get custom data name or use default
+        const customDataName = document.getElementById('dataNameInput').value.trim();
+        const dataLabel = customDataName || '(DP)';
+
+        // Get time unit and format period count
+        const timeUnit = document.getElementById('timeUnitSelect').value;
+        const dataCount = filteredResults.length;
+        let periodText = '';
+        
+        if (timeUnit === 'years') {
+            periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
+        } else if (timeUnit === 'months') {
+            periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
+        } else if (timeUnit === 'weeks') {
+            periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
+        } else if (timeUnit === 'days') {
+            periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
+        } else if (timeUnit === 'semesters') {
+            periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
+        } else if (timeUnit === 'fourmonths') {
+            periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
+        } else if (timeUnit === 'trimesters') {
+            periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
+        }
+
+        // Prepare data
+        const labels = filteredResults.map(r => r.date);
+        const dpData = filteredResults.map(r => r.dp);
+        const dpaData = filteredResults.map(r => r.dpa);
+        const uclData = filteredResults.map(r => r.ucl);
+        const lclData = filteredResults.map(r => r.lcl);
+
+        // Prepare point colors for DP line (red for signals, blue for normal)
+        const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+        const dpPointBorderColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
+
+        // Custom title from input with period count
+        const customTitle = document.getElementById('chartTitleInput').value.trim();
+        const baseTitle = customTitle || t.chartTitle;
+        const chartTitle = `${baseTitle} ${periodText}`;
+
+        spcChart = new Chart(ctx, {
+            type: 'line',
+            plugins: [ChartDataLabels],
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: dataLabel,
+                        data: dpData,
+                        borderColor: '#4169E1',
+                        backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                        borderWidth: 2,
+                        pointBackgroundColor: dpPointColors,
+                        pointBorderColor: dpPointBorderColors,
+                        pointRadius: 3,
+                        pointHoverRadius: 4,
+                        tension: 0
+                    },
+                    {
+                        label: t.chartLabels.dpa,
+                        data: dpaData,
+                        borderColor: '#228B22',
+                        backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0
+                    },
+                    {
+                        label: t.chartLabels.ucl,
+                        data: uclData,
+                        borderColor: '#DC143C',
+                        backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0
+                    },
+                    {
+                        label: t.chartLabels.lcl,
+                        data: lclData,
+                        borderColor: '#DC143C',
+                        backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: chartTitle,
+                        font: {
+                            size: 16,
+                            weight: 'bold'
+                        },
+                        color: '#2c3e50'
+                    },
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            usePointStyle: false,
+                            padding: 20,
+                            boxWidth: 20,
+                            boxHeight: 8,
+                            generateLabels: function(chart) {
+                                const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                const labels = original.call(this, chart);
+
+                                return labels.map(label => {
+                                    label.fillStyle = label.strokeStyle;
+                                    return label;
+                                });
+                            }
+                        }
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        usePointStyle: false,
+                        boxWidth: 20,
+                        boxHeight: 8,
+                        filter: function(tooltipItem) {
+                            return true;
+                        },
+                        itemSort: function(a, b) {
+                            const getOrder = (label) => {
+                                if (label.includes('UCL')) return 1;
+                                if (label.includes('DP') || (!label.includes('DPA') && !label.includes('UCL') && !label.includes('LCL'))) return 2;
+                                if (label.includes('DPA')) return 3;
+                                if (label.includes('LCL')) return 4;
+                                return 5;
+                            };
+                            return getOrder(a.dataset.label) - getOrder(b.dataset.label);
+                        },
+                        callbacks: {
+                            label: function(context) {
+                                const value = context.parsed.y;
+                                return context.dataset.label + ': ' + fmt(value);
+                            },
+                            labelColor: function(context) {
+                                return {
+                                    borderColor: context.dataset.borderColor,
+                                    backgroundColor: context.dataset.borderColor,
+                                    borderWidth: 1,
+                                    borderRadius: 0
+                                };
+                            }
+                        }
+                    },
+                    datalabels: {
+                        display: function(context) {
+                            return context.datasetIndex === 0 && showLabels;
+                        },
+                        align: 'top',
+                        offset: 8,
+                        color: function(context) {
+                            const result = filteredResults[context.dataIndex];
+                            return result.signal === 1 ? '#FF0000' : '#4169E1';
+                        },
+                        font: {
+                            size: 10,
+                            weight: 'bold'
+                        },
+                        formatter: function(value) {
+                            return fmt(value);
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        display: true,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Período' : 'Period',
+                            font: {
+                                weight: 'bold'
+                            }
+                        },
+                        ticks: {
+                            maxRotation: 45
+                        },
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        display: true,
+                        beginAtZero: yAxisFromZero,
+                        min: yAxisFromZero ? 0 : undefined,
+                        title: {
+                            display: true,
+                            text: isSpanish ? 'Valor' : 'Value',
+                            font: {
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                interaction: {
+                    mode: 'nearest',
+                    axis: 'x',
+                    intersect: false
+                }
+            }
+        });
+    }
+}
+        // Copy chart to clipboard
+        async function copyChart() {
+            if (!spcChart) return;
+
+            try {
+                const canvas = spcChart.canvas;
+
+                // Create a blob from the canvas
+                canvas.toBlob(async (blob) => {
+                    try {
+                        const item = new ClipboardItem({ 'image/png': blob });
+                        await navigator.clipboard.write([item]);
+
+                        // Show success feedback
+                        const btn = document.getElementById('copyChartBtn');
+                        const originalText = btn.textContent;
+                        btn.textContent = isSpanish ? '¡Copiado!' : 'Copied!';
+                        btn.style.backgroundColor = '#28a745';
+
+                        setTimeout(() => {
+                            btn.textContent = originalText;
+                            btn.style.backgroundColor = '#6f42c1';
+                        }, 2000);
+                    } catch (err) {
+                        console.error('Failed to copy chart: ', err);
+                        // Fallback: show instruction to right-click
+                        alert(isSpanish ? 
+                            'No se pudo copiar automáticamente. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
+                            'Could not copy automatically. Right-click on the chart and select "Copy image".');
+                    }
+                }, 'image/png');
+            } catch (err) {
+                console.error('Failed to copy chart: ', err);
+                alert(isSpanish ? 
+                    'No se pudo copiar el gráfico. Haga clic derecho en el gráfico y seleccione "Copiar imagen".' :
+                    'Could not copy chart. Right-click on the chart and select "Copy image".');
+            }
+        }
+
+        // Toggle decimals on and off in chart
+        function toggleDecimals() {
+            showDecimals = !showDecimals;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+    
+        if (spcChart && currentResults) {
+            updateChart();
+            }    
+        }
+
+        function toggleYAxis() {
+            yAxisFromZero = !yAxisFromZero;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
+    
+        if (spcChart && currentResults) {
+            updateChart();
+            }
+        }
+        
+        // Download chart as image
+        function downloadChart() {
+            if (!spcChart) return;
+
+            const customTitle = document.getElementById('chartTitleInput').value.trim();
+            const t = isSpanish ? lang.es : lang.en;
+            const filename = customTitle || t.chartTitle;
+
+            const link = document.createElement('a');
+            link.download = `${filename}.png`;
+            link.href = spcChart.toBase64Image('image/png', 1.0);
+            link.click();
+        }
+
+        // Download table as Excel file
+        function downloadTable() {
+            if (!currentResults) return;
+
+            const t = isSpanish ? lang.es : lang.en;
+
+            const excelData = currentResults.map(row => ({
+                [t.headers[0]]: row.period,
+                [t.headers[1]]: row.date,
+                [t.headers[2]]: row.dp,
+                [t.headers[3]]: row.dpa || '',
+                [t.headers[4]]: row.mr || '',
+                [t.headers[5]]: row.mra || '',
+                [t.headers[6]]: row.lcl || '',
+                [t.headers[7]]: row.dla || '',
+                [t.headers[8]]: row.dua || '',
+                [t.headers[9]]: row.ucl || '',
+                [t.headers[10]]: row.mrucl || '',
+                [t.headers[11]]: row.signal || ''
+            }));
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(excelData);
+
+            XLSX.utils.book_append_sheet(wb, ws, t.resultsTitle);
+
+            const customDataName = document.getElementById('dataNameInput').value.trim();
+            const dataName = customDataName || (isSpanish ? 'Datos_SPC' : 'SPC_Data');
+            const filename = `${dataName}_${t.resultsTitle}.xlsx`;
+
+            XLSX.writeFile(wb, filename);
+        }
+
+        // Toggle table visibility
+        function toggleTable() {
+            const t = isSpanish ? lang.es : lang.en;
+            const tableContainer = document.getElementById('tableContainer');
+            const toggleBtn = document.getElementById('toggleTableBtn');
+
+            isTableVisible = !isTableVisible;
+
+            if (isTableVisible) {
+                tableContainer.style.display = 'block';
+                toggleBtn.textContent = t.hideTableBtn;
+            } else {
+                tableContainer.style.display = 'none';
+                toggleBtn.textContent = t.showTableBtn;
+            }
+        }
+
+        // Display results
+        // Display results
+function showResults(results, results2 = null) {
+    currentResults = results;
+    currentResults2 = results2;
+
+    // Show/hide comparison toggles
+    const comparisonToggles = document.getElementById('comparisonToggles');
+    if (results2) {
+        comparisonToggles.classList.remove('hidden');
+    } else {
+        comparisonToggles.classList.add('hidden');
+    }
+
+    // Show view controls if more than 8 points
+    const viewControls = document.getElementById('viewControls');
+    if (results.length > 8) {
+        viewControls.classList.remove('hidden');
+        initializeRangeControls();
+    } else {
+        viewControls.classList.add('hidden');
+    }
+
+    // Update table display
+    updateTableDisplay();
+
+    document.getElementById('resultsDiv').classList.remove('hidden');
+    document.getElementById('chartDiv').classList.remove('hidden');
+
+    const t = isSpanish ? lang.es : lang.en;
+    const tableContainer = document.getElementById('tableContainer');
+    const toggleBtn = document.getElementById('toggleTableBtn');
+
+    if (isTableVisible) {
+        tableContainer.style.display = 'block';
+        toggleBtn.textContent = t.hideTableBtn;
+    } else {
+        tableContainer.style.display = 'none';
+        toggleBtn.textContent = t.showTableBtn;
+    }
+
+    updateChart();
+}
+
+       // Show error
+        function showError(msg) {
+            document.getElementById('errorMsg').textContent = msg;
+            document.getElementById('errorDiv').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('errorDiv').classList.add('hidden');
+            }, 5000);
+        }
+
+        // Clear function
+        function clearAll() {
+            document.getElementById('dataInput').value = '';
+            document.getElementById('dataNameInput').value = '';
+            document.getElementById('chartTitleInput').value = '';
+            document.getElementById('errorDiv').classList.add('hidden');
+            document.getElementById('resultsDiv').classList.add('hidden');
+            document.getElementById('chartDiv').classList.add('hidden');
+            document.getElementById('viewControls').classList.add('hidden');
+            // Reset range
+            rangeStart = 1;
+            rangeEnd = 1;
+
+            // Reset to current month/week and year
+            const currentDate = new Date();
+            document.getElementById('yearRef').value = currentDate.getFullYear();
+            // Keep the currently selected time unit instead of resetting to months
+            // document.getElementById('monthsRadio').checked = true;
+            document.getElementById('endRadio').checked = true;
+            updatePeriodSelector();
+            updateDataCounter(); // Update counter after clearing
+
+            if (spcChart) {
+                spcChart.destroy();
+                spcChart = null;
+            }
+            currentResults = null;
+            currentResults2 = null;
+        }
+
+        // Main calculation function
+function calculate() {
+    const t = isSpanish ? lang.es : lang.en;
+
+    document.getElementById('errorDiv').classList.add('hidden');
+    document.getElementById('resultsDiv').classList.add('hidden');
+    document.getElementById('chartDiv').classList.add('hidden');
+
+    const dataInput = document.getElementById('dataInput').value.trim();
+    const dataInput2 = document.getElementById('dataInput2').value.trim();
+    const timeUnit = document.getElementById('timeUnitSelect').value;
+    const refPeriod = document.getElementById('periodSelect').value;
+    const refYear = parseInt(document.getElementById('yearRef').value);
+    const dateType = document.querySelector('input[name="dateType"]:checked').value;
+
+    if (!dataInput) return showError(t.errorNoData);
+    if (!refPeriod || !refYear || refYear < 1900 || refYear > 2100) return showError(t.errorDate);
+
+    let data;
+    try {
+        data = parseData(dataInput);
+    } catch (e) {
+        return showError(t.errorInvalidData);
+    }
+
+    if (data.length < 8) return showError(t.errorMinData);
+
+    const periods = genPeriods(refPeriod, refYear, timeUnit, dateType, data.length);
+    const results = calcSPC(data, periods);
+
+    // Process second dataset if provided
+    let results2 = null;
+    if (dataInput2) {
+        let data2;
+        try {
+            data2 = parseData(dataInput2);
+        } catch (e) {
+            return showError(t.errorInvalidData);
+        }
+
+        if (data2.length >= 8) {
+            const periods2 = genPeriods(refPeriod, refYear, timeUnit, dateType, data2.length);
+            results2 = calcSPC(data2, periods2);
+        }
+    }
+
+    showResults(results, results2);
+}
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentDate = new Date();
+            document.getElementById('yearRef').value = currentDate.getFullYear();
+
+        
+            updatePeriodSelector(); // Set current month/week by default
+            updateDataCounter(); // Initialize counter
+
+            // Add event listener for data input changes
+            document.getElementById('dataInput').addEventListener('input', updateDataCounter);
+            document.getElementById('dataInput2').addEventListener('input', updateDataCounter);
+            document.getElementById('langBtn').onclick = function() {
+                isSpanish = !isSpanish;
+                updateLang();
+            };
+
+            document.getElementById('timeUnitSelect').addEventListener('change', updatePeriodSelector);
+
+            // Add event listener for year changes to update days selector
+            document.getElementById('yearRef').addEventListener('change', function() {
+                const timeUnit = document.getElementById('timeUnitSelect').value;
+                if (timeUnit === 'days') {
+                    updatePeriodSelector();
+                }
+            });
+            document.getElementById('calcBtn').onclick = calculate;
+            document.getElementById('clearBtn').onclick = clearAll;
+            document.getElementById('toggleTableBtn').onclick = toggleTable;
+            document.getElementById('updateChartBtn').onclick = updateChart;
+            document.getElementById('toggleLabelsBtn').onclick = toggleLabels;
+            document.getElementById('toggleYAxisBtn').onclick = toggleYAxis;
+            document.getElementById('toggleDecimalsBtn').onclick = toggleDecimals;
+            document.getElementById('downloadChartBtn').onclick = downloadChart;
+            document.getElementById('copyChartBtn').onclick = copyChart;
+            document.getElementById('downloadTableBtn').onclick = downloadTable;
+            document.getElementById('showAllBtn').addEventListener('click', showAllPoints);
+            document.getElementById('showLast24Btn').addEventListener('click', showLast24Points);
+            document.getElementById('backToIndex').onclick = function() {
+                window.location.href = 'https://gpossels.github.io/SPC/index.html';
+            };
+            // Comparison toggle buttons
+document.getElementById('toggleDataset1DPBtn').onclick = function() {
+    showDataset1DP = !showDataset1DP;
+    if (currentResults2) updateChart();
+};
+
+document.getElementById('toggleDataset1DPABtn').onclick = function() {
+    showDataset1DPA = !showDataset1DPA;
+    if (currentResults2) updateChart();
+};
+
+document.getElementById('toggleDataset2DPBtn').onclick = function() {
+    showDataset2DP = !showDataset2DP;
+    if (currentResults2) updateChart();
+};
+
+document.getElementById('toggleDataset2DPABtn').onclick = function() {
+    showDataset2DPA = !showDataset2DPA;
+    if (currentResults2) updateChart();
+};
+               // Range slider controls
+            document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
+            document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
+                   // Initialize language (must be last to ensure all elements exist)
+       updateLang();
+});
+    </script>
+</body>
+</html>
