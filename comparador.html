@@ -806,7 +806,7 @@
                     toggleDataset2DPA: 'DPA Secundarios',
                     toggleDataset2Control: 'Límites Control Secundarios',
                     primaryDataValue: 'Valor Datos Primarios',
-                    secondaryDataValue: 'Valor Datos Secundarios'
+                    secondaryDataValue: 'Valor Datos Secundarios',
                     yAxisControlsTitle: 'Control Eje Y',
                     yAxisLeftLabel: 'Eje Y Izquierdo:',
                     yAxisRightLabel: 'Eje Y Derecho:',
@@ -822,13 +822,13 @@
                 backToIndex: '← Home',
                 dataLabel: 'Data (separated by space, tab or line, at least 8, ideally 20 and more):',
                 dataInputPlaceholder: 'Enter your data here',
-                dataNameLabel: 'Nombre valor en eje Y (opcional):',
-                dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
-                dataLabel2: 'Datos para Comparación (opcional, separados por espacio, tabulación o línea):',
-                dataNameLabel2: 'Nombre valor en eje Y derecho (opcional):',
-                dataNamePlaceholder2: 'ej. Datos anteriores, Grupo control, etc.',
-                toggleComparisonBtn: '▼ Mostrar Datos de Comparación',
-                toggleComparisonBtnHide: '▲ Ocultar Datos de Comparación',
+                dataNameLabel: 'Y-axis value name (optional):',
+                dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
+                dataLabel2: 'Comparison Data (optional, separated by space, tab or line):',
+                dataNameLabel2: 'Right Y-axis value name (optional):',
+                dataNamePlaceholder2: 'e.g. Previous data, Control group, etc.',
+                toggleComparisonBtn: '▼ Show Comparison Data',
+                toggleComparisonBtnHide: '▲ Hide Comparison Data',
                 timeLabel: 'Period:',
                 periodLabel: 'Year, Month, Week, or Day:',
                 yearRefLabel: 'Year:',
@@ -890,7 +890,7 @@
                 toggleDataset2DPA: 'Secondary DPA',
                 toggleDataset2Control: 'Secondary Control Limits',
                 primaryDataValue: 'Primary Data Value',
-                secondaryDataValue: 'Secondary Data Value'
+                secondaryDataValue: 'Secondary Data Value',
                 yAxisControlsTitle: 'Y-Axis Control',
                 yAxisLeftLabel: 'Left Y-Axis:',
                 yAxisRightLabel: 'Right Y-Axis:',
@@ -2073,7 +2073,6 @@ function updateChart() {
             }
         });
         
-    } else {        
     } else {
         // NORMAL MODE - Single dataset with control limits
         const filteredResults = getFilteredResults();
@@ -2744,4 +2743,5 @@ document.getElementById('resetYAxisRightMaxBtn').onclick = function() {
     </script>
 </body>
 </html>
+
 
