@@ -393,43 +393,8 @@
                 color: #555;
                 font-weight: 500;
             }
-        
-        @media (max-width: 768px) {
-            .input-row {
-                flex-direction: column;
-            }
 
-            .input-col {
-                min-width: unset;
-            }
-
-            .button-row {
-                flex-direction: column;
-            }
-
-            .chart-controls {
-                flex-direction: column;
-            }
-
-            .chart-controls input,
-            .chart-controls button {
-                width: 100%;
-                min-width: unset;
-            }
-
-            .chart-container {
-                height: 400px;
-                padding: 10px;
-            }
-
-            .radio-group {
-                flex-direction: column;
-                gap: 10px;
-            }
-        
-            
-    
-            .range-slider-container {
+        .range-slider-container {
                 position: relative;
                 padding: 10px 0;
             }
@@ -488,7 +453,40 @@
                 transform: translateY(-50%);
                 border-radius: 3px;
             }
-        }
+        
+        @media (max-width: 768px) {
+            .input-row {
+                flex-direction: column;
+            }
+
+            .input-col {
+                min-width: unset;
+            }
+
+            .button-row {
+                flex-direction: column;
+            }
+
+            .chart-controls {
+                flex-direction: column;
+            }
+
+            .chart-controls input,
+            .chart-controls button {
+                width: 100%;
+                min-width: unset;
+            }
+
+            .chart-container {
+                height: 400px;
+                padding: 10px;
+            }
+
+            .radio-group {
+                flex-direction: column;
+                gap: 10px;
+            }
+         }
     </style>
 </head>
 <body>
@@ -2743,5 +2741,6 @@ document.getElementById('resetYAxisRightMaxBtn').onclick = function() {
     </script>
 </body>
 </html>
+
 
 
