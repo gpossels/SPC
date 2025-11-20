@@ -513,20 +513,27 @@
                 </div>
 
                 <div class="input-group">
-                    <label id="dataNameLabel">Nombre de los datos (opcional):</label>
+                    <label id="dataNameLabel">Nombre valor en eje Y (opcional):</label>
                     <input type="text" id="dataNameInput" placeholder="ej. Defectos por millón, Tiempo de respuesta, etc.">
                 </div>
 
                 <div class="input-group">
-                    <label id="dataLabel2">Datos para Comparación (opcional, separados por espacio, tabulación o línea):</label>
-                    <textarea id="dataInput2"></textarea>
-                    <div id="dataCounter2" class="data-counter insufficient">0 puntos de datos</div>
-                </div>
-                
-                <div class="input-group">
-                    <label id="dataNameLabel2">Nombre de los datos de comparación (opcional):</label>
-                    <input type="text" id="dataNameInput2" placeholder="ej. Datos anteriores, Grupo control, etc.">
-                </div>
+    <button id="toggleComparisonBtn" class="secondary-btn" style="width: 100%; margin-bottom: 10px;">
+        ▼ Mostrar Datos de Comparación
+    </button>
+    <div id="comparisonSection" class="hidden">
+        <div class="input-group">
+            <label id="dataLabel2">Datos para Comparación (opcional, separados por espacio, tabulación o línea):</label>
+            <textarea id="dataInput2"></textarea>
+            <div id="dataCounter2" class="data-counter insufficient">0 puntos de datos</div>
+        </div>
+
+        <div class="input-group">
+            <label id="dataNameLabel2">Nombre valor en eje Y derecho (opcional):</label>
+            <input type="text" id="dataNameInput2" placeholder="ej. Datos anteriores, Grupo control, etc.">
+        </div>
+    </div>
+</div>
                 
                 <div class="input-group">
                     <div class="input-row">
@@ -595,12 +602,22 @@
                             <button id="toggleTableBtn">Mostrar Tabla</button>
                         </div>
 
-                        <div id="comparisonToggles" class="hidden" style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 4px;">
+                        <div id="comparisonToggles" class="hidden" style="margin-top: 10px; padding: 15px; background: #f0f0f0; border-radius: 4px;">
                             <strong id="comparisonTogglesTitle">Mostrar/Ocultar Líneas:</strong>
-                            <button id="toggleDataset1DPBtn" style="margin-left: 10px;">Dataset 1 DP</button>
-                            <button id="toggleDataset1DPABtn">Dataset 1 DPA</button>
-                            <button id="toggleDataset2DPBtn">Dataset 2 DP</button>
-                            <button id="toggleDataset2DPABtn">Dataset 2 DPA</button>
+                            <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="toggleAllDataset1Btn" style="background: #2196F3; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">Todos Datos Primarios</button>
+                                <button id="toggleAllDataset2Btn" style="background: #FF9800; color: white; padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer;">Todos Datos Secundarios</button>
+                            </div>
+                            <div style="margin-top: 10px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="toggleDataset1DPBtn" class="chart-controls button">DP Primarios</button>
+                                <button id="toggleDataset1DPABtn" class="chart-controls button">DPA Primarios</button>
+                                <button id="toggleDataset1ControlBtn" class="chart-controls button">Límites Control Primarios</button>
+                            </div>
+                            <div style="margin-top: 5px; display: flex; gap: 10px; flex-wrap: wrap;">
+                                <button id="toggleDataset2DPBtn" class="chart-controls button">DP Secundarios</button>
+                                <button id="toggleDataset2DPABtn" class="chart-controls button">DPA Secundarios</button>
+                                <button id="toggleDataset2ControlBtn" class="chart-controls button">Límites Control Secundarios</button>
+                            </div>
                         </div>
                         
                         <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
@@ -625,6 +642,40 @@
                     </div>
                 </div>
 
+<div id="yAxisControls" class="view-controls hidden">
+    <h4 id="yAxisControlsTitle">Control Eje Y</h4>
+    
+    <div style="margin-bottom: 15px;">
+        <label id="yAxisLeftLabel" style="font-weight: 600; display: block; margin-bottom: 5px;">Eje Y Izquierdo:</label>
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+            <label style="min-width: 60px;">Mínimo:</label>
+            <input type="number" id="yAxisLeftMinInput" step="any" style="flex: 1; padding: 5px;">
+            <button id="resetYAxisLeftMinBtn" class="range-btn" style="padding: 5px 10px;">Reset</button>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label style="min-width: 60px;">Máximo:</label>
+            <input type="number" id="yAxisLeftMaxInput" step="any" style="flex: 1; padding: 5px;">
+            <button id="resetYAxisLeftMaxBtn" class="range-btn" style="padding: 5px 10px;">Reset</button>
+        </div>
+    </div>
+    
+    <div id="yAxisRightControls" class="hidden" style="margin-top: 15px;">
+        <label id="yAxisRightLabel" style="font-weight: 600; display: block; margin-bottom: 5px;">Eje Y Derecho:</label>
+        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 5px;">
+            <label style="min-width: 60px;">Mínimo:</label>
+            <input type="number" id="yAxisRightMinInput" step="any" style="flex: 1; padding: 5px;">
+            <button id="resetYAxisRightMinBtn" class="range-btn" style="padding: 5px 10px;">Reset</button>
+        </div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <label style="min-width: 60px;">Máximo:</label>
+            <input type="number" id="yAxisRightMaxInput" step="any" style="flex: 1; padding: 5px;">
+            <button id="resetYAxisRightMaxBtn" class="range-btn" style="padding: 5px 10px;">Reset</button>
+        </div>
+    </div>
+    
+    <button id="applyYAxisBtn" class="range-btn" style="width: 100%; margin-top: 10px; background: #28a745;">Aplicar Cambios</button>
+</div>
+                    
                 <div id="tableContainer" class="table-container hidden">
                     <table>
                         <thead id="tableHead">
@@ -665,8 +716,18 @@
         let currentResults2 = null;
         let showDataset1DP = true;
         let showDataset1DPA = true;
+        let showDataset1UCL = true;
+        let showDataset1LCL = true;
         let showDataset2DP = true;
         let showDataset2DPA = true;
+        let showDataset2UCL = true;
+        let showDataset2LCL = true;
+        let comparisonSectionVisible = false;
+        let useDifferentUnits = false;
+        let yAxisLeftMin = null;
+        let yAxisLeftMax = null;
+        let yAxisRightMin = null;
+        let yAxisRightMax = null;
         
         // Language translations
         const lang = {
@@ -677,11 +738,13 @@
                 backToIndex: '← Inicio',
                 dataLabel: 'Datos (separados por espacio, tabulación o línea, mínimo 8, idealmente 20 y más):',
                 dataInputPlaceholder: 'Ingresa tus datos aquí',
-                dataNameLabel: 'Nombre de los datos (opcional):',
+                dataNameLabel: 'Nombre valor en eje Y (opcional):',
                 dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
                 dataLabel2: 'Datos para Comparación (opcional, separados por espacio, tabulación o línea):',
-                dataNameLabel2: 'Nombre de los datos de comparación (opcional):',
+                dataNameLabel2: 'Nombre valor en eje Y derecho (opcional):',
                 dataNamePlaceholder2: 'ej. Datos anteriores, Grupo control, etc.',
+                toggleComparisonBtn: '▼ Mostrar Datos de Comparación',
+                toggleComparisonBtnHide: '▲ Ocultar Datos de Comparación',
                 timeLabel: 'Período:',
                 periodLabel: 'Año, Mes, Semana o Día:',
                 yearRefLabel: 'Año:',
@@ -734,10 +797,23 @@
                     dla: '(DLA)'
                 },
                 comparisonTogglesTitle: 'Mostrar/Ocultar Líneas:',
-                    toggleDataset1DP: 'Conjunto 1 DP',
-                    toggleDataset1DPA: 'Conjunto 1 DPA',
-                    toggleDataset2DP: 'Conjunto 2 DP',
-                    toggleDataset2DPA: 'Conjunto 2 DPA'
+                    toggleAllDataset1: 'Todos Datos Primarios',
+                    toggleAllDataset2: 'Todos Datos Secundarios',
+                    toggleDataset1DP: 'DP Primarios',
+                    toggleDataset1DPA: 'DPA Primarios',
+                    toggleDataset1Control: 'Límites Control Primarios',
+                    toggleDataset2DP: 'DP Secundarios',
+                    toggleDataset2DPA: 'DPA Secundarios',
+                    toggleDataset2Control: 'Límites Control Secundarios',
+                    primaryDataValue: 'Valor Datos Primarios',
+                    secondaryDataValue: 'Valor Datos Secundarios'
+                    yAxisControlsTitle: 'Control Eje Y',
+                    yAxisLeftLabel: 'Eje Y Izquierdo:',
+                    yAxisRightLabel: 'Eje Y Derecho:',
+                    yAxisMinLabel: 'Mínimo:',
+                    yAxisMaxLabel: 'Máximo:',
+                    resetBtn: 'Reset',
+                    applyChangesBtn: 'Aplicar Cambios'
                 },
             en: {
                 title: 'PBC Fast Generator',
@@ -746,11 +822,13 @@
                 backToIndex: '← Home',
                 dataLabel: 'Data (separated by space, tab or line, at least 8, ideally 20 and more):',
                 dataInputPlaceholder: 'Enter your data here',
-                dataNameLabel: 'Data name (optional):',
-                dataNamePlaceholder: 'e.g. Defects per million, Response time, etc.',
-                dataLabel2: 'Comparison Data (optional, separated by space, tab or line):',
-                dataNameLabel2: 'Comparison data name (optional):',
-                dataNamePlaceholder2: 'e.g. Previous data, Control group, etc.',
+                dataNameLabel: 'Nombre valor en eje Y (opcional):',
+                dataNamePlaceholder: 'ej. Defectos por millón, Tiempo de respuesta, etc.',
+                dataLabel2: 'Datos para Comparación (opcional, separados por espacio, tabulación o línea):',
+                dataNameLabel2: 'Nombre valor en eje Y derecho (opcional):',
+                dataNamePlaceholder2: 'ej. Datos anteriores, Grupo control, etc.',
+                toggleComparisonBtn: '▼ Mostrar Datos de Comparación',
+                toggleComparisonBtnHide: '▲ Ocultar Datos de Comparación',
                 timeLabel: 'Period:',
                 periodLabel: 'Year, Month, Week, or Day:',
                 yearRefLabel: 'Year:',
@@ -803,10 +881,23 @@
                     dla: '(DLA)',
                 },
                 comparisonTogglesTitle: 'Show/Hide Lines:',
-                    toggleDataset1DP: 'Dataset 1 DP',
-                    toggleDataset1DPA: 'Dataset 1 DPA',
-                    toggleDataset2DP: 'Dataset 2 DP',
-                    toggleDataset2DPA: 'Dataset 2 DPA'
+                toggleAllDataset1: 'All Primary Data',
+                toggleAllDataset2: 'All Secondary Data',
+                toggleDataset1DP: 'Primary DP',
+                toggleDataset1DPA: 'Primary DPA',
+                toggleDataset1Control: 'Primary Control Limits',
+                toggleDataset2DP: 'Secondary DP',
+                toggleDataset2DPA: 'Secondary DPA',
+                toggleDataset2Control: 'Secondary Control Limits',
+                primaryDataValue: 'Primary Data Value',
+                secondaryDataValue: 'Secondary Data Value'
+                yAxisControlsTitle: 'Y-Axis Control',
+                yAxisLeftLabel: 'Left Y-Axis:',
+                yAxisRightLabel: 'Right Y-Axis:',
+                yAxisMinLabel: 'Minimum:',
+                yAxisMaxLabel: 'Maximum:',
+                resetBtn: 'Reset',
+                applyChangesBtn: 'Apply Changes'
             }
         };
 
@@ -1062,6 +1153,38 @@
             return periods;
         }
 
+    // Generate chart title based on date range
+function generateChartTitle(results, results2 = null) {
+    const t = isSpanish ? lang.es : lang.en;
+    const timeUnit = document.getElementById('timeUnitSelect').value;
+    
+    // Get data names
+    const primaryDataName = document.getElementById('dataNameInput').value.trim() || t.primaryDataValue;
+    const secondaryDataName = document.getElementById('dataNameInput2').value.trim() || t.secondaryDataValue;
+    
+    // Get first and last dates
+    const firstDate = results[0].date;
+    const lastDate = results[results.length - 1].date;
+    
+    // Build period text
+    let periodText = '';
+    if (timeUnit === 'years') {
+        periodText = `${firstDate} ${isSpanish ? 'a' : 'to'} ${lastDate}`;
+    } else {
+        periodText = `${firstDate} ${isSpanish ? 'a' : 'to'} ${lastDate}`;
+    }
+    
+    // Build title
+    let title = '';
+    if (results2) {
+        title = `${isSpanish ? 'Comparación' : 'Comparison'}: ${primaryDataName} ${isSpanish ? 'y' : 'and'} ${secondaryDataName} ${isSpanish ? 'en el periodo' : 'in period'} ${periodText}`;
+    } else {
+        title = `${primaryDataName} ${isSpanish ? 'en el periodo' : 'in period'} ${periodText}`;
+    }
+    
+    return title;
+}
+        
         // Format number with appropriate decimal marker based on language
         function fmt(num) {
            const formatted = showDecimals ? num.toFixed(2) : Math.round(num).toString();
@@ -1450,15 +1573,25 @@
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
             document.getElementById('comparisonTogglesTitle').textContent = t.comparisonTogglesTitle;
+            document.getElementById('toggleComparisonBtn').textContent = comparisonSectionVisible ? t.toggleComparisonBtnHide : t.toggleComparisonBtn;
+            document.getElementById('toggleAllDataset1Btn').textContent = t.toggleAllDataset1;
+            document.getElementById('toggleAllDataset2Btn').textContent = t.toggleAllDataset2;
             document.getElementById('toggleDataset1DPBtn').textContent = t.toggleDataset1DP;
             document.getElementById('toggleDataset1DPABtn').textContent = t.toggleDataset1DPA;
+            document.getElementById('toggleDataset1ControlBtn').textContent = t.toggleDataset1Control;
             document.getElementById('toggleDataset2DPBtn').textContent = t.toggleDataset2DP;
             document.getElementById('toggleDataset2DPABtn').textContent = t.toggleDataset2DPA;
+            document.getElementById('toggleDataset2ControlBtn').textContent = t.toggleDataset2Control;
 
             
             // View controls
             document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
             updateRangeInfo();
+            // Y-axis controls
+            document.getElementById('yAxisControlsTitle').textContent = t.yAxisControlsTitle;
+            document.getElementById('yAxisLeftLabel').textContent = t.yAxisLeftLabel;
+            document.getElementById('yAxisRightLabel').textContent = t.yAxisRightLabel;
+            document.getElementById('applyYAxisBtn').textContent = t.applyChangesBtn;
             updatePeriodSelector();
             updateDataCounter(); // Update counter text with new language
 
@@ -1654,8 +1787,9 @@
                 });
             }
         
+        
         // Create or update chart
-        // Create or update chart
+// Create or update chart
 function updateChart() {
     if (!currentResults) return;
 
@@ -1667,55 +1801,36 @@ function updateChart() {
         spcChart.destroy();
     }
 
+    // Get custom title or generate default
+    const customTitle = document.getElementById('chartTitleInput').value.trim();
+    const chartTitle = customTitle || generateChartTitle(currentResults, currentResults2);
+
     // Check if we're in comparison mode
     if (currentResults2) {
-        // COMPARISON MODE - No control limits, just DP and DPA lines
-        const customDataName = document.getElementById('dataNameInput').value.trim() || (isSpanish ? 'Conjunto 1' : 'Dataset 1');
-        const customDataName2 = document.getElementById('dataNameInput2').value.trim() || (isSpanish ? 'Conjunto 2' : 'Dataset 2');
+        // COMPARISON MODE
+        const primaryDataName = document.getElementById('dataNameInput').value.trim() || t.primaryDataValue;
+        const secondaryDataName = document.getElementById('dataNameInput2').value.trim() || t.secondaryDataValue;
 
         const labels1 = currentResults.map(r => r.date);
         const labels2 = currentResults2.map(r => r.date);
-        
-        // Use the longer dataset's labels
         const labels = labels1.length >= labels2.length ? labels1 : labels2;
 
         const dpData1 = currentResults.map(r => r.dp);
         const dpaData1 = currentResults.map(r => r.dpa);
+        const uclData1 = currentResults.map(r => r.ucl);
+        const lclData1 = currentResults.map(r => r.lcl);
+
         const dpData2 = currentResults2.map(r => r.dp);
         const dpaData2 = currentResults2.map(r => r.dpa);
-
-        // Get time unit and format period count
-        const timeUnit = document.getElementById('timeUnitSelect').value;
-        const dataCount1 = currentResults.length;
-        const dataCount2 = currentResults2.length;
-        let periodText = '';
-        
-        if (timeUnit === 'years') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} años)` : `(${dataCount1} & ${dataCount2} years)`;
-        } else if (timeUnit === 'months') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} meses)` : `(${dataCount1} & ${dataCount2} months)`;
-        } else if (timeUnit === 'weeks') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} semanas)` : `(${dataCount1} & ${dataCount2} weeks)`;
-        } else if (timeUnit === 'days') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} días)` : `(${dataCount1} & ${dataCount2} days)`;
-        } else if (timeUnit === 'semesters') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} semestres)` : `(${dataCount1} & ${dataCount2} semesters)`;
-        } else if (timeUnit === 'fourmonths') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} cuatrimestres)` : `(${dataCount1} & ${dataCount2} four-month periods)`;
-        } else if (timeUnit === 'trimesters') {
-            periodText = isSpanish ? `(${dataCount1} y ${dataCount2} trimestres)` : `(${dataCount1} & ${dataCount2} quarters)`;
-        }
-
-        const customTitle = document.getElementById('chartTitleInput').value.trim();
-        const baseTitle = customTitle || (isSpanish ? 'Gráfico de Comparación' : 'Comparison Chart');
-        const chartTitle = `${baseTitle} ${periodText}`;
+        const uclData2 = currentResults2.map(r => r.ucl);
+        const lclData2 = currentResults2.map(r => r.lcl);
 
         const datasets = [];
 
-        // Dataset 1 DP (solid blue)
+        // Dataset 1 lines (solid)
         if (showDataset1DP) {
             datasets.push({
-                label: `${customDataName} - DP`,
+                label: `${primaryDataName} - ${isSpanish ? 'Puntos' : 'Data Points'}`,
                 data: dpData1,
                 borderColor: '#4169E1',
                 backgroundColor: 'rgba(65, 105, 225, 0.1)',
@@ -1725,28 +1840,57 @@ function updateChart() {
                 pointRadius: 3,
                 pointHoverRadius: 4,
                 tension: 0,
-                borderDash: []
+                borderDash: [],
+                yAxisID: 'y'
             });
         }
 
-        // Dataset 1 DPA (solid green)
         if (showDataset1DPA) {
             datasets.push({
-                label: `${customDataName} - DPA`,
+                label: `${primaryDataName} - ${isSpanish ? 'Línea Central' : 'Center Line'}`,
                 data: dpaData1,
                 borderColor: '#228B22',
                 backgroundColor: 'rgba(34, 139, 34, 0.1)',
                 borderWidth: 2,
                 pointRadius: 0,
                 tension: 0,
-                borderDash: []
+                borderDash: [],
+                yAxisID: 'y'
             });
         }
 
-        // Dataset 2 DP (dashed blue)
+        if (showDataset1UCL) {
+            datasets.push({
+                label: `${primaryDataName} - ${isSpanish ? 'LCS' : 'UCL'}`,
+                data: uclData1,
+                borderColor: '#DC143C',
+                backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: [],
+                yAxisID: 'y'
+            });
+        }
+
+        if (showDataset1LCL) {
+            datasets.push({
+                label: `${primaryDataName} - ${isSpanish ? 'LCI' : 'LCL'}`,
+                data: lclData1,
+                borderColor: '#DC143C',
+                backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: [],
+                yAxisID: 'y'
+            });
+        }
+
+        // Dataset 2 lines (dashed)
         if (showDataset2DP) {
             datasets.push({
-                label: `${customDataName2} - DP`,
+                label: `${secondaryDataName} - ${isSpanish ? 'Puntos' : 'Data Points'}`,
                 data: dpData2,
                 borderColor: '#4169E1',
                 backgroundColor: 'rgba(65, 105, 225, 0.1)',
@@ -1756,22 +1900,105 @@ function updateChart() {
                 pointRadius: 3,
                 pointHoverRadius: 4,
                 tension: 0,
-                borderDash: [5, 5]
+                borderDash: [5, 5],
+                yAxisID: useDifferentUnits ? 'y2' : 'y'
             });
         }
 
-        // Dataset 2 DPA (dashed green)
         if (showDataset2DPA) {
             datasets.push({
-                label: `${customDataName2} - DPA`,
+                label: `${secondaryDataName} - ${isSpanish ? 'Línea Central' : 'Center Line'}`,
                 data: dpaData2,
                 borderColor: '#228B22',
                 backgroundColor: 'rgba(34, 139, 34, 0.1)',
                 borderWidth: 2,
                 pointRadius: 0,
                 tension: 0,
-                borderDash: [5, 5]
+                borderDash: [5, 5],
+                yAxisID: useDifferentUnits ? 'y2' : 'y'
             });
+        }
+
+        if (showDataset2UCL) {
+            datasets.push({
+                label: `${secondaryDataName} - ${isSpanish ? 'LCS' : 'UCL'}`,
+                data: uclData2,
+                borderColor: '#DC143C',
+                backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: [5, 5],
+                yAxisID: useDifferentUnits ? 'y2' : 'y'
+            });
+        }
+
+        if (showDataset2LCL) {
+            datasets.push({
+                label: `${secondaryDataName} - ${isSpanish ? 'LCI' : 'LCL'}`,
+                data: lclData2,
+                borderColor: '#DC143C',
+                backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0,
+                borderDash: [5, 5],
+                yAxisID: useDifferentUnits ? 'y2' : 'y'
+            });
+        }
+
+        // Build scales configuration
+        const scalesConfig = {
+            x: {
+                display: true,
+                title: {
+                    display: true,
+                    text: isSpanish ? 'Período' : 'Period',
+                    font: {
+                        weight: 'bold'
+                    }
+                },
+                ticks: {
+                    maxRotation: 45
+                },
+                grid: {
+                    display: false
+                }
+            },
+            y: {
+                display: true,
+                position: 'left',
+                beginAtZero: !useDifferentUnits,
+                min: yAxisLeftMin !== null ? yAxisLeftMin : (useDifferentUnits ? undefined : 0),
+                max: yAxisLeftMax !== null ? yAxisLeftMax : undefined,
+                title: {
+                    display: true,
+                    text: primaryDataName,
+                    font: {
+                        weight: 'bold'
+                    }
+                }
+            }
+        };
+
+        // Add right Y-axis if using different units
+        if (useDifferentUnits) {
+            scalesConfig.y2 = {
+                display: true,
+                position: 'right',
+                min: yAxisRightMin !== null ? yAxisRightMin : undefined,
+                max: yAxisRightMax !== null ? yAxisRightMax : undefined,
+                title: {
+                    display: true,
+                    text: secondaryDataName,
+                    font: {
+                        weight: 'bold'
+                    }
+                },
+                grid: {
+                    drawOnChartArea: false
+                }
+            };
         }
 
         spcChart = new Chart(ctx, {
@@ -1837,36 +2064,7 @@ function updateChart() {
                         display: false
                     }
                 },
-                scales: {
-                    x: {
-                        display: true,
-                        title: {
-                            display: true,
-                            text: isSpanish ? 'Período' : 'Period',
-                            font: {
-                                weight: 'bold'
-                            }
-                        },
-                        ticks: {
-                            maxRotation: 45
-                        },
-                        grid: {
-                            display: false
-                        }
-                    },
-                    y: {
-                        display: true,
-                        beginAtZero: yAxisFromZero,
-                        min: yAxisFromZero ? 0 : undefined,
-                        title: {
-                            display: true,
-                            text: isSpanish ? 'Valor' : 'Value',
-                            font: {
-                                weight: 'bold'
-                            }
-                        }
-                    }
-                },
+                scales: scalesConfig,
                 interaction: {
                     mode: 'nearest',
                     axis: 'x',
@@ -1874,36 +2072,15 @@ function updateChart() {
                 }
             }
         });
-
+        
+    } else {        
     } else {
-        // NORMAL MODE - Original chart with control limits
+        // NORMAL MODE - Single dataset with control limits
         const filteredResults = getFilteredResults();
         if (!filteredResults || filteredResults.length === 0) return;
 
-        // Get custom data name or use default
-        const customDataName = document.getElementById('dataNameInput').value.trim();
-        const dataLabel = customDataName || '(DP)';
-
-        // Get time unit and format period count
-        const timeUnit = document.getElementById('timeUnitSelect').value;
-        const dataCount = filteredResults.length;
-        let periodText = '';
-        
-        if (timeUnit === 'years') {
-            periodText = isSpanish ? `(${dataCount} años)` : `(${dataCount} years)`;
-        } else if (timeUnit === 'months') {
-            periodText = isSpanish ? `(${dataCount} meses)` : `(${dataCount} months)`;
-        } else if (timeUnit === 'weeks') {
-            periodText = isSpanish ? `(${dataCount} semanas)` : `(${dataCount} weeks)`;
-        } else if (timeUnit === 'days') {
-            periodText = isSpanish ? `(${dataCount} días)` : `(${dataCount} days)`;
-        } else if (timeUnit === 'semesters') {
-            periodText = isSpanish ? `(${dataCount} semestres)` : `(${dataCount} semesters)`;
-        } else if (timeUnit === 'fourmonths') {
-            periodText = isSpanish ? `(${dataCount} cuatrimestres)` : `(${dataCount} four-month periods)`;
-        } else if (timeUnit === 'trimesters') {
-            periodText = isSpanish ? `(${dataCount} trimestres)` : `(${dataCount} quarters)`;
-        }
+        // Get Y-axis label
+        const yAxisLabel = document.getElementById('dataNameInput').value.trim() || (isSpanish ? 'Valor' : 'Value');
 
         // Prepare data
         const labels = filteredResults.map(r => r.date);
@@ -1916,57 +2093,66 @@ function updateChart() {
         const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
         const dpPointBorderColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
 
-        // Custom title from input with period count
-        const customTitle = document.getElementById('chartTitleInput').value.trim();
-        const baseTitle = customTitle || t.chartTitle;
-        const chartTitle = `${baseTitle} ${periodText}`;
+        const datasets = [];
+
+        // Add datasets based on visibility flags
+        if (showDataset1DP) {
+            datasets.push({
+                label: isSpanish ? 'Puntos de Datos' : 'Data Points',
+                data: dpData,
+                borderColor: '#4169E1',
+                backgroundColor: 'rgba(65, 105, 225, 0.1)',
+                borderWidth: 2,
+                pointBackgroundColor: dpPointColors,
+                pointBorderColor: dpPointBorderColors,
+                pointRadius: 3,
+                pointHoverRadius: 4,
+                tension: 0
+            });
+        }
+
+        if (showDataset1DPA) {
+            datasets.push({
+                label: isSpanish ? 'Línea Central' : 'Center Line',
+                data: dpaData,
+                borderColor: '#228B22',
+                backgroundColor: 'rgba(34, 139, 34, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0
+            });
+        }
+
+        if (showDataset1UCL) {
+            datasets.push({
+                label: isSpanish ? 'Límite Control Superior' : 'Upper Control Limit',
+                data: uclData,
+                borderColor: '#DC143C',
+                backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0
+            });
+        }
+
+        if (showDataset1LCL) {
+            datasets.push({
+                label: isSpanish ? 'Límite Control Inferior' : 'Lower Control Limit',
+                data: lclData,
+                borderColor: '#DC143C',
+                backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                tension: 0
+            });
+        }
 
         spcChart = new Chart(ctx, {
             type: 'line',
             plugins: [ChartDataLabels],
             data: {
                 labels: labels,
-                datasets: [
-                    {
-                        label: dataLabel,
-                        data: dpData,
-                        borderColor: '#4169E1',
-                        backgroundColor: 'rgba(65, 105, 225, 0.1)',
-                        borderWidth: 2,
-                        pointBackgroundColor: dpPointColors,
-                        pointBorderColor: dpPointBorderColors,
-                        pointRadius: 3,
-                        pointHoverRadius: 4,
-                        tension: 0
-                    },
-                    {
-                        label: t.chartLabels.dpa,
-                        data: dpaData,
-                        borderColor: '#228B22',
-                        backgroundColor: 'rgba(34, 139, 34, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0
-                    },
-                    {
-                        label: t.chartLabels.ucl,
-                        data: uclData,
-                        borderColor: '#DC143C',
-                        backgroundColor: 'rgba(220, 20, 60, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0
-                    },
-                    {
-                        label: t.chartLabels.lcl,
-                        data: lclData,
-                        borderColor: '#DC143C',
-                        backgroundColor: 'rgba(220, 20, 60, 0.1)',
-                        borderWidth: 2,
-                        pointRadius: 0,
-                        tension: 0
-                    }
-                ]
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -1992,7 +2178,6 @@ function updateChart() {
                             generateLabels: function(chart) {
                                 const original = Chart.defaults.plugins.legend.labels.generateLabels;
                                 const labels = original.call(this, chart);
-
                                 return labels.map(label => {
                                     label.fillStyle = label.strokeStyle;
                                     return label;
@@ -2006,19 +2191,6 @@ function updateChart() {
                         usePointStyle: false,
                         boxWidth: 20,
                         boxHeight: 8,
-                        filter: function(tooltipItem) {
-                            return true;
-                        },
-                        itemSort: function(a, b) {
-                            const getOrder = (label) => {
-                                if (label.includes('UCL')) return 1;
-                                if (label.includes('DP') || (!label.includes('DPA') && !label.includes('UCL') && !label.includes('LCL'))) return 2;
-                                if (label.includes('DPA')) return 3;
-                                if (label.includes('LCL')) return 4;
-                                return 5;
-                            };
-                            return getOrder(a.dataset.label) - getOrder(b.dataset.label);
-                        },
                         callbacks: {
                             label: function(context) {
                                 const value = context.parsed.y;
@@ -2036,7 +2208,7 @@ function updateChart() {
                     },
                     datalabels: {
                         display: function(context) {
-                            return context.datasetIndex === 0 && showLabels;
+                            return context.datasetIndex === 0 && showLabels && showDataset1DP;
                         },
                         align: 'top',
                         offset: 8,
@@ -2072,11 +2244,12 @@ function updateChart() {
                     },
                     y: {
                         display: true,
-                        beginAtZero: yAxisFromZero,
-                        min: yAxisFromZero ? 0 : undefined,
+                        beginAtZero: true,
+                        min: yAxisLeftMin !== null ? yAxisLeftMin : 0,
+                        max: yAxisLeftMax !== null ? yAxisLeftMax : undefined,
                         title: {
                             display: true,
-                            text: isSpanish ? 'Valor' : 'Value',
+                            text: yAxisLabel,
                             font: {
                                 weight: 'bold'
                             }
@@ -2091,7 +2264,7 @@ function updateChart() {
             }
         });
     }
-}
+}        
         // Copy chart to clipboard
         async function copyChart() {
             if (!spcChart) return;
@@ -2216,50 +2389,77 @@ function updateChart() {
             }
         }
 
-        // Display results
-        // Display results
-function showResults(results, results2 = null) {
-    currentResults = results;
-    currentResults2 = results2;
-
-    // Show/hide comparison toggles
-    const comparisonToggles = document.getElementById('comparisonToggles');
-    if (results2) {
-        comparisonToggles.classList.remove('hidden');
+            // Display results
+            function showResults(results, results2 = null) {
+                currentResults = results;
+                currentResults2 = results2;
+            
+                // Set default visibility for comparison mode
+                if (results2) {
+                    // In comparison mode: only show central lines by default
+                    showDataset1DP = false;
+                    showDataset1DPA = true;
+                    showDataset1UCL = false;
+                    showDataset1LCL = false;
+                    showDataset2DP = false;
+                    showDataset2DPA = true;
+                    showDataset2UCL = false;
+                    showDataset2LCL = false;
+                } else {
+                    // In normal mode: show all lines
+                    showDataset1DP = true;
+                    showDataset1DPA = true;
+                    showDataset1UCL = true;
+                    showDataset1LCL = true;
+                }
+            
+                // Show/hide comparison toggles
+                const comparisonToggles = document.getElementById('comparisonToggles');
+                if (results2) {
+                    comparisonToggles.classList.remove('hidden');
+                } else {
+                    comparisonToggles.classList.add('hidden');
+                }
+            
+                // Show view controls if more than 8 points
+                const viewControls = document.getElementById('viewControls');
+                if (results.length > 8) {
+                    viewControls.classList.remove('hidden');
+                    initializeRangeControls();
+                } else {
+                    viewControls.classList.add('hidden');
+                }
+            // Show Y-axis controls
+    const yAxisControls = document.getElementById('yAxisControls');
+    yAxisControls.classList.remove('hidden');
+    
+    // Show/hide right Y-axis controls based on units
+    const yAxisRightControls = document.getElementById('yAxisRightControls');
+    if (results2 && useDifferentUnits) {
+        yAxisRightControls.classList.remove('hidden');
     } else {
-        comparisonToggles.classList.add('hidden');
+        yAxisRightControls.classList.add('hidden');
     }
-
-    // Show view controls if more than 8 points
-    const viewControls = document.getElementById('viewControls');
-    if (results.length > 8) {
-        viewControls.classList.remove('hidden');
-        initializeRangeControls();
-    } else {
-        viewControls.classList.add('hidden');
-    }
-
-    // Update table display
-    updateTableDisplay();
-
-    document.getElementById('resultsDiv').classList.remove('hidden');
-    document.getElementById('chartDiv').classList.remove('hidden');
-
-    const t = isSpanish ? lang.es : lang.en;
-    const tableContainer = document.getElementById('tableContainer');
-    const toggleBtn = document.getElementById('toggleTableBtn');
-
-    if (isTableVisible) {
-        tableContainer.style.display = 'block';
-        toggleBtn.textContent = t.hideTableBtn;
-    } else {
-        tableContainer.style.display = 'none';
-        toggleBtn.textContent = t.showTableBtn;
-    }
-
-    updateChart();
-}
-
+                // Update table display
+                updateTableDisplay();
+            
+                document.getElementById('resultsDiv').classList.remove('hidden');
+                document.getElementById('chartDiv').classList.remove('hidden');
+            
+                const t = isSpanish ? lang.es : lang.en;
+                const tableContainer = document.getElementById('tableContainer');
+                const toggleBtn = document.getElementById('toggleTableBtn');
+            
+                if (isTableVisible) {
+                    tableContainer.style.display = 'block';
+                    toggleBtn.textContent = t.hideTableBtn;
+                } else {
+                    tableContainer.style.display = 'none';
+                    toggleBtn.textContent = t.showTableBtn;
+                }
+            
+                updateChart();
+            }
        // Show error
         function showError(msg) {
             document.getElementById('errorMsg').textContent = msg;
@@ -2292,11 +2492,42 @@ function showResults(results, results2 = null) {
             updateDataCounter(); // Update counter after clearing
 
             if (spcChart) {
-                spcChart.destroy();
-                spcChart = null;
-            }
-            currentResults = null;
-            currentResults2 = null;
+    spcChart.destroy();
+    spcChart = null;
+}
+currentResults = null;
+currentResults2 = null;
+
+// Reset comparison section
+comparisonSectionVisible = false;
+document.getElementById('comparisonSection').classList.add('hidden');
+const t = isSpanish ? lang.es : lang.en;
+document.getElementById('toggleComparisonBtn').textContent = t.toggleComparisonBtn;
+
+// Reset visibility flags
+showDataset1DP = true;
+showDataset1DPA = true;
+showDataset1UCL = true;
+showDataset1LCL = true;
+showDataset2DP = true;
+showDataset2DPA = true;
+showDataset2UCL = true;
+showDataset2LCL = true;
+
+// Reset axis ranges
+yAxisLeftMin = null;
+yAxisLeftMax = null;
+yAxisRightMin = null;
+yAxisRightMax = null;
+useDifferentUnits = false;
+            // Clear Y-axis input fields
+document.getElementById('yAxisLeftMinInput').value = '';
+document.getElementById('yAxisLeftMaxInput').value = '';
+document.getElementById('yAxisRightMinInput').value = '';
+document.getElementById('yAxisRightMaxInput').value = '';
+
+// Hide Y-axis controls
+document.getElementById('yAxisControls').classList.add('hidden');
         }
 
         // Main calculation function
@@ -2359,6 +2590,19 @@ function calculate() {
             // Add event listener for data input changes
             document.getElementById('dataInput').addEventListener('input', updateDataCounter);
             document.getElementById('dataInput2').addEventListener('input', updateDataCounter);
+            // Auto-copy primary data name to secondary when comparison section opens
+            document.getElementById('dataNameInput').addEventListener('input', function() {
+                if (comparisonSectionVisible && !document.getElementById('dataNameInput2').value) {
+                    document.getElementById('dataNameInput2').value = this.value;
+                }
+            });
+            
+            // Check if units are different
+            document.getElementById('dataNameInput2').addEventListener('input', function() {
+                const primaryUnit = document.getElementById('dataNameInput').value.trim();
+                const secondaryUnit = this.value.trim();
+                useDifferentUnits = primaryUnit !== secondaryUnit && primaryUnit !== '' && secondaryUnit !== '';
+            });
             document.getElementById('langBtn').onclick = function() {
                 isSpanish = !isSpanish;
                 updateLang();
@@ -2388,25 +2632,108 @@ function calculate() {
             document.getElementById('backToIndex').onclick = function() {
                 window.location.href = 'https://gpossels.github.io/SPC/index.html';
             };
-            // Comparison toggle buttons
-document.getElementById('toggleDataset1DPBtn').onclick = function() {
-    showDataset1DP = !showDataset1DP;
-    if (currentResults2) updateChart();
+            // Comparison section toggle
+            document.getElementById('toggleComparisonBtn').onclick = function() {
+                comparisonSectionVisible = !comparisonSectionVisible;
+                const section = document.getElementById('comparisonSection');
+                const btn = document.getElementById('toggleComparisonBtn');
+                const t = isSpanish ? lang.es : lang.en;
+                
+                if (comparisonSectionVisible) {
+                    section.classList.remove('hidden');
+                    btn.textContent = t.toggleComparisonBtnHide;
+                } else {
+                    section.classList.add('hidden');
+                    btn.textContent = t.toggleComparisonBtn;
+                }
+            };
+
+            // Comparison toggle buttons - Individual lines
+            document.getElementById('toggleDataset1DPBtn').onclick = function() {
+                showDataset1DP = !showDataset1DP;
+                updateChart();
+            };
+            
+            document.getElementById('toggleDataset1DPABtn').onclick = function() {
+                showDataset1DPA = !showDataset1DPA;
+                updateChart();
+            };
+            
+            document.getElementById('toggleDataset1ControlBtn').onclick = function() {
+                showDataset1UCL = !showDataset1UCL;
+                showDataset1LCL = !showDataset1LCL;
+                updateChart();
+            };
+            
+            document.getElementById('toggleDataset2DPBtn').onclick = function() {
+                showDataset2DP = !showDataset2DP;
+                if (currentResults2) updateChart();
+            };
+            
+            document.getElementById('toggleDataset2DPABtn').onclick = function() {
+                showDataset2DPA = !showDataset2DPA;
+                if (currentResults2) updateChart();
+            };
+            
+            document.getElementById('toggleDataset2ControlBtn').onclick = function() {
+                showDataset2UCL = !showDataset2UCL;
+                showDataset2LCL = !showDataset2LCL;
+                if (currentResults2) updateChart();
+            };
+            
+            // Toggle all lines for dataset 1
+            document.getElementById('toggleAllDataset1Btn').onclick = function() {
+                const allVisible = showDataset1DP && showDataset1DPA && showDataset1UCL && showDataset1LCL;
+                showDataset1DP = !allVisible;
+                showDataset1DPA = !allVisible;
+                showDataset1UCL = !allVisible;
+                showDataset1LCL = !allVisible;
+                updateChart();
+            };
+            
+            // Toggle all lines for dataset 2
+            document.getElementById('toggleAllDataset2Btn').onclick = function() {
+                if (!currentResults2) return;
+                const allVisible = showDataset2DP && showDataset2DPA && showDataset2UCL && showDataset2LCL;
+                showDataset2DP = !allVisible;
+                showDataset2DPA = !allVisible;
+                showDataset2UCL = !allVisible;
+                showDataset2LCL = !allVisible;
+                updateChart();
+            };
+            // Y-axis controls
+document.getElementById('applyYAxisBtn').onclick = function() {
+    const leftMin = document.getElementById('yAxisLeftMinInput').value;
+    const leftMax = document.getElementById('yAxisLeftMaxInput').value;
+    const rightMin = document.getElementById('yAxisRightMinInput').value;
+    const rightMax = document.getElementById('yAxisRightMaxInput').value;
+    
+    yAxisLeftMin = leftMin !== '' ? parseFloat(leftMin) : null;
+    yAxisLeftMax = leftMax !== '' ? parseFloat(leftMax) : null;
+    yAxisRightMin = rightMin !== '' ? parseFloat(rightMin) : null;
+    yAxisRightMax = rightMax !== '' ? parseFloat(rightMax) : null;
+    
+    updateChart();
 };
 
-document.getElementById('toggleDataset1DPABtn').onclick = function() {
-    showDataset1DPA = !showDataset1DPA;
-    if (currentResults2) updateChart();
+document.getElementById('resetYAxisLeftMinBtn').onclick = function() {
+    document.getElementById('yAxisLeftMinInput').value = '';
+    yAxisLeftMin = null;
 };
 
-document.getElementById('toggleDataset2DPBtn').onclick = function() {
-    showDataset2DP = !showDataset2DP;
-    if (currentResults2) updateChart();
+document.getElementById('resetYAxisLeftMaxBtn').onclick = function() {
+    document.getElementById('yAxisLeftMaxInput').value = '';
+    yAxisLeftMax = null;
 };
 
-document.getElementById('toggleDataset2DPABtn').onclick = function() {
-    showDataset2DPA = !showDataset2DPA;
-    if (currentResults2) updateChart();
+document.getElementById('resetYAxisRightMinBtn').onclick = function() {
+    document.getElementById('yAxisRightMinInput').value = '';
+    yAxisRightMin = null;
+};
+
+document.getElementById('resetYAxisRightMaxBtn').onclick = function() {
+    document.getElementById('yAxisRightMaxInput').value = '';
+    yAxisRightMax = null;
 };
                // Range slider controls
             document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
@@ -2417,3 +2744,4 @@ document.getElementById('toggleDataset2DPABtn').onclick = function() {
     </script>
 </body>
 </html>
+
