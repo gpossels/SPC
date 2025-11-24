@@ -1806,22 +1806,26 @@ function updateChart() {
     // Check if we're in comparison mode
     if (currentResults2) {
         // COMPARISON MODE
-        const primaryDataName = document.getElementById('dataNameInput').value.trim() || t.primaryDataValue;
-        const secondaryDataName = document.getElementById('dataNameInput2').value.trim() || t.secondaryDataValue;
+const primaryDataName = document.getElementById('dataNameInput').value.trim() || t.primaryDataValue;
+const secondaryDataName = document.getElementById('dataNameInput2').value.trim() || t.secondaryDataValue;
 
-        const labels1 = currentResults.map(r => r.date);
-        const labels2 = currentResults2.map(r => r.date);
-        const labels = labels1.length >= labels2.length ? labels1 : labels2;
+// Use filtered results based on range
+const filteredResults1 = getFilteredResults();
+const filteredResults2 = currentResults2 ? currentResults2.slice(Math.max(0, rangeStart - 1), Math.min(currentResults2.length, rangeEnd)) : null;
 
-        const dpData1 = currentResults.map(r => r.dp);
-        const dpaData1 = currentResults.map(r => r.dpa);
-        const uclData1 = currentResults.map(r => r.ucl);
-        const lclData1 = currentResults.map(r => r.lcl);
+const labels1 = filteredResults1.map(r => r.date);
+const labels2 = filteredResults2 ? filteredResults2.map(r => r.date) : [];
+const labels = labels1.length >= labels2.length ? labels1 : labels2;
 
-        const dpData2 = currentResults2.map(r => r.dp);
-        const dpaData2 = currentResults2.map(r => r.dpa);
-        const uclData2 = currentResults2.map(r => r.ucl);
-        const lclData2 = currentResults2.map(r => r.lcl);
+const dpData1 = filteredResults1.map(r => r.dp);
+const dpaData1 = filteredResults1.map(r => r.dpa);
+const uclData1 = filteredResults1.map(r => r.ucl);
+const lclData1 = filteredResults1.map(r => r.lcl);
+
+const dpData2 = filteredResults2 ? filteredResults2.map(r => r.dp) : [];
+const dpaData2 = filteredResults2 ? filteredResults2.map(r => r.dpa) : [];
+const uclData2 = filteredResults2 ? filteredResults2.map(r => r.ucl) : [];
+const lclData2 = filteredResults2 ? filteredResults2.map(r => r.lcl) : [];
 
         const datasets = [];
 
@@ -2741,6 +2745,7 @@ document.getElementById('resetYAxisRightMaxBtn').onclick = function() {
     </script>
 </body>
 </html>
+
 
 
 
