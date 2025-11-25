@@ -520,7 +520,6 @@
                 </div>
 
                 <div class="input-group">
-    <div class="input-group">
     <div id="comparisonSection" class="hidden">
         <div class="input-group">
             <label id="dataLabel2">Datos para Comparación (opcional, separados por espacio, tabulación o línea):</label>
@@ -533,7 +532,6 @@
             <input type="text" id="dataNameInput2" placeholder="ej. Datos anteriores, Grupo control, etc.">
         </div>
     </div>
-</div>
                 
                 <div class="input-group">
                     <div class="input-row">
@@ -2594,15 +2592,7 @@ yAxisLeftMax = null;
 yAxisRightMin = null;
 yAxisRightMax = null;
 useDifferentUnits = false;
-            // Clear Y-axis input fields
-document.getElementById('yAxisLeftMinInput').value = '';
-document.getElementById('yAxisLeftMaxInput').value = '';
-document.getElementById('yAxisRightMinInput').value = '';
-document.getElementById('yAxisRightMaxInput').value = '';
-
-// Hide Y-axis controls
-document.getElementById('yAxisControls').classList.add('hidden');
-        }
+            }
 
         // Main calculation function
 function calculate() {
@@ -2822,6 +2812,7 @@ document.getElementById('equalizeAxesCheckbox').addEventListener('change', funct
     </script>
 </body>
 </html>
+
 
 
 
