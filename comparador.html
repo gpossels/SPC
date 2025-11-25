@@ -607,7 +607,41 @@
                             <button id="downloadTableBtn">Descargar Tabla</button>
                             <button id="toggleTableBtn">Mostrar Tabla</button>
 
-                            <div id="comparisonToggles" style="margin-top: 10px; padding: 15px; background: #f0f0f0; border-radius: 4px;">
+                            
+                            
+                            <div id="equalizeAxesContainer" class="hidden" style="margin-top: 10px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                    <input type="checkbox" id="equalizeAxesCheckbox" style="width: auto; margin: 0;">
+                                    <span id="equalizeAxesLabel">Igualar ejes Y</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        
+                        
+                        <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="spcChart"></canvas>
+                    </div>
+                <div id="viewControls" class="view-controls hidden">
+                    <h4 id="viewControlsTitle">Ventana de Visualización</h4>
+                    <div class="range-buttons">
+                        <button id="showAllBtn" class="range-btn">Show All</button>
+                        <button id="showLast24Btn" class="range-btn">Last 24</button>
+                    </div>
+                    <div class="range-info" id="rangeInfo">Visualizando puntos 1 a 8 de 8 totales</div>
+                    <div class="range-slider-container">
+                        <div class="range-slider-wrapper">
+                            <div class="range-slider-track"></div>
+                            <div class="range-slider-fill" id="rangeFill"></div>
+                            <input type="range" id="rangeStartSlider" min="1" value="1">
+                            <input type="range" id="rangeEndSlider" min="1" value="8">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="comparisonToggles" style="margin-top: 10px; padding: 15px; background: #f0f0f0; border-radius: 4px;">
                             <strong id="comparisonTogglesTitle">Mostrar/Ocultar Líneas:</strong>
                             <div style="margin-top: 15px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                                 <div>
@@ -668,40 +702,6 @@
                                 </div>
                             </div>
                         </div>
-                            
-                            <div id="equalizeAxesContainer" class="hidden" style="margin-top: 10px;">
-                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
-                                    <input type="checkbox" id="equalizeAxesCheckbox" style="width: auto; margin: 0;">
-                                    <span id="equalizeAxesLabel">Igualar ejes Y</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        
-                        
-                        <input type="text" id="chartTitleInput" placeholder="Ingrese el título del gráfico">
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="spcChart"></canvas>
-                    </div>
-                <div id="viewControls" class="view-controls hidden">
-                    <h4 id="viewControlsTitle">Ventana de Visualización</h4>
-                    <div class="range-buttons">
-                        <button id="showAllBtn" class="range-btn">Show All</button>
-                        <button id="showLast24Btn" class="range-btn">Last 24</button>
-                    </div>
-                    <div class="range-info" id="rangeInfo">Visualizando puntos 1 a 8 de 8 totales</div>
-                    <div class="range-slider-container">
-                        <div class="range-slider-wrapper">
-                            <div class="range-slider-track"></div>
-                            <div class="range-slider-fill" id="rangeFill"></div>
-                            <input type="range" id="rangeStartSlider" min="1" value="1">
-                            <input type="range" id="rangeEndSlider" min="1" value="8">
-                        </div>
-                    </div>
-                </div>
-
-
                     
                 <div id="tableContainer" class="table-container hidden">
                     <table>
@@ -2812,6 +2812,7 @@ document.getElementById('equalizeAxesCheckbox').addEventListener('change', funct
     </script>
 </body>
 </html>
+
 
 
 
