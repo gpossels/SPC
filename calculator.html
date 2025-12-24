@@ -1790,18 +1790,7 @@
     const result = filteredResults[index];
     const lines = [];
     
-    // Add week dates if applicable
-    if (result.weekStart && result.weekEnd) {
-        const formatDate = (date) => {
-            const day = date.getDate();
-            const month = date.getMonth() + 1;
-            return `${day}/${month}`;
-        };
-        
-        lines.push(formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd));
-    }
-    
-    // Add range calculation
+    // Add range calculation first
     if (result.ucl && result.lcl) {
         let range;
         if (result.lcl < 0) {
@@ -1812,6 +1801,18 @@
         
         const rangeLabel = isSpanish ? 'Rango' : 'Range';
         lines.push(rangeLabel + ': ' + fmt(range));
+    }
+    
+    // Add week dates below range if applicable
+    if (result.weekStart && result.weekEnd) {
+        const formatDate = (date) => {
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            return `${day}/${month}`;
+        };
+        
+        const weekLabel = isSpanish ? 'Semana' : 'Week';
+        lines.push(weekLabel + ': ' + formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd));
     }
     
     return lines.length > 0 ? ['\n' + lines.join('\n')] : [];
