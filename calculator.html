@@ -892,11 +892,22 @@
                         const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
                         periods.push(`${dayLabel} ${currentYear}`);
                     } else if (unit === 'weeks') {
-                        const totalWeeks = parseInt(refPeriod) + i;
-                        currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
-                        currentPeriod = ((totalWeeks - 1) % 52) + 1;
-                        periods.push(`S${currentPeriod} ${currentYear}`);
-                    } else if (unit === 'months') {
+    const totalWeeks = parseInt(refPeriod) + i;
+    currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
+    currentPeriod = ((totalWeeks - 1) % 52) + 1;
+    
+    // Calculate actual week start and end dates
+    const yearStart = new Date(currentYear, 0, 1);
+    const daysToAdd = (currentPeriod - 1) * 7;
+    const weekStart = new Date(yearStart.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+    
+    periods.push({
+        display: `S${currentPeriod} ${currentYear}`,
+        weekStart: weekStart,
+        weekEnd: weekEnd
+    });
+} else if (unit === 'months') {
                         const totalMonths = parseInt(refPeriod) + i;
                         currentYear = refYear + Math.floor((totalMonths - 1) / 12);
                         currentPeriod = ((totalMonths - 1) % 12) + 1;
@@ -940,15 +951,26 @@
                         const dayLabel = isSpanish ? `Día ${currentPeriod}` : `Day ${currentPeriod}`;
                         periods.push(`${dayLabel} ${currentYear}`);
                     } else if (unit === 'weeks') {
-                        let totalWeeks = parseInt(refPeriod) - offset;
-                        currentYear = refYear;
-                        while (totalWeeks <= 0) {
-                            totalWeeks += 52;
-                            currentYear--;
-                        }
-                        currentPeriod = totalWeeks;
-                        periods.push(`S${currentPeriod} ${currentYear}`);
-                    } else if (unit === 'months') {
+    let totalWeeks = parseInt(refPeriod) - offset;
+    currentYear = refYear;
+    while (totalWeeks <= 0) {
+        totalWeeks += 52;
+        currentYear--;
+    }
+    currentPeriod = totalWeeks;
+    
+    // Calculate actual week start and end dates
+    const yearStart = new Date(currentYear, 0, 1);
+    const daysToAdd = (currentPeriod - 1) * 7;
+    const weekStart = new Date(yearStart.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+    
+    periods.push({
+        display: `S${currentPeriod} ${currentYear}`,
+        weekStart: weekStart,
+        weekEnd: weekEnd
+    });
+} else if (unit === 'months') {
                         let totalMonths = parseInt(refPeriod) - offset;
                         currentYear = refYear;
                         while (totalMonths <= 0) {
@@ -1009,15 +1031,26 @@
 
         // Calculate SPC
         function calcSPC(data, periods) {
-            const t = isSpanish ? lang.es : lang.en;
-            const results = data.map((dp, i) => ({
-                period: i + 1,
-                date: periods[i],
-                dp: dp,
-                dpa: null, mr: null, mra: null,
-                lcl: null, dla: null, dua: null, ucl: null, mrucl: null,
-                rule: null, ruleApplied: null, signal: null
-            }));
+    const t = isSpanish ? lang.es : lang.en;
+    const results = data.map((dp, i) => {
+        const periodData = periods[i];
+        const result = {
+            period: i + 1,
+            date: typeof periodData === 'object' ? periodData.display : periodData,
+            dp: dp,
+            dpa: null, mr: null, mra: null,
+            lcl: null, dla: null, dua: null, ucl: null, mrucl: null,
+            rule: null, ruleApplied: null, signal: null
+        };
+        
+        // Add week dates if available
+        if (typeof periodData === 'object' && periodData.weekStart && periodData.weekEnd) {
+            result.weekStart = periodData.weekStart;
+            result.weekEnd = periodData.weekEnd;
+        }
+        
+        return result;
+    });
 
             // Baseline calculation (first 8 points)
             const dpa = data.slice(0, 8).reduce((a, b) => a + b) / 8;
@@ -1738,19 +1771,52 @@
                                 return getOrder(a.dataset.label) - getOrder(b.dataset.label);
                             },
                             callbacks: {
-                                label: function(context) {
-                                    const value = context.parsed.y;
-                                    return context.dataset.label + ': ' + fmt(value);
-                                },
-                                labelColor: function(context) {
-                                    return {
-                                        borderColor: context.dataset.borderColor,
-                                        backgroundColor: context.dataset.borderColor,
-                                        borderWidth: 1,
-                                        borderRadius: 0
-                                    };
-                                }
-                            }
+    label: function(context) {
+        const value = context.parsed.y;
+        return context.dataset.label + ': ' + fmt(value);
+    },
+    labelColor: function(context) {
+        return {
+            borderColor: context.dataset.borderColor,
+            backgroundColor: context.dataset.borderColor,
+            borderWidth: 1,
+            borderRadius: 0
+        };
+    },
+    afterBody: function(tooltipItems) {
+    if (tooltipItems.length === 0) return [];
+    
+    const index = tooltipItems[0].dataIndex;
+    const result = filteredResults[index];
+    const lines = [];
+    
+    // Add week dates if applicable
+    if (result.weekStart && result.weekEnd) {
+        const formatDate = (date) => {
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            return `${day}/${month}`;
+        };
+        
+        lines.push(formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd));
+    }
+    
+    // Add range calculation
+    if (result.ucl && result.lcl) {
+        let range;
+        if (result.lcl < 0) {
+            range = result.ucl;
+        } else {
+            range = result.ucl - result.lcl;
+        }
+        
+        const rangeLabel = isSpanish ? 'Rango' : 'Range';
+        lines.push(rangeLabel + ': ' + fmt(range));
+    }
+    
+    return lines.length > 0 ? ['\n' + lines.join('\n')] : [];
+}
+}
                         },
                         datalabels: {
                             display: function(context) {
