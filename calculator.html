@@ -896,10 +896,15 @@
     currentYear = refYear + Math.floor((totalWeeks - 1) / 52);
     currentPeriod = ((totalWeeks - 1) % 52) + 1;
     
-    // Calculate actual week start and end dates
-    const yearStart = new Date(currentYear, 0, 1);
-    const daysToAdd = (currentPeriod - 1) * 7;
-    const weekStart = new Date(yearStart.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    // Calculate actual week start (Monday) and end (Sunday) dates
+    // Find first Monday of the year
+    const jan1 = new Date(currentYear, 0, 1);
+    const dayOfWeek = jan1.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const daysUntilMonday = dayOfWeek === 0 ? 1 : (8 - dayOfWeek) % 7;
+    const firstMonday = new Date(currentYear, 0, 1 + daysUntilMonday);
+    
+    // Calculate week start (Monday)
+    const weekStart = new Date(firstMonday.getTime() + (currentPeriod - 1) * 7 * 24 * 60 * 60 * 1000);
     const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
     
     periods.push({
