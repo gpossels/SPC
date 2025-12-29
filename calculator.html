@@ -1915,7 +1915,19 @@ footer: function(tooltipItems) {
                                 // Show numeric labels based on showLabels toggle
                                 return showLabels;
                             },
-                            align: 'top',
+                            align: function(context) {
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                
+                                // Dynamic positioning for labeled red points
+                                if (result.signal === 1 && hasLabel) {
+                                    // If DP is above center line (DPA), show label above
+                                    // If DP is below center line (DPA), show label below
+                                    return result.dp > result.dpa ? 'top' : 'bottom';
+                                }
+                                
+                                return 'top';
+                            },
                             offset: function(context) {
                                 const result = filteredResults[context.dataIndex];
                                 const hasLabel = dataPointLabels[result.period];
