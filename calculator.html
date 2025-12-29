@@ -311,6 +311,36 @@
             display: none;
         }
 
+        .label-editor-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 8px;
+        }
+
+        .label-editor-item label {
+            font-weight: bold;
+            min-width: 150px;
+            color: #d84315;
+        }
+
+        .label-editor-item input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 2px solid #ff9800;
+            border-radius: 4px;
+        }
+
+        .label-editor-item input:focus {
+            outline: none;
+            border-color: #f57c00;
+            background: #fff8e1;
+        }
+        
         .alert {
             padding: 15px;
             margin-bottom: 20px;
@@ -629,6 +659,13 @@
                     </table>
                 </div>
             </div>
+                <div id="labelEditorSection" class="results-section hidden">
+                    <h3 id="labelEditorTitle">Etiquetar Puntos de Señal</h3>
+                    <p id="labelEditorDesc">Agregue notas para documentar las causas de los puntos de señal (rojos):</p>
+                    <div id="labelEditorContainer">
+                    <!-- Labels will be dynamically added here -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -642,6 +679,7 @@
         let yAxisFromZero = false;
         let rangeStart = 1;
         let rangeEnd = 1;
+        let dataPointLabels = {}; // Store labels for red points: {index: "label text"}
         
         // Language translations
         const lang = {
@@ -703,7 +741,10 @@
                     ucl: '(Límite de Control Superior)',
                     lcl: '(Límite de Control Inferior)',
                     dua: '(DUA)',
-                    dla: '(DLA)'
+                    dla: '(DLA)',
+                labelEditorTitle: 'Etiquetar Puntos de Señal',
+                labelEditorDesc: 'Agregue notas para documentar las causas de los puntos de señal (rojos):',
+                labelPlaceholder: 'Ej: Falta de personal, falla de equipo, día festivo...'
                 }
             },
             en: {
@@ -765,6 +806,9 @@
                     lcl: '(Lower Control Limit)',
                     dua: '(DUA)',
                     dla: '(DLA)',
+                    labelEditorTitle: 'Label Signal Points',
+                    labelEditorDesc: 'Add notes to document the causes of signal points (red):',
+                    labelPlaceholder: 'e.g. Staff shortage, equipment failure, holiday...'
                 }
             }
         };
@@ -1458,6 +1502,13 @@
 
             // Update toggle labels button text
             document.getElementById('toggleLabelsBtn').textContent = showLabels ? t.hideLabelsBtn : t.showLabelsBtn;
+
+            // Update label editor
+            document.getElementById('labelEditorTitle').textContent = t.labelEditorTitle;
+            document.getElementById('labelEditorDesc').textContent = t.labelEditorDesc;
+            if (currentResults) {
+                populateLabelEditor(); // Refresh with new language
+            }
         }
 
             // Get filtered results based on range
@@ -2065,8 +2116,61 @@ footer: function(tooltipItems) {
             }
 
             updateChart();
+            populateLabelEditor(); // Add label editor for red points
         }
 
+// Populate label editor for red signal points
+        function populateLabelEditor() {
+            const container = document.getElementById('labelEditorContainer');
+            const section = document.getElementById('labelEditorSection');
+            const t = isSpanish ? lang.es : lang.en;
+            
+            if (!currentResults) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            // Find all red signal points
+            const redPoints = currentResults.filter(r => r.signal === 1);
+            
+            if (redPoints.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            // Show section and populate
+            section.classList.remove('hidden');
+            container.innerHTML = '';
+            
+            redPoints.forEach(point => {
+                const div = document.createElement('div');
+                div.className = 'label-editor-item';
+                
+                const label = document.createElement('label');
+                label.textContent = `${isSpanish ? 'Período' : 'Period'} ${point.period} (${point.date}):`;
+                
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = t.labelPlaceholder;
+                input.value = dataPointLabels[point.period] || '';
+                input.dataset.period = point.period;
+                
+                // Save label on input
+                input.addEventListener('input', function() {
+                    if (this.value.trim()) {
+                        dataPointLabels[point.period] = this.value.trim();
+                    } else {
+                        delete dataPointLabels[point.period];
+                    }
+                    updateChart(); // Refresh chart to show labels
+                });
+                
+                div.appendChild(label);
+                div.appendChild(input);
+                container.appendChild(div);
+            });
+        }
+        
        // Show error
         function showError(msg) {
             document.getElementById('errorMsg').textContent = msg;
@@ -2102,6 +2206,7 @@ footer: function(tooltipItems) {
                 spcChart.destroy();
                 spcChart = null;
             }
+            dataPointLabels = {}; // Clear all labels
             currentResults = null;
         }
 
