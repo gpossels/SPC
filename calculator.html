@@ -1904,20 +1904,59 @@ footer: function(tooltipItems) {
                         },
                         datalabels: {
                             display: function(context) {
-                                return context.datasetIndex === 0 && showLabels;
+                                if (context.datasetIndex !== 0) return false;
+                                
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                
+                                // Always show custom labels for red points with labels
+                                if (result.signal === 1 && hasLabel) return true;
+                                
+                                // Show numeric labels based on showLabels toggle
+                                return showLabels;
                             },
                             align: 'top',
-                            offset: 8,
+                            offset: function(context) {
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                return (result.signal === 1 && hasLabel) ? 35 : 8;
+                            },
                             color: function(context) {
                                 const result = filteredResults[context.dataIndex];
                                 return result.signal === 1 ? '#FF0000' : '#4169E1';
                             },
-                            font: {
-                                size: 10,
-                                weight: 'bold'
+                            font: function(context) {
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                return {
+                                    size: (result.signal === 1 && hasLabel) ? 11 : 10,
+                                    weight: 'bold'
+                                };
                             },
-                            formatter: function(value) {
-                                return fmt(value);
+                            formatter: function(value, context) {
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                
+                                // For red points with custom labels
+                                if (result.signal === 1 && hasLabel) {
+                                    let dateInfo = '';
+                                    
+                                    if (result.weekStart && result.weekEnd) {
+                                        const formatDate = (date) => {
+                                            const day = date.getDate();
+                                            const month = date.getMonth() + 1;
+                                            return `${day}/${month}`;
+                                        };
+                                        dateInfo = formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd);
+                                    } else {
+                                        dateInfo = result.date;
+                                    }
+                                    
+                                    return dataPointLabels[result.period] + '\n' + dateInfo;
+                                }
+                                
+                                // For normal points, show value only if showLabels is true
+                                return showLabels ? fmt(value) : '';
                             }
                         }
                     },
