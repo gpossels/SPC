@@ -1852,62 +1852,20 @@
     },
                         datalabels: {
                             display: function(context) {
-                                if (context.datasetIndex !== 0) return false;
-                                
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                
-                                // Show value labels if showLabels is true (for non-labeled points)
-                                // Always show custom labels if point is red and has a label
-                                if (result.signal === 1 && hasLabel) return true;
-                                return showLabels;
+                                return context.datasetIndex === 0 && showLabels;
                             },
                             align: 'top',
-                            offset: function(context) {
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                // More offset for labeled red points
-                                return (result.signal === 1 && hasLabel) ? 30 : 8;
-                            },
+                            offset: 8,
                             color: function(context) {
                                 const result = filteredResults[context.dataIndex];
                                 return result.signal === 1 ? '#FF0000' : '#4169E1';
                             },
-                            font: function(context) {
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                return {
-                                    size: (result.signal === 1 && hasLabel) ? 11 : 10,
-                                    weight: 'bold'
-                                };
+                            font: {
+                                size: 10,
+                                weight: 'bold'
                             },
-                            formatter: function(value, context) {
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                
-                                if (result.signal === 1 && hasLabel) {
-                                    // Show custom label AND date range for red points
-                                    let dateInfo = '';
-                                    
-                                    // Format date based on period type
-                                    if (result.weekStart && result.weekEnd) {
-                                        // For weeks: show "25/3 - 31/3"
-                                        const formatDate = (date) => {
-                                            const day = date.getDate();
-                                            const month = date.getMonth() + 1;
-                                            return `${day}/${month}`;
-                                        };
-                                        dateInfo = formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd);
-                                    } else {
-                                        // For other periods: use existing date format
-                                        dateInfo = result.date;
-                                    }
-                                    
-                                    return dataPointLabels[result.period] + '\n' + dateInfo;
-                                }
-                                
-                                // Show just value for normal points
-                                return showLabels ? fmt(value) : '';
+                            formatter: function(value) {
+                                return fmt(value);
                             }
                         }
                     },
