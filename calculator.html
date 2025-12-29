@@ -1850,6 +1850,58 @@
         const value = context.parsed.y;
         return context.dataset.label + ': ' + fmt(value);
     },
+    labelColor: function(context) {
+        return {
+            borderColor: context.dataset.borderColor,
+            backgroundColor: context.dataset.borderColor,
+            borderWidth: 1,
+            borderRadius: 0
+        };
+    },
+    afterBody: function(tooltipItems) {
+    if (tooltipItems.length === 0) return [];
+    
+    const index = tooltipItems[0].dataIndex;
+    const result = filteredResults[index];
+    const output = [];
+    
+    // Add range calculation
+    if (result.ucl && result.lcl) {
+        let range;
+        if (result.lcl < 0) {
+            range = result.ucl;
+        } else {
+            range = result.ucl - result.lcl;
+        }
+        
+        const rangeLabel = isSpanish ? 'Rango' : 'Range';
+        output.push(rangeLabel + ': ' + fmt(range));
+    }
+    
+    return output;
+},
+footer: function(tooltipItems) {
+    if (tooltipItems.length === 0) return [];
+    
+    const index = tooltipItems[0].dataIndex;
+    const result = filteredResults[index];
+    
+    // Add week dates if applicable
+    if (result.weekStart && result.weekEnd) {
+        const formatDate = (date) => {
+            const day = date.getDate();
+            const month = date.getMonth() + 1;
+            return `${day}/${month}`;
+        };
+        
+        const weekLabel = isSpanish ? 'Semana' : 'Week';
+        return weekLabel + ': ' + formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd);
+    }
+    
+    return '';
+}
+}
+                        },
                         datalabels: {
                             display: function(context) {
                                 return context.datasetIndex === 0 && showLabels;
