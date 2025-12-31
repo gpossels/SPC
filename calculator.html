@@ -1902,79 +1902,107 @@ footer: function(tooltipItems) {
 }
 }
                         },
-                        datalabels: {
+                        datalabels: [
+                        // First label: Black text (custom label + date) for red points
+                        {
                             display: function(context) {
                                 if (context.datasetIndex !== 0) return false;
-                                
                                 const result = filteredResults[context.dataIndex];
                                 const hasLabel = dataPointLabels[result.period];
-                                
-                                // Always show custom labels for red points with labels
-                                if (result.signal === 1 && hasLabel) return true;
-                                
-                                // Show numeric labels based on showLabels toggle
-                                return showLabels;
+                                // Only show for red points with custom labels
+                                return result.signal === 1 && hasLabel;
                             },
                             align: function(context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                
-                                // Dynamic positioning for labeled red points
-                                if (result.signal === 1 && hasLabel) {
-                                    // If DP is above center line (DPA), show label above
-                                    // If DP is below center line (DPA), show label below
-                                    return result.dp > result.dpa ? 'top' : 'bottom';
-                                }
-                                
-                                return 'top';
+                                return result.dp > result.dpa ? 'top' : 'bottom';
                             },
-                            offset: function(context) {
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                return (result.signal === 1 && hasLabel) ? 20 : 8;
-                            },
-                            color: function(context) {
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                
-                                // Black text for custom labels on red points, otherwise use point color
-                                if (result.signal === 1 && hasLabel) return '#000000';
-                                return result.signal === 1 ? '#FF0000' : '#4169E1';
-                            },
-                            font: function(context) {
-                                const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
-                                return {
-                                    size: (result.signal === 1 && hasLabel) ? 11 : 10,
-                                    weight: 'bold'
-                                };
+                            offset: 20,
+                            color: '#000000',
+                            font: {
+                                size: 11,
+                                weight: 'bold'
                             },
                             formatter: function(value, context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                let dateInfo = '';
                                 
-                                // For red points with custom labels
-                                if (result.signal === 1 && hasLabel) {
-                                    let dateInfo = '';
-                                    
-                                    if (result.weekStart && result.weekEnd) {
-                                        const formatDate = (date) => {
-                                            const day = date.getDate();
-                                            const month = date.getMonth() + 1;
-                                            return `${day}/${month}`;
-                                        };
-                                        dateInfo = formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd);
-                                    } else {
-                                        dateInfo = result.date;
-                                    }
-                                    
-                                    return dataPointLabels[result.period] + '\n' + dateInfo;
+                                if (result.weekStart && result.weekEnd) {
+                                    const formatDate = (date) => {
+                                        const day = date.getDate();
+                                        const month = date.getMonth() + 1;
+                                        return `${day}/${month}`;
+                                    };
+                                    dateInfo = formatDate(result.weekStart) + ' - ' + formatDate(result.weekEnd);
+                                } else {
+                                    dateInfo = result.date;
                                 }
                                 
-                                // For normal points, show value only if showLabels is true
+                                return dataPointLabels[result.period] + '\n' + dateInfo;
+                            }
+                        },
+                        // Second label: Red value for red points with custom labels
+                        {
+                            display: function(context) {
+                                if (context.datasetIndex !== 0) return false;
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                // Only show for red points with custom labels
+                                return result.signal === 1 && hasLabel;
+                            },
+                            align: function(context) {
+                                const result = filteredResults[context.dataIndex];
+                                return result.dp > result.dpa ? 'top' : 'bottom';
+                            },
+                            offset: function(context) {
+                                const result = filteredResults[context.dataIndex];
+                                // Calculate offset: base offset (20) + space for 2 lines of text
+                                // Each line is approximately 13 pixels height
+                                // When above (top), we need more positive offset
+                                // When below (bottom), offset is negative from the point
+                                const baseOffset = 20;
+                                const lineHeight = 13;
+                                const numberOfLines = 2; // label + date
+                                const totalTextHeight = numberOfLines * lineHeight;
+                                
+                                return result.dp > result.dpa ? 
+                                    (baseOffset + totalTextHeight + 5) :  // above: push further down
+                                    (baseOffset + totalTextHeight + 5);   // below: push further up
+                            },
+                            color: '#FF0000',
+                            font: {
+                                size: 11,
+                                weight: 'bold'
+                            },
+                            formatter: function(value, context) {
+                                return fmt(value);
+                            }
+                        },
+                        // Third label: Regular numeric labels for normal points
+                        {
+                            display: function(context) {
+                                if (context.datasetIndex !== 0) return false;
+                                const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                // Don't show if it's a red point with custom label (already handled above)
+                                if (result.signal === 1 && hasLabel) return false;
+                                // Show numeric labels based on showLabels toggle
+                                return showLabels;
+                            },
+                            align: 'top',
+                            offset: 8,
+                            color: function(context) {
+                                const result = filteredResults[context.dataIndex];
+                                return result.signal === 1 ? '#FF0000' : '#4169E1';
+                            },
+                            font: {
+                                size: 10,
+                                weight: 'bold'
+                            },
+                            formatter: function(value) {
                                 return showLabels ? fmt(value) : '';
                             }
                         }
+                    ]
                     },
                     scales: {
                         x: {
