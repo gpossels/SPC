@@ -1935,6 +1935,10 @@ footer: function(tooltipItems) {
                             },
                             color: function(context) {
                                 const result = filteredResults[context.dataIndex];
+                                const hasLabel = dataPointLabels[result.period];
+                                
+                                // Black text for custom labels on red points, otherwise use point color
+                                if (result.signal === 1 && hasLabel) return '#000000';
                                 return result.signal === 1 ? '#FF0000' : '#4169E1';
                             },
                             font: function(context) {
