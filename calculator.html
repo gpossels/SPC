@@ -1999,7 +1999,7 @@ footer: function(tooltipItems) {
                             min: yAxisFromZero ? 0 : undefined,
                             title: {
                                 display: true,
-                                text: isSpanish ? 'Valor' : 'Value',
+                                text: customDataName || (isSpanish ? 'Valor' : 'Value'),
                                 font: {
                                     weight: 'bold'
                                 }
