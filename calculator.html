@@ -681,7 +681,7 @@
         let rangeEnd = 1;
         let dataPointLabels = {}; // Store labels for red points: {index: "label text"}
         
-        // Language translations
+// Language translations
         const lang = {
             es: {
                 title: 'Generador Rápido PBC',
@@ -741,10 +741,19 @@
                     ucl: '(Límite de Control Superior)',
                     lcl: '(Límite de Control Inferior)',
                     dua: '(DUA)',
-                    dla: '(DLA)',
+                    dla: '(DLA)'
+                },
                 labelEditorTitle: 'Etiquetar Puntos de Señal',
                 labelEditorDesc: 'Agregue notas para documentar las causas de los puntos de señal (rojos):',
-                labelPlaceholder: 'Ej: Falta de personal, falla de equipo, día festivo...'
+                labelPlaceholder: 'Ej: Falta de personal, falla de equipo, día festivo...',
+                xAxisLabels: {
+                    years: 'Años',
+                    months: 'Meses',
+                    weeks: 'Semanas ISO',
+                    days: 'Días',
+                    semesters: 'Semestres',
+                    fourmonths: 'Cuatrimestres',
+                    trimesters: 'Trimestres'
                 }
             },
             en: {
@@ -805,10 +814,19 @@
                     ucl: '(Upper Control Limit)',
                     lcl: '(Lower Control Limit)',
                     dua: '(DUA)',
-                    dla: '(DLA)',
-                    labelEditorTitle: 'Label Signal Points',
-                    labelEditorDesc: 'Add notes to document the causes of signal points (red):',
-                    labelPlaceholder: 'e.g. Staff shortage, equipment failure, holiday...'
+                    dla: '(DLA)'
+                },
+                labelEditorTitle: 'Label Signal Points',
+                labelEditorDesc: 'Add notes to document the causes of signal points (red):',
+                labelPlaceholder: 'e.g. Staff shortage, equipment failure, holiday...',
+                xAxisLabels: {
+                    years: 'Years',
+                    months: 'Months',
+                    weeks: 'ISO Weeks',
+                    days: 'Days',
+                    semesters: 'Semesters',
+                    fourmonths: 'Four-Month Periods',
+                    trimesters: 'Quarters'
                 }
             }
         };
@@ -1981,7 +1999,7 @@ footer: function(tooltipItems) {
                             display: true,
                             title: {
                                 display: true,
-                                text: isSpanish ? 'Período' : 'Period',
+                                text: t.xAxisLabels[timeUnit],
                                 font: {
                                     weight: 'bold'
                                 }
