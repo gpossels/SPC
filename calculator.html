@@ -377,7 +377,60 @@
             font-weight: normal;
             cursor: pointer;
         }
+	.week-mark-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border: 2px solid #6f42c1;
+            border-radius: 8px;
+            flex-wrap: wrap;
+        }
 
+        .week-mark-item input[type="date"] {
+            flex: 1;
+            min-width: 140px;
+        }
+
+        .week-mark-item input[type="text"] {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .week-mark-item select {
+            flex: 0 0 120px;
+        }
+
+        .week-mark-item .radio-group {
+            flex: 0 0 auto;
+            margin: 0;
+        }
+
+        .week-mark-item button {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9em;
+            flex: 0 0 auto;
+        }
+
+        .week-mark-item button:hover {
+            background: #c82333;
+        }
+
+        .color-option {
+            width: 30px;
+            height: 30px;
+            border-radius: 4px;
+            border: 2px solid #333;
+            cursor: pointer;
+            display: inline-block;
+        }
         .view-controls {
                 background: #f8f9fa;
                 padding: 20px;
@@ -585,7 +638,25 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                	<div id="weekMarkingSection" class="input-group hidden">
+    <label id="weekMarkingLabel">Marcar Semanas (opcional):</label>
+    
+    <div id="weekMarkingContainer">
+        <!-- Week marking inputs will be added here dynamically -->
+    </div>
+    
+    <div class="button-row" style="margin-top: 10px;">
+        <button type="button" id="addWeekMarkBtn" class="secondary-btn" style="background: #6f42c1; flex: 0 1 auto;">
+            <span id="addWeekMarkBtnText">+ Agregar Marca</span>
+        </button>
+        <button type="button" id="importExcelBtn" class="secondary-btn" style="background: #17a2b8; flex: 0 1 auto;">
+            <span id="importExcelBtnText">Importar Excel</span>
+        </button>
+        <input type="file" id="excelFileInput" accept=".xlsx,.xls" style="display: none;">
+    </div>
+</div>
+		</div>
+
             </div>
 
             <div id="errorDiv" class="hidden">
@@ -680,7 +751,30 @@
         let rangeStart = 1;
         let rangeEnd = 1;
         let dataPointLabels = {}; // Store labels for red points: {index: "label text"}
+        let weekMarkings = []; // Store week markings: [{startDate, endDate, color, label, type}]
+        let weekMarkingIdCounter = 0;
         
+        const colorPalette = {
+            red: 'rgba(255, 200, 200, 0.7)',
+            orange: 'rgba(255, 220, 180, 0.7)',
+            yellow: 'rgba(255, 255, 200, 0.7)',
+            green: 'rgba(200, 255, 200, 0.7)',
+            cyan: 'rgba(200, 255, 255, 0.7)',
+            blue: 'rgba(200, 220, 255, 0.7)',
+            violet: 'rgba(230, 200, 255, 0.7)',
+            grey: 'rgba(220, 220, 220, 0.7)'
+        };
+        
+        const colorPaletteSolid = {
+            red: '#FF0000',
+            orange: '#FF8800',
+            yellow: '#FFD700',
+            green: '#00CC00',
+            cyan: '#00CCCC',
+            blue: '#0066FF',
+            violet: '#9900FF',
+            grey: '#666666'
+        };
 // Language translations
         const lang = {
             es: {
@@ -754,7 +848,20 @@
                     semesters: 'Semestres',
                     fourmonths: 'Cuatrimestres',
                     trimesters: 'Trimestres'
-                }
+                },
+		weekMarkingLabel: 'Marcar Semanas (opcional):',
+                addWeekMarkBtn: '+ Agregar Marca',
+                importExcelBtn: 'Importar Excel',
+                startDateLabel: 'Fecha Inicio:',
+                endDateLabel: 'Fecha Fin:',
+                markLabelLabel: 'Etiqueta:',
+                colorLabel: 'Color:',
+                markTypeLabel: 'Tipo:',
+                bandType: 'Banda',
+                circleType: 'Círculo',
+                deleteMarkBtn: 'Eliminar',
+                rangeOptional: '(opcional, para rango)',
+                markLabelPlaceholder: 'ej. Vacaciones, Feriado...'
             },
             en: {
                 title: 'PBC Fast Generator',
@@ -827,7 +934,20 @@
                     semesters: 'Semesters',
                     fourmonths: 'Four-Month Periods',
                     trimesters: 'Quarters'
-                }
+                },
+		weekMarkingLabel: 'Mark Weeks (optional):',
+                addWeekMarkBtn: '+ Add Mark',
+                importExcelBtn: 'Import Excel',
+                startDateLabel: 'Start Date:',
+                endDateLabel: 'End Date:',
+                markLabelLabel: 'Label:',
+                colorLabel: 'Color:',
+                markTypeLabel: 'Type:',
+                bandType: 'Band',
+                circleType: 'Circle',
+                deleteMarkBtn: 'Delete',
+                rangeOptional: '(optional, for range)',
+                markLabelPlaceholder: 'e.g. Vacation, Holiday...'
             }
         };
 
@@ -1114,6 +1234,279 @@
             return formatted;
         }
     }
+// Parse date string (DD/MM/YYYY or DD-MM-YYYY)
+        function parseDate(dateStr) {
+            if (!dateStr) return null;
+            
+            const parts = dateStr.split(/[/-]/);
+            if (parts.length !== 3) return null;
+            
+            const day = parseInt(parts[0]);
+            const month = parseInt(parts[1]);
+            const year = parseInt(parts[2]);
+            
+            if (isNaN(day) || isNaN(month) || isNaN(year)) return null;
+            if (month < 1 || month > 12) return null;
+            if (day < 1 || day > 31) return null;
+            
+            return new Date(year, month - 1, day);
+        }
+        
+        // Find which week(s) a date falls into from currentResults
+        function findWeeksForDate(date) {
+            if (!currentResults || !date) return [];
+            
+            const matchingWeeks = [];
+            
+            currentResults.forEach((result, index) => {
+                if (result.weekStart && result.weekEnd) {
+                    if (date >= result.weekStart && date <= result.weekEnd) {
+                        matchingWeeks.push(index);
+                    }
+                }
+            });
+            
+            return matchingWeeks;
+        }
+        
+        // Find weeks for a date range
+        function findWeeksForDateRange(startDate, endDate) {
+            if (!currentResults || !startDate || !endDate) return [];
+            
+            const matchingWeeks = [];
+            
+            currentResults.forEach((result, index) => {
+                if (result.weekStart && result.weekEnd) {
+                    // Check if week overlaps with date range
+                    if (result.weekStart <= endDate && result.weekEnd >= startDate) {
+                        matchingWeeks.push(index);
+                    }
+                }
+            });
+            
+            return matchingWeeks;
+        }
+// Add a new week marking input field
+        function addWeekMarkingField(startDate = '', endDate = '', label = '', color = 'yellow', type = 'band') {
+            const t = isSpanish ? lang.es : lang.en;
+            const container = document.getElementById('weekMarkingContainer');
+            const id = weekMarkingIdCounter++;
+            
+            const div = document.createElement('div');
+            div.className = 'week-mark-item';
+            div.dataset.markId = id;
+            
+            const startDateLabel = document.createElement('label');
+            startDateLabel.textContent = t.startDateLabel;
+            startDateLabel.style.minWidth = 'auto';
+            startDateLabel.style.fontSize = '0.9em';
+            
+            const startDateInput = document.createElement('input');
+            startDateInput.type = 'date';
+            startDateInput.value = startDate;
+            startDateInput.dataset.field = 'startDate';
+            
+            const endDateLabel = document.createElement('label');
+            endDateLabel.textContent = t.endDateLabel + ' ' + t.rangeOptional;
+            endDateLabel.style.minWidth = 'auto';
+            endDateLabel.style.fontSize = '0.9em';
+            
+            const endDateInput = document.createElement('input');
+            endDateInput.type = 'date';
+            endDateInput.value = endDate;
+            endDateInput.dataset.field = 'endDate';
+            
+            const labelLabel = document.createElement('label');
+            labelLabel.textContent = t.markLabelLabel;
+            labelLabel.style.minWidth = 'auto';
+            labelLabel.style.fontSize = '0.9em';
+            
+            const labelInput = document.createElement('input');
+            labelInput.type = 'text';
+            labelInput.placeholder = t.markLabelPlaceholder;
+            labelInput.value = label;
+            labelInput.dataset.field = 'label';
+            
+            const colorLabel = document.createElement('label');
+            colorLabel.textContent = t.colorLabel;
+            colorLabel.style.minWidth = 'auto';
+            colorLabel.style.fontSize = '0.9em';
+            
+            const colorSelect = document.createElement('select');
+            colorSelect.dataset.field = 'color';
+            Object.keys(colorPalette).forEach(colorKey => {
+                const option = document.createElement('option');
+                option.value = colorKey;
+                option.textContent = colorKey.charAt(0).toUpperCase() + colorKey.slice(1);
+                if (colorKey === color) option.selected = true;
+                colorSelect.appendChild(option);
+            });
+            
+            const typeLabel = document.createElement('label');
+            typeLabel.textContent = t.markTypeLabel;
+            typeLabel.style.minWidth = 'auto';
+            typeLabel.style.fontSize = '0.9em';
+            
+            const typeRadioGroup = document.createElement('div');
+            typeRadioGroup.className = 'radio-group';
+            
+            const bandRadio = document.createElement('input');
+            bandRadio.type = 'radio';
+            bandRadio.name = `markType${id}`;
+            bandRadio.value = 'band';
+            bandRadio.checked = (type === 'band');
+            bandRadio.dataset.field = 'type';
+            
+            const bandLabel = document.createElement('label');
+            bandLabel.textContent = t.bandType;
+            
+            const circleRadio = document.createElement('input');
+            circleRadio.type = 'radio';
+            circleRadio.name = `markType${id}`;
+            circleRadio.value = 'circle';
+            circleRadio.checked = (type === 'circle');
+            circleRadio.dataset.field = 'type';
+            
+            const circleLabel = document.createElement('label');
+            circleLabel.textContent = t.circleType;
+            
+            typeRadioGroup.appendChild(bandRadio);
+            typeRadioGroup.appendChild(bandLabel);
+            typeRadioGroup.appendChild(circleRadio);
+            typeRadioGroup.appendChild(circleLabel);
+            
+            const deleteBtn = document.createElement('button');
+            deleteBtn.textContent = t.deleteMarkBtn;
+            deleteBtn.onclick = function() {
+                div.remove();
+                updateWeekMarkingsFromUI();
+            };
+            
+            // Add change listeners to update weekMarkings array
+            [startDateInput, endDateInput, labelInput, colorSelect, bandRadio, circleRadio].forEach(input => {
+                input.addEventListener('change', updateWeekMarkingsFromUI);
+            });
+            
+            div.appendChild(startDateLabel);
+            div.appendChild(startDateInput);
+            div.appendChild(endDateLabel);
+            div.appendChild(endDateInput);
+            div.appendChild(labelLabel);
+            div.appendChild(labelInput);
+            div.appendChild(colorLabel);
+            div.appendChild(colorSelect);
+            div.appendChild(typeLabel);
+            div.appendChild(typeRadioGroup);
+            div.appendChild(deleteBtn);
+            
+            container.appendChild(div);
+        }
+
+// Update weekMarkings array from UI fields
+        function updateWeekMarkingsFromUI() {
+            weekMarkings = [];
+            
+            const container = document.getElementById('weekMarkingContainer');
+            const markItems = container.querySelectorAll('.week-mark-item');
+            
+            markItems.forEach(item => {
+                const startDateInput = item.querySelector('input[data-field="startDate"]');
+                const endDateInput = item.querySelector('input[data-field="endDate"]');
+                const labelInput = item.querySelector('input[data-field="label"]');
+                const colorSelect = item.querySelector('select[data-field="color"]');
+                const typeRadios = item.querySelectorAll('input[data-field="type"]');
+                
+                let type = 'band';
+                typeRadios.forEach(radio => {
+                    if (radio.checked) type = radio.value;
+                });
+                
+                if (startDateInput.value) {
+                    const marking = {
+                        startDate: startDateInput.value,
+                        endDate: endDateInput.value || '',
+                        label: labelInput.value || '',
+                        color: colorSelect.value,
+                        type: type
+                    };
+                    
+                    weekMarkings.push(marking);
+                }
+            });
+            
+            // Update chart if it exists
+            if (spcChart && currentResults) {
+                updateChart();
+            }
+        }
+
+// Import week markings from Excel file
+        function importWeekMarkingsFromExcel(file) {
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    
+                    // Read first sheet
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+                    
+                    // Clear existing marks
+                    const container = document.getElementById('weekMarkingContainer');
+                    container.innerHTML = '';
+                    
+                    // Process each row
+                    jsonData.forEach(row => {
+                        if (row.length >= 1 && row[0]) {
+                            const startDate = excelDateToJSDate(row[0]);
+                            const endDate = row.length >= 2 && row[1] ? excelDateToJSDate(row[1]) : '';
+                            
+                            if (startDate) {
+                                addWeekMarkingField(startDate, endDate, '', 'yellow', 'band');
+                            }
+                        }
+                    });
+                    
+                    updateWeekMarkingsFromUI();
+                    
+                } catch (error) {
+                    console.error('Error importing Excel:', error);
+                    alert(isSpanish ? 
+                        'Error al importar el archivo Excel. Verifique el formato.' : 
+                        'Error importing Excel file. Please check the format.');
+                }
+            };
+            
+            reader.readAsArrayBuffer(file);
+        }
+        
+        // Convert Excel date to JavaScript date string (YYYY-MM-DD)
+        function excelDateToJSDate(excelDate) {
+            // If it's already a string in DD/MM/YYYY or DD-MM-YYYY format
+            if (typeof excelDate === 'string') {
+                const parsed = parseDate(excelDate);
+                if (parsed) {
+                    const year = parsed.getFullYear();
+                    const month = String(parsed.getMonth() + 1).padStart(2, '0');
+                    const day = String(parsed.getDate()).padStart(2, '0');
+                    return `${year}-${month}-${day}`;
+                }
+                return '';
+            }
+            
+            // If it's an Excel serial date number
+            if (typeof excelDate === 'number') {
+                const date = new Date((excelDate - 25569) * 86400 * 1000);
+                const year = date.getFullYear();
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const day = String(date.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+            
+            return '';
+        }
 
         // Calculate SPC
         function calcSPC(data, periods) {
@@ -1434,7 +1827,14 @@
                     }
                 }
             }
-        }
+        // Show/hide week marking section based on time unit
+            const weekMarkingSection = document.getElementById('weekMarkingSection');
+            if (timeUnit === 'weeks') {
+                weekMarkingSection.classList.remove('hidden');
+            } else {
+                weekMarkingSection.classList.add('hidden');
+            }
+	}
 
         // Update existing table and chart when language changes
         function updateExistingResults() {
@@ -1527,6 +1927,19 @@
             if (currentResults) {
                 populateLabelEditor(); // Refresh with new language
             }
+	
+// Update week marking section
+            document.getElementById('weekMarkingLabel').textContent = t.weekMarkingLabel;
+            document.getElementById('addWeekMarkBtnText').textContent = t.addWeekMarkBtn;
+            document.getElementById('importExcelBtnText').textContent = t.importExcelBtn;
+            
+            // Refresh week marking fields with new language
+            const existingMarks = [...weekMarkings];
+            const container = document.getElementById('weekMarkingContainer');
+            container.innerHTML = '';
+            existingMarks.forEach(mark => {
+                addWeekMarkingField(mark.startDate, mark.endDate, mark.label, mark.color, mark.type);
+            });
         }
 
             // Get filtered results based on range
@@ -1765,7 +2178,110 @@
             // Create new chart
             spcChart = new Chart(ctx, {
                 type: 'line',
-                plugins: [ChartDataLabels],
+                plugins: [ChartDataLabels, {
+                    id: 'weekMarkings',
+                    beforeDatasetsDraw: function(chart) {
+                        // Only draw week markings if time unit is weeks
+                        const timeUnit = document.getElementById('timeUnitSelect').value;
+                        if (timeUnit !== 'weeks') return;
+                        if (!weekMarkings || weekMarkings.length === 0) return;
+                        if (!currentResults) return;
+                        
+                        const ctx = chart.ctx;
+                        const chartArea = chart.chartArea;
+                        const xScale = chart.scales.x;
+                        const yScale = chart.scales.y;
+                        
+                        // First pass: draw all bands
+                        weekMarkings.forEach(marking => {
+                            if (marking.type !== 'band') return;
+                            
+                            const startDate = marking.startDate ? new Date(marking.startDate + 'T00:00:00') : null;
+                            if (!startDate) return;
+                            
+                            const endDate = marking.endDate ? new Date(marking.endDate + 'T00:00:00') : null;
+                            
+                            let weekIndices = [];
+                            if (endDate) {
+                                weekIndices = findWeeksForDateRange(startDate, endDate);
+                            } else {
+                                weekIndices = findWeeksForDate(startDate);
+                            }
+                            
+                            if (weekIndices.length === 0) return;
+                            
+                            const adjustedIndices = weekIndices.map(i => i - (rangeStart - 1)).filter(i => i >= 0 && i < filteredResults.length);
+                            
+                            if (adjustedIndices.length === 0) return;
+                            
+                            // Draw vertical band
+                            const firstIndex = adjustedIndices[0];
+                            const lastIndex = adjustedIndices[adjustedIndices.length - 1];
+                            
+                            let leftX, rightX;
+                            
+                            if (firstIndex === 0) {
+                                leftX = chartArea.left;
+                            } else {
+                                const currentX = xScale.getPixelForValue(firstIndex);
+                                const prevX = xScale.getPixelForValue(firstIndex - 1);
+                                leftX = (currentX + prevX) / 2;
+                            }
+                            
+                            if (lastIndex === filteredResults.length - 1) {
+                                rightX = chartArea.right;
+                            } else {
+                                const currentX = xScale.getPixelForValue(lastIndex);
+                                const nextX = xScale.getPixelForValue(lastIndex + 1);
+                                rightX = (currentX + nextX) / 2;
+                            }
+                            
+                            ctx.save();
+                            ctx.fillStyle = colorPalette[marking.color];
+                            ctx.fillRect(leftX, chartArea.top, rightX - leftX, chartArea.bottom - chartArea.top);
+                            ctx.restore();
+                        });
+                        
+                        // Second pass: draw all circles (on top of bands)
+                        weekMarkings.forEach(marking => {
+                            if (marking.type !== 'circle') return;
+                            
+                            const startDate = marking.startDate ? new Date(marking.startDate + 'T00:00:00') : null;
+                            if (!startDate) return;
+                            
+                            const endDate = marking.endDate ? new Date(marking.endDate + 'T00:00:00') : null;
+                            
+                            let weekIndices = [];
+                            if (endDate) {
+                                weekIndices = findWeeksForDateRange(startDate, endDate);
+                            } else {
+                                weekIndices = findWeeksForDate(startDate);
+                            }
+                            
+                            if (weekIndices.length === 0) return;
+                            
+                            const adjustedIndices = weekIndices.map(i => i - (rangeStart - 1)).filter(i => i >= 0 && i < filteredResults.length);
+                            
+                            if (adjustedIndices.length === 0) return;
+                            
+                            // Draw circles around data points
+                            adjustedIndices.forEach(index => {
+                                const x = xScale.getPixelForValue(index);
+                                const y = yScale.getPixelForValue(filteredResults[index].dp);
+                                
+                                const circleRadius = 12;
+                                
+                                ctx.save();
+                                ctx.strokeStyle = colorPaletteSolid[marking.color];
+                                ctx.lineWidth = 1;
+                                ctx.beginPath();
+                                ctx.arc(x, y, circleRadius, 0, 2 * Math.PI);
+                                ctx.stroke();
+                                ctx.restore();
+                            });
+                        });
+                    }
+                }],
                 data: {
                     labels: labels,
                     datasets: [
@@ -1835,10 +2351,33 @@
                                     const original = Chart.defaults.plugins.legend.labels.generateLabels;
                                     const labels = original.call(this, chart);
 
-                                    return labels.map(label => {
+                                    const updatedLabels = labels.map(label => {
                                         label.fillStyle = label.strokeStyle;
                                         return label;
                                     });
+                                    
+                                    // Add week marking labels
+                                    if (weekMarkings && weekMarkings.length > 0) {
+                                        weekMarkings.forEach((marking, index) => {
+                                            if (marking.label) {
+                                                // Use pale color for bands, solid color for circles
+                                                const legendColor = marking.type === 'band' ? 
+                                                    colorPalette[marking.color] : 
+                                                    colorPaletteSolid[marking.color];
+                                                
+                                                updatedLabels.push({
+                                                    text: marking.label,
+                                                    fillStyle: legendColor,
+                                                    strokeStyle: legendColor,
+                                                    lineWidth: 0,
+                                                    hidden: false,
+                                                    index: updatedLabels.length
+                                                });
+                                            }
+                                        });
+                                    }
+                                    
+                                    return updatedLabels;
                                 }
                             }
                         },
@@ -2280,6 +2819,9 @@ footer: function(tooltipItems) {
                 spcChart = null;
             }
             dataPointLabels = {}; // Clear all labels
+		weekMarkings = []; // Clear week markings
+            weekMarkingIdCounter = 0;
+            document.getElementById('weekMarkingContainer').innerHTML = ''; // Clear week marking UI
             currentResults = null;
         }
 
@@ -2359,7 +2901,23 @@ footer: function(tooltipItems) {
             document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
             document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
                    // Initialize language (must be last to ensure all elements exist)
-       updateLang();
+       // Week marking event listeners
+            document.getElementById('addWeekMarkBtn').addEventListener('click', function() {
+                addWeekMarkingField();
+                updateWeekMarkingsFromUI();
+            });
+            
+            document.getElementById('importExcelBtn').addEventListener('click', function() {
+                document.getElementById('excelFileInput').click();
+            });
+            
+            document.getElementById('excelFileInput').addEventListener('change', function(e) {
+                if (e.target.files.length > 0) {
+                    importWeekMarkingsFromExcel(e.target.files[0]);
+                    e.target.value = ''; // Reset file input
+                }
+            });
+	updateLang();
 });
     </script>
 </body>
