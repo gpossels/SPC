@@ -1287,7 +1287,8 @@
             return matchingWeeks;
         }
 // Add a new week marking input field
-        function addWeekMarkingField(startDate = '', endDate = '', label = '', color = 'yellow', type = 'band') {
+        // Add a new week marking input field
+        function addWeekMarkingField(startDate = '', endDate = '', label = '', color = 'yellow', type = 'band', dates = []) {
             const t = isSpanish ? lang.es : lang.en;
             const container = document.getElementById('weekMarkingContainer');
             const id = weekMarkingIdCounter++;
@@ -1296,59 +1297,16 @@
             div.className = 'week-mark-item';
             div.dataset.markId = id;
             
-            const startDateLabel = document.createElement('label');
-            startDateLabel.textContent = t.startDateLabel;
-            startDateLabel.style.minWidth = 'auto';
-            startDateLabel.style.fontSize = '0.9em';
-            
-            const startDateInput = document.createElement('input');
-            startDateInput.type = 'date';
-            startDateInput.value = startDate;
-            startDateInput.dataset.field = 'startDate';
-            
-            const endDateLabel = document.createElement('label');
-            endDateLabel.textContent = t.endDateLabel + ' ' + t.rangeOptional;
-            endDateLabel.style.minWidth = 'auto';
-            endDateLabel.style.fontSize = '0.9em';
-            
-            const endDateInput = document.createElement('input');
-            endDateInput.type = 'date';
-            endDateInput.value = endDate;
-            endDateInput.dataset.field = 'endDate';
-            
-            const labelLabel = document.createElement('label');
-            labelLabel.textContent = t.markLabelLabel;
-            labelLabel.style.minWidth = 'auto';
-            labelLabel.style.fontSize = '0.9em';
-            
-            const labelInput = document.createElement('input');
-            labelInput.type = 'text';
-            labelInput.placeholder = t.markLabelPlaceholder;
-            labelInput.value = label;
-            labelInput.dataset.field = 'label';
-            
-            const colorLabel = document.createElement('label');
-            colorLabel.textContent = t.colorLabel;
-            colorLabel.style.minWidth = 'auto';
-            colorLabel.style.fontSize = '0.9em';
-            
-            const colorSelect = document.createElement('select');
-            colorSelect.dataset.field = 'color';
-            Object.keys(colorPalette).forEach(colorKey => {
-                const option = document.createElement('option');
-                option.value = colorKey;
-                option.textContent = colorKey.charAt(0).toUpperCase() + colorKey.slice(1);
-                if (colorKey === color) option.selected = true;
-                colorSelect.appendChild(option);
-            });
-            
+            // TYPE SELECTOR FIRST (to determine layout)
             const typeLabel = document.createElement('label');
             typeLabel.textContent = t.markTypeLabel;
             typeLabel.style.minWidth = 'auto';
             typeLabel.style.fontSize = '0.9em';
+            typeLabel.style.flexBasis = '100%';
             
             const typeRadioGroup = document.createElement('div');
             typeRadioGroup.className = 'radio-group';
+            typeRadioGroup.style.flexBasis = '100%';
             
             const bandRadio = document.createElement('input');
             bandRadio.type = 'radio';
@@ -1370,11 +1328,60 @@
             const circleLabel = document.createElement('label');
             circleLabel.textContent = t.circleType;
             
+            const groupRadio = document.createElement('input');
+            groupRadio.type = 'radio';
+            groupRadio.name = `markType${id}`;
+            groupRadio.value = 'group';
+            groupRadio.checked = (type === 'group');
+            groupRadio.dataset.field = 'type';
+            
+            const groupLabel = document.createElement('label');
+            groupLabel.textContent = isSpanish ? 'Grupo' : 'Group';
+            
             typeRadioGroup.appendChild(bandRadio);
             typeRadioGroup.appendChild(bandLabel);
             typeRadioGroup.appendChild(circleRadio);
             typeRadioGroup.appendChild(circleLabel);
+            typeRadioGroup.appendChild(groupRadio);
+            typeRadioGroup.appendChild(groupLabel);
             
+            // CONTAINER FOR DYNAMIC CONTENT (changes based on type)
+            const dynamicContent = document.createElement('div');
+            dynamicContent.style.display = 'flex';
+            dynamicContent.style.flexWrap = 'wrap';
+            dynamicContent.style.gap = '10px';
+            dynamicContent.style.width = '100%';
+            dynamicContent.dataset.dynamicContent = 'true';
+            
+            // LABEL INPUT (always visible)
+            const labelLabel = document.createElement('label');
+            labelLabel.textContent = t.markLabelLabel;
+            labelLabel.style.minWidth = 'auto';
+            labelLabel.style.fontSize = '0.9em';
+            
+            const labelInput = document.createElement('input');
+            labelInput.type = 'text';
+            labelInput.placeholder = t.markLabelPlaceholder;
+            labelInput.value = label;
+            labelInput.dataset.field = 'label';
+            
+            // COLOR SELECTOR (always visible)
+            const colorLabel = document.createElement('label');
+            colorLabel.textContent = t.colorLabel;
+            colorLabel.style.minWidth = 'auto';
+            colorLabel.style.fontSize = '0.9em';
+            
+            const colorSelect = document.createElement('select');
+            colorSelect.dataset.field = 'color';
+            Object.keys(colorPalette).forEach(colorKey => {
+                const option = document.createElement('option');
+                option.value = colorKey;
+                option.textContent = colorKey.charAt(0).toUpperCase() + colorKey.slice(1);
+                if (colorKey === color) option.selected = true;
+                colorSelect.appendChild(option);
+            });
+            
+            // DELETE BUTTON
             const deleteBtn = document.createElement('button');
             deleteBtn.textContent = t.deleteMarkBtn;
             deleteBtn.onclick = function() {
@@ -1382,21 +1389,143 @@
                 updateWeekMarkingsFromUI();
             };
             
-            // Add change listeners to update weekMarkings array
-            [startDateInput, endDateInput, labelInput, colorSelect, bandRadio, circleRadio].forEach(input => {
-                input.addEventListener('change', updateWeekMarkingsFromUI);
+            // Function to render the appropriate fields based on type
+            function renderFields() {
+    const checkedRadio = div.querySelector('input[name="markType' + id + '"]:checked');
+    if (!checkedRadio) return; // Safety check - exit if no radio button is checked yet
+    const selectedType = checkedRadio.value;
+    dynamicContent.innerHTML = '';
+                
+                if (selectedType === 'band') {
+                    // BAND: Start date + optional end date
+                    const startDateLabel = document.createElement('label');
+                    startDateLabel.textContent = t.startDateLabel;
+                    startDateLabel.style.minWidth = 'auto';
+                    startDateLabel.style.fontSize = '0.9em';
+                    
+                    const startDateInput = document.createElement('input');
+                    startDateInput.type = 'date';
+                    startDateInput.value = startDate;
+                    startDateInput.dataset.field = 'startDate';
+                    startDateInput.addEventListener('change', updateWeekMarkingsFromUI);
+                    
+                    const endDateLabel = document.createElement('label');
+                    endDateLabel.textContent = t.endDateLabel + ' ' + t.rangeOptional;
+                    endDateLabel.style.minWidth = 'auto';
+                    endDateLabel.style.fontSize = '0.9em';
+                    
+                    const endDateInput = document.createElement('input');
+                    endDateInput.type = 'date';
+                    endDateInput.value = endDate;
+                    endDateInput.dataset.field = 'endDate';
+                    endDateInput.addEventListener('change', updateWeekMarkingsFromUI);
+                    
+                    dynamicContent.appendChild(startDateLabel);
+                    dynamicContent.appendChild(startDateInput);
+                    dynamicContent.appendChild(endDateLabel);
+                    dynamicContent.appendChild(endDateInput);
+                    
+                } else if (selectedType === 'circle') {
+                    // CIRCLE: Single date
+                    const dateLabel = document.createElement('label');
+                    dateLabel.textContent = isSpanish ? 'Fecha:' : 'Date:';
+                    dateLabel.style.minWidth = 'auto';
+                    dateLabel.style.fontSize = '0.9em';
+                    
+                    const dateInput = document.createElement('input');
+                    dateInput.type = 'date';
+                    dateInput.value = startDate;
+                    dateInput.dataset.field = 'startDate';
+                    dateInput.addEventListener('change', updateWeekMarkingsFromUI);
+                    
+                    dynamicContent.appendChild(dateLabel);
+                    dynamicContent.appendChild(dateInput);
+                    
+                } else if (selectedType === 'group') {
+                    // GROUP: Multiple dates with add/remove buttons
+                    const datesContainer = document.createElement('div');
+                    datesContainer.style.flexBasis = '100%';
+                    datesContainer.style.display = 'flex';
+                    datesContainer.style.flexDirection = 'column';
+                    datesContainer.style.gap = '10px';
+                    datesContainer.dataset.datesContainer = 'true';
+                    
+                    // Initialize with existing dates or one empty field
+                    const initialDates = dates.length > 0 ? dates : [''];
+                    
+                    initialDates.forEach(date => {
+                        addDateFieldToGroup(datesContainer, date);
+                    });
+                    
+                    const addDateBtn = document.createElement('button');
+                    addDateBtn.type = 'button';
+                    addDateBtn.textContent = isSpanish ? '+ Agregar Fecha' : '+ Add Date';
+                    addDateBtn.style.background = '#28a745';
+                    addDateBtn.style.alignSelf = 'flex-start';
+                    addDateBtn.onclick = function(e) {
+                        e.preventDefault();
+                        addDateFieldToGroup(datesContainer, '');
+                    };
+                    
+                    dynamicContent.appendChild(datesContainer);
+                    dynamicContent.appendChild(addDateBtn);
+                }
+            }
+            
+            // Function to add a date field to a group
+            function addDateFieldToGroup(container, dateValue = '') {
+                const dateRow = document.createElement('div');
+                dateRow.style.display = 'flex';
+                dateRow.style.gap = '10px';
+                dateRow.style.alignItems = 'center';
+                
+                const dateInput = document.createElement('input');
+                dateInput.type = 'date';
+                dateInput.value = dateValue;
+                dateInput.dataset.field = 'groupDate';
+                dateInput.style.flex = '1';
+                dateInput.addEventListener('change', updateWeekMarkingsFromUI);
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '×';
+                removeBtn.style.background = '#dc3545';
+                removeBtn.style.padding = '5px 10px';
+                removeBtn.style.minWidth = 'auto';
+                removeBtn.onclick = function(e) {
+                    e.preventDefault();
+                    dateRow.remove();
+                    updateWeekMarkingsFromUI();
+                };
+                
+                dateRow.appendChild(dateInput);
+                dateRow.appendChild(removeBtn);
+                container.appendChild(dateRow);
+            }
+            
+            // Initial render
+            renderFields();
+            
+            // Add change listeners for type selection
+            [bandRadio, circleRadio, groupRadio].forEach(radio => {
+                radio.addEventListener('change', function() {
+                    renderFields();
+                    updateWeekMarkingsFromUI();
+                });
             });
             
-            div.appendChild(startDateLabel);
-            div.appendChild(startDateInput);
-            div.appendChild(endDateLabel);
-            div.appendChild(endDateInput);
+            // Add change listeners for label and color
+            labelInput.addEventListener('change', updateWeekMarkingsFromUI);
+            colorSelect.addEventListener('change', updateWeekMarkingsFromUI);
+            
+            // Build the div
+            div.appendChild(typeLabel);
+            div.appendChild(typeRadioGroup);
+            div.appendChild(dynamicContent);
             div.appendChild(labelLabel);
             div.appendChild(labelInput);
             div.appendChild(colorLabel);
             div.appendChild(colorSelect);
-            div.appendChild(typeLabel);
-            div.appendChild(typeRadioGroup);
             div.appendChild(deleteBtn);
             
             container.appendChild(div);
@@ -1410,8 +1539,6 @@
             const markItems = container.querySelectorAll('.week-mark-item');
             
             markItems.forEach(item => {
-                const startDateInput = item.querySelector('input[data-field="startDate"]');
-                const endDateInput = item.querySelector('input[data-field="endDate"]');
                 const labelInput = item.querySelector('input[data-field="label"]');
                 const colorSelect = item.querySelector('select[data-field="color"]');
                 const typeRadios = item.querySelectorAll('input[data-field="type"]');
@@ -1421,16 +1548,54 @@
                     if (radio.checked) type = radio.value;
                 });
                 
-                if (startDateInput.value) {
-                    const marking = {
-                        startDate: startDateInput.value,
-                        endDate: endDateInput.value || '',
-                        label: labelInput.value || '',
-                        color: colorSelect.value,
-                        type: type
-                    };
+                if (type === 'band') {
+                    const startDateInput = item.querySelector('input[data-field="startDate"]');
+                    const endDateInput = item.querySelector('input[data-field="endDate"]');
                     
-                    weekMarkings.push(marking);
+                    if (startDateInput && startDateInput.value) {
+                        const marking = {
+                            startDate: startDateInput.value,
+                            endDate: endDateInput ? endDateInput.value || '' : '',
+                            label: labelInput.value || '',
+                            color: colorSelect.value,
+                            type: 'band'
+                        };
+                        weekMarkings.push(marking);
+                    }
+                    
+                } else if (type === 'circle') {
+                    const startDateInput = item.querySelector('input[data-field="startDate"]');
+                    
+                    if (startDateInput && startDateInput.value) {
+                        const marking = {
+                            startDate: startDateInput.value,
+                            endDate: '',
+                            label: labelInput.value || '',
+                            color: colorSelect.value,
+                            type: 'circle'
+                        };
+                        weekMarkings.push(marking);
+                    }
+                    
+                } else if (type === 'group') {
+                    const groupDateInputs = item.querySelectorAll('input[data-field="groupDate"]');
+                    const dates = [];
+                    
+                    groupDateInputs.forEach(input => {
+                        if (input.value) {
+                            dates.push(input.value);
+                        }
+                    });
+                    
+                    if (dates.length > 0) {
+                        const marking = {
+                            dates: dates,
+                            label: labelInput.value || '',
+                            color: colorSelect.value,
+                            type: 'group'
+                        };
+                        weekMarkings.push(marking);
+                    }
                 }
             });
             
@@ -1938,7 +2103,11 @@
             const container = document.getElementById('weekMarkingContainer');
             container.innerHTML = '';
             existingMarks.forEach(mark => {
-                addWeekMarkingField(mark.startDate, mark.endDate, mark.label, mark.color, mark.type);
+                if (mark.type === 'group') {
+                    addWeekMarkingField('', '', mark.label, mark.color, mark.type, mark.dates);
+                } else {
+                    addWeekMarkingField(mark.startDate, mark.endDate, mark.label, mark.color, mark.type, []);
+                }
             });
         }
 
@@ -2244,43 +2413,66 @@
                         
                         // Second pass: draw all circles (on top of bands)
                         weekMarkings.forEach(marking => {
-                            if (marking.type !== 'circle') return;
-                            
-                            const startDate = marking.startDate ? new Date(marking.startDate + 'T00:00:00') : null;
-                            if (!startDate) return;
-                            
-                            const endDate = marking.endDate ? new Date(marking.endDate + 'T00:00:00') : null;
-                            
-                            let weekIndices = [];
-                            if (endDate) {
-                                weekIndices = findWeeksForDateRange(startDate, endDate);
-                            } else {
-                                weekIndices = findWeeksForDate(startDate);
+                            if (marking.type === 'circle') {
+                                // Single circle
+                                const startDate = marking.startDate ? new Date(marking.startDate + 'T00:00:00') : null;
+                                if (!startDate) return;
+                                
+                                const weekIndices = findWeeksForDate(startDate);
+                                if (weekIndices.length === 0) return;
+                                
+                                const adjustedIndices = weekIndices.map(i => i - (rangeStart - 1)).filter(i => i >= 0 && i < filteredResults.length);
+                                if (adjustedIndices.length === 0) return;
+                                
+                                // Draw circles around data points
+                                adjustedIndices.forEach(index => {
+                                    const x = xScale.getPixelForValue(index);
+                                    const y = yScale.getPixelForValue(filteredResults[index].dp);
+                                    
+                                    const circleRadius = 12;
+                                    
+                                    ctx.save();
+                                    ctx.strokeStyle = colorPaletteSolid[marking.color];
+                                    ctx.lineWidth = 2;
+                                    ctx.beginPath();
+                                    ctx.arc(x, y, circleRadius, 0, 2 * Math.PI);
+                                    ctx.stroke();
+                                    ctx.restore();
+                                });
+                                
+                            } else if (marking.type === 'group') {
+                                // Group of circles with same color/label
+                                if (!marking.dates || marking.dates.length === 0) return;
+                                
+                                marking.dates.forEach(dateStr => {
+                                    const date = dateStr ? new Date(dateStr + 'T00:00:00') : null;
+                                    if (!date) return;
+                                    
+                                    const weekIndices = findWeeksForDate(date);
+                                    if (weekIndices.length === 0) return;
+                                    
+                                    const adjustedIndices = weekIndices.map(i => i - (rangeStart - 1)).filter(i => i >= 0 && i < filteredResults.length);
+                                    if (adjustedIndices.length === 0) return;
+                                    
+                                    // Draw circles around data points
+                                    adjustedIndices.forEach(index => {
+                                        const x = xScale.getPixelForValue(index);
+                                        const y = yScale.getPixelForValue(filteredResults[index].dp);
+                                        
+                                        const circleRadius = 12;
+                                        
+                                        ctx.save();
+                                        ctx.strokeStyle = colorPaletteSolid[marking.color];
+                                        ctx.lineWidth = 2;
+                                        ctx.beginPath();
+                                        ctx.arc(x, y, circleRadius, 0, 2 * Math.PI);
+                                        ctx.stroke();
+                                        ctx.restore();
+                                    });
+                                });
                             }
-                            
-                            if (weekIndices.length === 0) return;
-                            
-                            const adjustedIndices = weekIndices.map(i => i - (rangeStart - 1)).filter(i => i >= 0 && i < filteredResults.length);
-                            
-                            if (adjustedIndices.length === 0) return;
-                            
-                            // Draw circles around data points
-                            adjustedIndices.forEach(index => {
-                                const x = xScale.getPixelForValue(index);
-                                const y = yScale.getPixelForValue(filteredResults[index].dp);
-                                
-                                const circleRadius = 12;
-                                
-                                ctx.save();
-                                ctx.strokeStyle = colorPaletteSolid[marking.color];
-                                ctx.lineWidth = 1;
-                                ctx.beginPath();
-                                ctx.arc(x, y, circleRadius, 0, 2 * Math.PI);
-                                ctx.stroke();
-                                ctx.restore();
-                            });
                         });
-                    }
+			}
                 }],
                 data: {
                     labels: labels,
@@ -2360,7 +2552,7 @@
                                     if (weekMarkings && weekMarkings.length > 0) {
                                         weekMarkings.forEach((marking, index) => {
                                             if (marking.label) {
-                                                // Use pale color for bands, solid color for circles
+                                                // Use pale color for bands, solid color for circles and groups
                                                 const legendColor = marking.type === 'band' ? 
                                                     colorPalette[marking.color] : 
                                                     colorPaletteSolid[marking.color];
