@@ -1056,36 +1056,46 @@ function isLeapYear(year) {
 }
 
 // Helper to get the start and end dates of an ISO week
+// Helper to get the start and end dates of an ISO week
 function getISOWeekDates(year, week) {
     // January 4th is always in week 1
     const jan4 = new Date(year, 0, 4);
     const jan4Day = jan4.getDay() || 7; // Convert Sunday (0) to 7
     
-    // Find Monday of week 1
-    const week1Monday = new Date(jan4.getTime() - (jan4Day - 1) * 24 * 60 * 60 * 1000);
+    // Find Monday of week 1 safely using setDate
+    const week1Monday = new Date(jan4.getTime());
+    week1Monday.setDate(jan4.getDate() - (jan4Day - 1));
     
-    // Calculate target week's Monday
-    const weekStart = new Date(week1Monday.getTime() + (week - 1) * 7 * 24 * 60 * 60 * 1000);
-    const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+    // Calculate target week's Monday safely
+    const weekStart = new Date(week1Monday.getTime());
+    weekStart.setDate(week1Monday.getDate() + (week - 1) * 7);
+    
+    // Calculate Sunday of that week safely
+    const weekEnd = new Date(weekStart.getTime());
+    weekEnd.setDate(weekStart.getDate() + 6);
     
     return { weekStart, weekEnd };
 }
 
 // Helper to find the correct ISO week number and year for any given date
 function getISOWeekFromDate(date) {
-    const target = new Date(date.valueOf());
+    const target = new Date(date.getTime());
     const dayNr = (date.getDay() + 6) % 7; // Monday is 0, Sunday is 6
     
     // ISO weeks are defined by the year that the Thursday falls in
     target.setDate(target.getDate() - dayNr + 3);
-    const firstThursday = target.valueOf();
+    const firstThursday = new Date(target.getTime());
     
     target.setMonth(0, 4); // January 4th
     const jan4Day = (target.getDay() + 6) % 7;
     target.setDate(target.getDate() - jan4Day); // Monday of week 1
     
-    const weekNumber = 1 + Math.round(((firstThursday - target.valueOf()) / (7 * 24 * 60 * 60 * 1000)));
-    const weekYear = new Date(firstThursday).getFullYear();
+    // Safely calculate the number of weeks using UTC bounds or midday references to bypass DST differences
+    const thursdayUTC = Date.UTC(firstThursday.getFullYear(), firstThursday.getMonth(), firstThursday.getDate());
+    const mondayUTC = Date.UTC(target.getFullYear(), target.getMonth(), target.getDate());
+    
+    const weekNumber = 1 + Math.round((thursdayUTC - mondayUTC) / (7 * 24 * 60 * 60 * 1000));
+    const weekYear = firstThursday.getFullYear();
     
     return { weekNumber, weekYear };
 }
@@ -1117,9 +1127,12 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                 periods.push(`${dayLabel} ${currentYear}`);
             } else if (unit === 'weeks') {
                 // Add i weeks directly to the reference Monday
-                const weekStart = new Date(refWeekStart.getTime() + i * 7 * 24 * 60 * 60 * 1000);
-                const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
-                
+                const weekStart = new Date(refWeekStart.getTime());
+				weekStart.setDate(weekStart.getDate() + (i * 7)); // Let JS handle DST shifts safely
+
+				const weekEnd = new Date(weekStart.getTime());
+				weekEnd.setDate(weekEnd.getDate() + 6);
+				
                 // Dynamically extract the correct ISO week and Year
                 const { weekNumber, weekYear } = getISOWeekFromDate(weekStart);
                 
@@ -1173,8 +1186,11 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                 periods.push(`${dayLabel} ${currentYear}`);
             } else if (unit === 'weeks') {
                 // Subtract offset weeks directly from the reference Monday
-                const weekStart = new Date(refWeekStart.getTime() - offset * 7 * 24 * 60 * 60 * 1000);
-                const weekEnd = new Date(weekStart.getTime() + 6 * 24 * 60 * 60 * 1000);
+                const weekStart = new Date(refWeekStart.getTime());
+				weekStart.setDate(weekStart.getDate() - (offset * 7)); 
+
+				const weekEnd = new Date(weekStart.getTime());
+				weekEnd.setDate(weekEnd.getDate() + 6);
                 
                 // Dynamically extract the correct ISO week and Year
                 const { weekNumber, weekYear } = getISOWeekFromDate(weekStart);
