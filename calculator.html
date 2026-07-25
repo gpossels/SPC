@@ -470,6 +470,15 @@
                 background: #ccc;
                 cursor: not-allowed;
             }
+			.playback-controls {
+                display: flex;
+                gap: 10px;
+                align-items: center;
+                flex-wrap: wrap;
+                margin-top: 15px;
+                padding-top: 15px;
+                border-top: 1px solid #ddd;
+            }
             .range-info {
                 margin-bottom: 15px;
                 font-size: 0.95em;
@@ -708,10 +717,25 @@
                             <input type="range" id="rangeStartSlider" min="1" value="1">
                             <input type="range" id="rangeEndSlider" min="1" value="8">
                         </div>
-                    </div>
-                </div>
+					</div>
+                    <div class="playback-controls">
+                        <button id="playBtn" class="range-btn">▶ Reproducir</button>
+                        <button id="stepBackBtn" class="range-btn">◀</button>
+                        <button id="stepFwdBtn" class="range-btn">▶</button>
+                        <button id="exitPlaybackBtn" class="range-btn">Vista completa</button>
+                        <label id="speedLabel" style="font-size:0.9em;">Velocidad:</label>
+                        <select id="playbackSpeed" style="width:auto;padding:6px;">
+                            <option value="1000">0.5x</option>
+                            <option value="500" selected>1x</option>
+                            <option value="250">2x</option>
+                            <option value="100">5x</option>
+                        </select>
+                        <span id="playbackInfo" style="font-size:0.9em;font-weight:500;"></span>
+                        <input type="range" id="playbackSlider" min="8" max="8" value="8" style="flex-basis:100%;margin-top:10px;">
+					</div>
+				</div>
 
-                <div id="tableContainer" class="table-container hidden">
+				<div id="tableContainer" class="table-container hidden">
                     <table>
                         <thead id="tableHead">
                             <tr>
@@ -758,9 +782,17 @@
         let dataPointLabels = {}; // Store labels for red points: {index: "label text"}
         let weekMarkings = []; // Store week markings: [{startDate, endDate, color, label, type}]
         let weekMarkingIdCounter = 0;
-
 		let currentBaselineN = 8;
-
+		let fullResults = null;
+        let currentData = null;
+        let currentPeriods = null;
+        let playbackFrames = null;
+        let playbackIndex = 0;
+        let playbackTimer = null;
+        let playbackActive = false;
+        let playbackYMin = null;
+        let playbackYMax = null;
+		
 		function getBaselineSize() {
 		    let n = parseInt(document.getElementById('baselineInput').value);
 		    if (isNaN(n)) n = 8;
@@ -875,7 +907,12 @@
                 circleType: 'Círculo',
                 deleteMarkBtn: 'Eliminar',
                 rangeOptional: '(opcional, para rango)',
-                markLabelPlaceholder: 'ej. Vacaciones, Feriado...'
+                markLabelPlaceholder: 'ej. Vacaciones, Feriado...',
+				playBtn: '▶ Reproducir',
+                pauseBtn: '❚❚ Pausar',
+                exitPlaybackBtn: 'Vista completa',
+                speedLabel: 'Velocidad:',
+                playbackPoint: 'Punto'
             },
             en: {
                 title: 'PBC Fast Generator',
@@ -962,7 +999,12 @@
                 circleType: 'Circle',
                 deleteMarkBtn: 'Delete',
                 rangeOptional: '(optional, for range)',
-                markLabelPlaceholder: 'e.g. Vacation, Holiday...'
+                markLabelPlaceholder: 'e.g. Vacation, Holiday...',
+				playBtn: '▶ Play',
+                pauseBtn: '❚❚ Pause',
+                exitPlaybackBtn: 'Full view',
+                speedLabel: 'Speed:',
+                playbackPoint: 'Point'
             }
         };
 
@@ -2109,7 +2151,11 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             
             // View controls
             document.getElementById('viewControlsTitle').textContent = isSpanish ? 'Ventana de Visualización' : 'View Window';
-            updateRangeInfo();
+            document.getElementById('exitPlaybackBtn').textContent = t.exitPlaybackBtn;
+            document.getElementById('speedLabel').textContent = t.speedLabel;
+            document.getElementById('playBtn').textContent = playbackActive ? t.pauseBtn : t.playBtn;
+            if (playbackFrames) renderPlaybackFrame(playbackIndex);
+			updateRangeInfo();
             updatePeriodSelector();
             updateDataCounter(); // Update counter text with new language
 
@@ -2191,7 +2237,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             
             // Update range values from sliders
             function updateRange() {
-                const startSlider = document.getElementById('rangeStartSlider');
+                if (playbackFrames) return;
+				const startSlider = document.getElementById('rangeStartSlider');
                 const endSlider = document.getElementById('rangeEndSlider');
             
                 if (!currentResults) return;
@@ -2227,6 +2274,7 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
 
             // Show all data points
             function showAllPoints() {
+				exitPlayback();
                 if (!currentResults) return;
                 
                 const totalPoints = currentResults.length;
@@ -2243,7 +2291,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             
             // Show last 24 points
             function showLast24Points() {
-                if (!currentResults) return;
+                exitPlayback();
+				if (!currentResults) return;
                 
                 const totalPoints = currentResults.length;
                 
@@ -2264,6 +2313,106 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                 updateTableDisplay();
             }
 
+			// Pre-compute every frame once, plus a fixed Y range so the axis doesn't jump
+        function buildPlaybackFrames() {
+            if (!currentData || !currentPeriods) return;
+            const N = currentBaselineN;
+            playbackFrames = [];
+            let lo = Infinity, hi = -Infinity;
+
+            for (let k = N; k <= currentData.length; k++) {
+                const frame = calcSPC(currentData.slice(0, k), currentPeriods.slice(0, k), N);
+                playbackFrames.push(frame);
+                frame.forEach(r => {
+                    [r.dp, r.lcl, r.ucl].forEach(v => {
+                        if (typeof v === 'number' && isFinite(v)) {
+                            if (v < lo) lo = v;
+                            if (v > hi) hi = v;
+                        }
+                    });
+                });
+            }
+
+            const pad = (hi - lo) * 0.05 || 1;
+            playbackYMin = lo - pad;
+            playbackYMax = hi + pad;
+
+            const slider = document.getElementById('playbackSlider');
+            slider.min = N;
+            slider.max = currentData.length;
+            playbackIndex = N;
+        }
+
+        function renderPlaybackFrame(k) {
+            if (!playbackFrames || !currentData) return;
+            const N = currentBaselineN;
+            k = Math.max(N, Math.min(currentData.length, k));
+            playbackIndex = k;
+
+            currentResults = playbackFrames[k - N];
+            rangeStart = 1;
+            rangeEnd = k;
+
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('playbackSlider').value = k;
+            document.getElementById('playbackInfo').textContent =
+                `${t.playbackPoint} ${k} / ${currentData.length}`;
+
+            updateChart();
+            updateTableDisplay();
+        }
+
+        function ensureFrames() {
+            if (!playbackFrames) buildPlaybackFrames();
+        }
+
+        function togglePlayback() {
+            if (playbackActive) { stopPlayback(); return; }
+            if (!currentData) return;
+            ensureFrames();
+            if (playbackIndex >= currentData.length) renderPlaybackFrame(currentBaselineN);
+
+            playbackActive = true;
+            document.getElementById('playBtn').textContent =
+                (isSpanish ? lang.es : lang.en).pauseBtn;
+
+            const speed = parseInt(document.getElementById('playbackSpeed').value) || 500;
+            playbackTimer = setInterval(() => {
+                if (playbackIndex >= currentData.length) { stopPlayback(); return; }
+                renderPlaybackFrame(playbackIndex + 1);
+            }, speed);
+        }
+
+        function stopPlayback() {
+            playbackActive = false;
+            if (playbackTimer) { clearInterval(playbackTimer); playbackTimer = null; }
+            document.getElementById('playBtn').textContent =
+                (isSpanish ? lang.es : lang.en).playBtn;
+        }
+
+        // Leave playback and return to the full, final chart
+        function exitPlayback() {
+            stopPlayback();
+            if (!fullResults) return;
+            currentResults = fullResults;
+            playbackFrames = null;
+            playbackYMin = playbackYMax = null;
+            document.getElementById('playbackInfo').textContent = '';
+            initializeRangeControls();
+            updateChart();
+            updateTableDisplay();
+            populateLabelEditor();
+        }
+
+        function resetPlaybackState() {
+            stopPlayback();
+            playbackFrames = null;
+            playbackIndex = 0;
+            playbackYMin = playbackYMax = null;
+            const info = document.getElementById('playbackInfo');
+            if (info) info.textContent = '';
+        }
+		
             // Initialize range controls
             function initializeRangeControls() {
                 if (!currentResults) return;
@@ -2374,7 +2523,20 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             // Prepare point colors for DP line (red for signals, blue for normal)
             const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
             const dpPointBorderColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
-        
+
+			if (playbackFrames && currentPeriods) {
+                const allDates = currentPeriods.map(p => typeof p === 'object' ? p.display : p);
+                for (let i = labels.length; i < allDates.length; i++) {
+                    labels.push(allDates[i]);
+                    dpData.push(null);
+                    dpaData.push(null);
+                    uclData.push(null);
+                    lclData.push(null);
+                    dpPointColors.push('#4169E1');
+                    dpPointBorderColors.push('#4169E1');
+                }
+            }
+			
             // Custom title from input with period count
             const customTitle = document.getElementById('chartTitleInput').value.trim();
             const baseTitle = customTitle || t.chartTitle;
@@ -2653,6 +2815,7 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
     
     const index = tooltipItems[0].dataIndex;
     const result = filteredResults[index];
+	if (!result) return [];
     const output = [];
     
     // Add range calculation
@@ -2675,7 +2838,8 @@ footer: function(tooltipItems) {
     
     const index = tooltipItems[0].dataIndex;
     const result = filteredResults[index];
-    
+    if (!result) return '';
+	
     // Add week dates if applicable
     if (result.weekStart && result.weekEnd) {
         const formatDate = (date) => {
@@ -2697,7 +2861,8 @@ footer: function(tooltipItems) {
                                 if (context.datasetIndex !== 0) return false;
                                 
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                if (!result) return false;
+								const hasLabel = dataPointLabels[result.period];
                                 
                                 // Always show custom labels for red points with labels
                                 if (result.signal === 1 && hasLabel) return true;
@@ -2707,7 +2872,8 @@ footer: function(tooltipItems) {
                             },
                             align: function(context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                if (!result) return 'top';
+								const hasLabel = dataPointLabels[result.period];
                                 
                                 // Dynamic positioning for labeled red points
                                 if (result.signal === 1 && hasLabel) {
@@ -2720,12 +2886,14 @@ footer: function(tooltipItems) {
                             },
                             offset: function(context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                if (!result) return 8;
+								const hasLabel = dataPointLabels[result.period];
                                 return (result.signal === 1 && hasLabel) ? 20 : 8;
                             },
                             color: function(context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                if (!result) return '#4169E1';
+								const hasLabel = dataPointLabels[result.period];
                                 
                                 // Black text for custom labels on red points, otherwise use point color
                                 if (result.signal === 1 && hasLabel) return '#000000';
@@ -2733,7 +2901,8 @@ footer: function(tooltipItems) {
                             },
                             font: function(context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                if (!result) return { size: 10, weight: 'bold' };
+								const hasLabel = dataPointLabels[result.period];
                                 return {
                                     size: (result.signal === 1 && hasLabel) ? 11 : 10,
                                     weight: 'bold'
@@ -2741,7 +2910,8 @@ footer: function(tooltipItems) {
                             },
                             formatter: function(value, context) {
                                 const result = filteredResults[context.dataIndex];
-                                const hasLabel = dataPointLabels[result.period];
+                                if (!result) return '';
+								const hasLabel = dataPointLabels[result.period];
                                 
                                 // For red points with custom labels
                                 if (result.signal === 1 && hasLabel) {
@@ -2786,7 +2956,8 @@ footer: function(tooltipItems) {
                         y: {
                             display: true,
                             beginAtZero: yAxisFromZero,
-                            min: yAxisFromZero ? 0 : undefined,
+                            min: yAxisFromZero ? 0 : (playbackFrames ? playbackYMin : undefined),
+                            max: playbackFrames ? playbackYMax : undefined,
                             title: {
                                 display: true,
                                 text: customDataName || (isSpanish ? 'Valor' : 'Value'),
@@ -3029,6 +3200,10 @@ footer: function(tooltipItems) {
             document.getElementById('chartTitleInput').value = '';
 			document.getElementById('baselineInput').value = 8;
             currentBaselineN = 8;
+			resetPlaybackState();
+            fullResults = null;
+            currentData = null;
+            currentPeriods = null;
             document.getElementById('errorDiv').classList.add('hidden');
             document.getElementById('resultsDiv').classList.add('hidden');
             document.getElementById('chartDiv').classList.add('hidden');
@@ -3144,6 +3319,23 @@ footer: function(tooltipItems) {
                // Range slider controls
             document.getElementById('rangeStartSlider').addEventListener('input', updateRange);
             document.getElementById('rangeEndSlider').addEventListener('input', updateRange);
+
+			// Playback controls
+            document.getElementById('playBtn').addEventListener('click', togglePlayback);
+            document.getElementById('exitPlaybackBtn').addEventListener('click', exitPlayback);
+            document.getElementById('stepBackBtn').addEventListener('click', function() {
+                stopPlayback(); ensureFrames(); renderPlaybackFrame(playbackIndex - 1);
+            });
+            document.getElementById('stepFwdBtn').addEventListener('click', function() {
+                stopPlayback(); ensureFrames(); renderPlaybackFrame(playbackIndex + 1);
+            });
+            document.getElementById('playbackSlider').addEventListener('input', function() {
+                stopPlayback(); ensureFrames(); renderPlaybackFrame(parseInt(this.value));
+            });
+            document.getElementById('playbackSpeed').addEventListener('change', function() {
+                if (playbackActive) { stopPlayback(); togglePlayback(); }
+            });
+			
                    // Initialize language (must be last to ensure all elements exist)
        // Week marking event listeners
             document.getElementById('addWeekMarkBtn').addEventListener('click', function() {
