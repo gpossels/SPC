@@ -2358,10 +2358,45 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             document.getElementById('playbackInfo').textContent =
                 `${t.playbackPoint} ${k} / ${currentData.length}`;
 
-            updateChart();
+            if (spcChart) {
+                updatePlaybackFrame();
+            } else {
+                updateChart();
+            }
+            
             updateTableDisplay();
         }
 
+		// Fast in-place update for playback: mutate datasets, no rebuild
+        function updatePlaybackFrame() {
+            if (!spcChart || !currentResults || !currentPeriods) return;
+
+            const filtered = getFilteredResults();
+            if (!filtered) return;
+
+            const allDates = currentPeriods.map(p => typeof p === 'object' ? p.display : p);
+            const dpData   = allDates.map((_, i) => filtered[i] ? filtered[i].dp  : null);
+            const dpaData  = allDates.map((_, i) => filtered[i] ? filtered[i].dpa : null);
+            const uclData  = allDates.map((_, i) => filtered[i] ? filtered[i].ucl : null);
+            const lclData  = allDates.map((_, i) => filtered[i] ? filtered[i].lcl : null);
+            const dpColors = allDates.map((_, i) => filtered[i] && filtered[i].signal === 1 ? '#FF0000' : '#4169E1');
+
+            spcChart.data.labels = allDates;
+            spcChart.data.datasets[0].data = dpData;
+            spcChart.data.datasets[0].pointBackgroundColor = dpColors;
+            spcChart.data.datasets[0].pointBorderColor = dpColors;
+            spcChart.data.datasets[1].data = dpaData;
+            spcChart.data.datasets[2].data = uclData;
+            spcChart.data.datasets[3].data = lclData;
+
+            // Keep the Y axis pinned so it doesn't jump between frames
+            spcChart.options.scales.y.min = yAxisFromZero ? 0 : playbackYMin;
+            spcChart.options.scales.y.max = playbackYMax;
+
+            spcChart.update();
+        }
+
+		
         function ensureFrames() {
             if (!playbackFrames) buildPlaybackFrames();
         }
@@ -2370,7 +2405,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             if (playbackActive) { stopPlayback(); return; }
             if (!currentData) return;
             ensureFrames();
-            if (playbackIndex >= currentData.length) renderPlaybackFrame(currentBaselineN);
+            if (spcChart) { spcChart.destroy(); spcChart = null; }
+			if (playbackIndex >= currentData.length) renderPlaybackFrame(currentBaselineN);
 
             playbackActive = true;
             document.getElementById('playBtn').textContent =
