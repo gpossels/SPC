@@ -600,6 +600,11 @@
                     <input type="text" id="dataNameInput" placeholder="ej. Defectos por millón, Tiempo de respuesta, etc.">
                 </div>
 
+				<div class="input-group">
+				    <label id="baselineLabel">Puntos para línea base (8-20):</label>
+				    <input type="number" id="baselineInput" min="8" max="20" step="1" value="8">
+				</div>
+				
                 <div class="input-group">
                     <div class="input-row">
                         <div class="input-col">
@@ -753,7 +758,15 @@
         let dataPointLabels = {}; // Store labels for red points: {index: "label text"}
         let weekMarkings = []; // Store week markings: [{startDate, endDate, color, label, type}]
         let weekMarkingIdCounter = 0;
-        
+
+		let currentBaselineN = 8;
+
+		function getBaselineSize() {
+		    let n = parseInt(document.getElementById('baselineInput').value);
+		    if (isNaN(n)) n = 8;
+		    return Math.max(8, Math.min(20, n));
+		}
+		
         const colorPalette = {
             red: 'rgba(255, 200, 200, 0.7)',
             orange: 'rgba(255, 220, 180, 0.7)',
@@ -823,7 +836,8 @@
                 baseline: 'Línea Base',
                 rule2: 'Regla 2',
                 rule3: 'Regla 3',
-                errorMinData: 'Se necesitan al menos 8 puntos de datos.',
+                errorMinData: 'Se necesitan al menos {n} puntos de datos.',
+				baselineLabel: 'Puntos para línea base (8-20):',
                 errorInvalidData: 'Datos numéricos inválidos.',
                 errorNoData: 'Ingrese algunos datos.',
                 errorDate: 'Seleccione un período y año válidos.',
@@ -909,7 +923,8 @@
                 baseline: 'Baseline',
                 rule2: 'Rule 2',
                 rule3: 'Rule 3',
-                errorMinData: 'At least 8 data points required.',
+                errorMinData: 'At least {n} data points required.',
+				baselineLabel: 'Baseline points (8-20):',
                 errorInvalidData: 'Invalid numeric data.',
                 errorNoData: 'Enter some data.',
                 errorDate: 'Select a valid period and year.',
@@ -1032,7 +1047,7 @@
             if (count === 0) {
                 counter.classList.add('insufficient');
                 calcBtn.disabled = true;
-            } else if (count < 8) {
+            } else if (count < getBaselineSize()) {
                 counter.classList.add('insufficient');
                 calcBtn.disabled = true;
             } else {
@@ -1698,7 +1713,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
         }
 
         // Calculate SPC
-        function calcSPC(data, periods) {
+        function calcSPC(data, periods, baselineN) {
+    const N = Math.max(8, Math.min(20, baselineN || 8));
     const t = isSpanish ? lang.es : lang.en;
     const results = data.map((dp, i) => {
         const periodData = periods[i];
@@ -1720,10 +1736,10 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
         return result;
     });
 
-            // Baseline calculation (first 8 points)
-            const dpa = data.slice(0, 8).reduce((a, b) => a + b) / 8;
+            // Baseline calculation (first N points)
+            const dpa = data.slice(0, N).reduce((a, b) => a + b) / N;
             const mrs = [];
-            for (let i = 1; i < 8; i++) {
+            for (let i = 1; i < N; i++) {
                 mrs.push(Math.abs(data[i] - data[i-1]));
             }
             const mra = mrs.reduce((a, b) => a + b) / mrs.length;
@@ -1735,8 +1751,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             const dla = (lcl + dpa) / 2;
             const dua = (dpa + ucl) / 2;
 
-            // Apply baseline to first 8 rows
-            for (let i = 0; i < 8; i++) {
+            // Apply baseline to first N rows
+            for (let i = 0; i < N; i++) {
                 results[i].dpa = dpa;
                 results[i].mra = mra;
                 results[i].lcl = lcl;
@@ -1749,7 +1765,7 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             }
 
             // Process remaining points
-            for (let i = 8; i < data.length; i++) {
+            for (let i = N; i < data.length; i++) {
                 const curr = data[i];
                 const prev = data[i-1];
                 const mr = Math.abs(curr - prev);
@@ -2059,6 +2075,7 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             document.getElementById('author').textContent = t.author;
             document.getElementById('dataLabel').textContent = t.dataLabel;
             document.getElementById('dataNameLabel').textContent = t.dataNameLabel;
+			document.getElementById('baselineLabel').textContent = t.baselineLabel;
             document.getElementById('dataNameInput').placeholder = t.dataNamePlaceholder;
             document.getElementById('dataInput').placeholder = t.dataInputPlaceholder;
             document.getElementById('timeLabel').textContent = t.timeLabel;
@@ -2183,16 +2200,16 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                 let start = parseInt(startSlider.value);
                 let end = parseInt(endSlider.value);
             
-                // Ensure minimum 8-point span
-                if (end - start < 7) {
+                // Ensure minimum span equal to the baseline size
+                if (end - start < currentBaselineN - 1) {
                     // Determine which slider was moved last by comparing to current values
                     if (start !== rangeStart) {
                         // Start slider was moved, adjust end
-                        end = Math.min(start + 7, totalPoints);
+                        end = Math.min(start + currentBaselineN - 1, totalPoints);
                         endSlider.value = end;
                     } else {
                         // End slider was moved, adjust start
-                        start = Math.max(end - 7, 1);
+                        start = Math.max(end - (currentBaselineN - 1), 1);
                         startSlider.value = start;
                     }
                 }
@@ -2915,15 +2932,12 @@ footer: function(tooltipItems) {
         // Display results
         function showResults(results) {
             currentResults = results;
+            fullResults = results;
+            resetPlaybackState();
         
-            // Show view controls if more than 8 points
-            const viewControls = document.getElementById('viewControls');
-            if (results.length > 8) {
-                viewControls.classList.remove('hidden');
-                initializeRangeControls();
-            } else {
-                viewControls.classList.add('hidden');
-            }
+            // Always initialize the view window
+            document.getElementById('viewControls').classList.remove('hidden');
+            initializeRangeControls();
         
             // Update table display
             updateTableDisplay();
@@ -3013,6 +3027,8 @@ footer: function(tooltipItems) {
             document.getElementById('dataInput').value = '';
             document.getElementById('dataNameInput').value = '';
             document.getElementById('chartTitleInput').value = '';
+			document.getElementById('baselineInput').value = 8;
+            currentBaselineN = 8;
             document.getElementById('errorDiv').classList.add('hidden');
             document.getElementById('resultsDiv').classList.add('hidden');
             document.getElementById('chartDiv').classList.add('hidden');
@@ -3065,11 +3081,22 @@ footer: function(tooltipItems) {
                 return showError(t.errorInvalidData);
             }
 
-            if (data.length < 8) return showError(t.errorMinData);
+            const baselineN = getBaselineSize();
+            document.getElementById('baselineInput').value = baselineN;
+            currentBaselineN = baselineN;
+
+            if (data.length < baselineN) {
+                return showError(t.errorMinData.replace('{n}', baselineN));
+            }
 
             const periods = genPeriods(refPeriod, refYear, timeUnit, dateType, data.length);
-            const results = calcSPC(data, periods);
+            const results = calcSPC(data, periods, baselineN);
+
+            currentData = data;
+            currentPeriods = periods;
+
             showResults(results);
+        }
         }
 
         // Initialize
@@ -3083,7 +3110,8 @@ footer: function(tooltipItems) {
 
             // Add event listener for data input changes
             document.getElementById('dataInput').addEventListener('input', updateDataCounter);
-            
+			document.getElementById('baselineInput').addEventListener('input', updateDataCounter);
+			
             document.getElementById('langBtn').onclick = function() {
                 isSpanish = !isSpanish;
                 updateLang();
