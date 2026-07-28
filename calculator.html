@@ -2853,13 +2853,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         const ctx = chart.ctx, area = chart.chartArea, xScale = chart.scales.x;
                         const maxCat = chart.data.labels.length - 1;
                         const ribbonH = 18;
-                        // Place the ribbon in the gap between the legend's bottom and the plot top
-                        const legend = chart.legend;
-                        const legendBottom = legend ? legend.bottom : area.top - 40;
-                        let ribbonTop = legendBottom + 4;
-                        // Never let it collide with the plot; clamp just above the plot area
-                        if (ribbonTop + ribbonH > area.top - 2) {
-                            ribbonTop = area.top - ribbonH - 2;
+                        const ribbonTop = area.top - ribbonH - 2;
                         }
                         ctx.save();
                         ctx.textAlign = 'center';
@@ -2997,7 +2991,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                     animation: false,
                     layout: {
                         padding: {
-                            top: (showMonthBands && timeUnit === 'weeks') ? 34 : 10,
+                            top: (showMonthBands && timeUnit === 'weeks') ? 40 : 10,
                             right: 24,
                             left: 12,
                             bottom: 4
@@ -3015,7 +3009,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         },
                         legend: {
                             display: true,
-                            position: 'top',
+                            position: 'bottom',
                             labels: {
                                 usePointStyle: false,
                                 padding: 20,
@@ -3063,8 +3057,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             enabled: showTooltip,
 							mode: 'index',
                             intersect: false,
-                            external: delayedTooltipHandler,
-							usePointStyle: false,
+                            usePointStyle: false,
                             boxWidth: 20,
                             boxHeight: 8,
                             filter: function(tooltipItem) {
@@ -3262,7 +3255,8 @@ footer: function(tooltipItems) {
                         mode: 'nearest',
                         axis: 'x',
                         intersect: false
-                    }
+                    },
+                    onHover: dwellHover
                 }
             });
         }
@@ -3343,32 +3337,38 @@ footer: function(tooltipItems) {
             if (spcChart && currentResults) updateChart();
         }
 
-		// Gate the tooltip so it only shows after the pointer dwells on one point
-        function delayedTooltipHandler(context) {
-            const chart = context.chart;
-            const tt = context.tooltip;
+		// Drives the dwell timer from real hover state (not the filtered tooltip)
+        function dwellHover(event, active, chart) {
+            if (!showTooltip) return;
 
-            // Nothing hovered: hide immediately and reset
-            if (!tt || tt.opacity === 0) {
+            // Left all points: hide and reset
+            if (!active || !active.length) {
                 if (tooltipDelayTimer) { clearTimeout(tooltipDelayTimer); tooltipDelayTimer = null; }
                 tooltipHoverIndex = null;
-                if (chart._ttReady) { chart._ttReady = false; chart.draw(); }
+                if (chart._ttReady) { chart._ttReady = false; chart.update('none'); }
                 return;
             }
 
-            const idx = tt.dataPoints && tt.dataPoints.length ? tt.dataPoints[0].dataIndex : null;
+            const idx = active[0].index;
 
-            // Moved to a different point: restart the dwell timer
-            if (idx !== tooltipHoverIndex) {
-                tooltipHoverIndex = idx;
-                chart._ttReady = false;
-                if (tooltipDelayTimer) clearTimeout(tooltipDelayTimer);
-                tooltipDelayTimer = setTimeout(() => {
-                    chart._ttReady = true;
-                    chart.setActiveElements(chart.tooltip.getActiveElements());
-                    chart.update('none'); // repaint so the now-allowed tooltip renders
-                }, TOOLTIP_DELAY_MS);
-            }
+            // Same point as before: leave the running timer / ready state alone
+            if (idx === tooltipHoverIndex) return;
+
+            // Moved to a new point: restart the dwell
+            tooltipHoverIndex = idx;
+            chart._ttReady = false;
+            if (tooltipDelayTimer) clearTimeout(tooltipDelayTimer);
+            tooltipDelayTimer = setTimeout(() => {
+                chart._ttReady = true;
+                try {
+                    chart.setActiveElements([{ datasetIndex: 0, index: idx }]);
+                    chart.tooltip.setActiveElements(
+                        [{ datasetIndex: 0, index: idx }],
+                        { x: 0, y: 0 }
+                    );
+                } catch (e) {}
+                chart.update('none'); // repaint; filter now lets the tooltip through
+            }, TOOLTIP_DELAY_MS);
         }
 
 		
