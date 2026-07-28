@@ -3305,6 +3305,9 @@ footer: function(tooltipItems) {
                     onHover: dwellHover
                 }
             });
+			spcChart._ttReady = false;
+            tooltipDelayTimer = null;
+            tooltipHoverIndex = null;
         }
 
         // Copy chart to clipboard
