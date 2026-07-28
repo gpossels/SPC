@@ -2916,16 +2916,34 @@ function segEdges(seg, xScale, area, maxCatIdx) {
 
                         ctx.save();
                         ctx.textAlign = 'center';
-                        ctx.textBaseline = 'bottom';
                         ctx.font = 'bold 11px Segoe UI, sans-serif';
+
+                        // Draw one value label with a translucent backing box so it stays legible
+                        function drawTag(text, x, yLine, place, color) {
+                            const padX = 3, padY = 1;
+                            const w = ctx.measureText(text).width;
+                            const h = 11;
+                            // place: 'above' puts the box above the line, 'below' puts it below
+                            const boxY = place === 'above' ? (yLine - h - padY - 2) : (yLine + padY + 2);
+                            ctx.fillStyle = 'rgba(255,255,255,0.78)';
+                            ctx.fillRect(x - w / 2 - padX, boxY, w + padX * 2, h + padY * 2);
+                            ctx.fillStyle = color;
+                            ctx.textBaseline = 'top';
+                            ctx.fillText(text, x, boxY + padY);
+                        }
+
                         segments.forEach(seg => {
                             const midIdx = (seg.startIdx + seg.endIdx) / 2;
                             const x = xScale.getPixelForValue(midIdx);
-                            ctx.fillStyle = '#228B22';
-                            ctx.fillText(fmt(seg.dpa), x, yScale.getPixelForValue(seg.dpa) - 3);
-                            ctx.fillStyle = '#DC143C';
-                            ctx.fillText(fmt(seg.ucl), x, yScale.getPixelForValue(seg.ucl) - 3);
-                            ctx.fillText(fmt(seg.lcl), x, yScale.getPixelForValue(seg.lcl) - 3);
+
+                            // DPA: put the label on whichever side has more room from the mid data point
+                            const midResult = fr[Math.round(midIdx)];
+                            const dpaPlace = (midResult && midResult.dp != null && midResult.dp > seg.dpa)
+                                ? 'below' : 'above';
+
+                            drawTag(fmt(seg.ucl), x, yScale.getPixelForValue(seg.ucl), 'above', '#DC143C'); // UCL above its line
+                            drawTag(fmt(seg.dpa), x, yScale.getPixelForValue(seg.dpa), dpaPlace, '#228B22'); // DPA away from data
+                            drawTag(fmt(seg.lcl), x, yScale.getPixelForValue(seg.lcl), 'below', '#DC143C'); // LCL below its line
                         });
                         ctx.restore();
                     }
