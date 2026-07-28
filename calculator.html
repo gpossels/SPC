@@ -2965,10 +2965,10 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         {
                             label: t.chartLabels.dua,
                             data: duaData,
-                            borderColor: '#228B22',
+                            borderColor: 'rgba(34, 139, 34, 0.55)',
                             backgroundColor: 'rgba(34, 139, 34, 0.05)',
-                            borderWidth: 1.5,
-                            borderDash: [6, 4],
+                            borderWidth: 1,
+                            borderDash: [1, 4],
                             pointRadius: 0,
                             tension: 0
                         },
@@ -3241,7 +3241,21 @@ footer: function(tooltipItems) {
                             display: true,
                             beginAtZero: yAxisFromZero,
                             min: yAxisFromZero ? 0 : (playbackFrames ? playbackYMin : undefined),
-                            max: playbackFrames ? playbackYMax : undefined,
+                            max: playbackFrames ? playbackYMax : (function() {
+                                // Add headroom so top points/labels clear the month ribbon
+                                let hi = -Infinity, lo = Infinity;
+                                filteredResults.forEach(r => {
+                                    [r.dp, r.ucl].forEach(v => {
+                                        if (typeof v === 'number' && isFinite(v)) {
+                                            if (v > hi) hi = v;
+                                            if (v < lo) lo = v;
+                                        }
+                                    });
+                                });
+                                if (hi === -Infinity) return undefined;
+                                const span = (hi - lo) || Math.abs(hi) || 1;
+                                return hi + span * 0.12;
+                            })(),
                             title: {
                                 display: true,
                                 text: customDataName || (isSpanish ? 'Valor' : 'Value'),
