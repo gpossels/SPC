@@ -2454,8 +2454,6 @@ function segEdges(seg, xScale, area, maxCatIdx) {
             const dpaData  = allDates.map((_, i) => filtered[i] ? filtered[i].dpa : null);
             const uclData  = allDates.map((_, i) => filtered[i] ? filtered[i].ucl : null);
             const lclData  = allDates.map((_, i) => filtered[i] ? filtered[i].lcl : null);
-            const dpColors = allDates.map((_, i) => filtered[i] && filtered[i].signal === 1 ? '#FF0000' : '#4169E1');
-			const lclData  = allDates.map((_, i) => filtered[i] ? filtered[i].lcl : null);
             const duaData  = allDates.map((_, i) => filtered[i] ? filtered[i].dua : null);
             const dlaData  = allDates.map((_, i) => filtered[i] ? filtered[i].dla : null);
             const dpColors = allDates.map((_, i) => filtered[i] && filtered[i].signal === 1 ? '#FF0000' : '#4169E1');
@@ -2932,14 +2930,6 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             tension: 0
                         },
                         {
-                            label: t.chartLabels.lcl,
-                            data: lclData,
-                            borderColor: '#DC143C',
-                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
-                            borderWidth: 2,
-                            pointRadius: 0,
-                            tension: 0
-                       {
                             label: t.chartLabels.lcl,
                             data: lclData,
                             borderColor: '#DC143C',
