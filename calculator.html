@@ -780,7 +780,7 @@
         let showDecimals = true;
 		let showMonthBands = true;
         let showTooltip = true;
-		const TOOLTIP_DELAY_MS = 2500; // hover dwell time before the tooltip appears
+		const TOOLTIP_DELAY_MS = 2000; // hover dwell time before the tooltip appears
         let tooltipDelayTimer = null;
         let tooltipHoverIndex = null;
 		let yAxisFromZero = false;
@@ -2990,7 +2990,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                     animation: false,
                     layout: {
                         padding: {
-                            top: (showMonthBands && timeUnit === 'weeks') ? 40 : 10,
+                            top: 10,
                             right: 24,
                             left: 12,
                             bottom: 4
@@ -3004,7 +3004,8 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                                 size: 16,
                                 weight: 'bold'
                             },
-                            color: '#2c3e50'
+                            color: '#2c3e50',
+                            padding: { top: 0, bottom: (showMonthBands && timeUnit === 'weeks') ? 34 : 10 }
                         },
                         legend: {
                             display: true,
@@ -3360,13 +3361,12 @@ footer: function(tooltipItems) {
             tooltipDelayTimer = setTimeout(() => {
                 chart._ttReady = true;
                 try {
-                    chart.setActiveElements([{ datasetIndex: 0, index: idx }]);
-                    chart.tooltip.setActiveElements(
-                        [{ datasetIndex: 0, index: idx }],
-                        { x: 0, y: 0 }
-                    );
+                    // Activate this index on EVERY dataset so the tooltip lists DP, DPA, UCL, LCL
+                    const els = chart.data.datasets.map((ds, di) => ({ datasetIndex: di, index: idx }));
+                    chart.setActiveElements(els);
+                    chart.tooltip.setActiveElements(els, { x: 0, y: 0 });
                 } catch (e) {}
-                chart.update('none'); // repaint; filter now lets the tooltip through
+                chart.update('none');
             }, TOOLTIP_DELAY_MS);
         }
 
