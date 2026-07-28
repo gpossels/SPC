@@ -693,6 +693,7 @@
                             <button id="toggleYAxisBtn">Start from 0</button>
                             <button id="toggleLabelsBtn">Hide Labels</button>
                             <button id="toggleDecimalsBtn">Hide Decimals</button>
+							<button id="toggleMonthBandsBtn">Ocultar Meses/Años</button>
                             <button id="downloadChartBtn">Descargar Gráfico</button>
                             <button id="copyChartBtn">Copiar Gráfico</button>
                             <button id="downloadTableBtn">Descargar Tabla</button>
@@ -776,6 +777,7 @@
         let isTableVisible = false;
         let showLabels = true;
         let showDecimals = true;
+		let showMonthBands = true;
         let yAxisFromZero = false;
         let rangeStart = 1;
         let rangeEnd = 1;
@@ -847,8 +849,10 @@
                 hideLabelsBtn: 'Ocultar Etiquetas',
                 showLabelsBtn: 'Mostrar Etiquetas',
                 hideDecimalsBtn: 'Ocultar Decimales',
-                showDecimalsBtn: 'Mostrar Decimales',
-                downloadChartBtn: 'Descargar Gráfico',
+				showDecimalsBtn: 'Mostrar Decimales',
+                hideMonthBandsBtn: 'Ocultar Meses/Años',
+                showMonthBandsBtn: 'Mostrar Meses/Años',
+				downloadChartBtn: 'Descargar Gráfico',
                 showAllBtn: 'Mostrar Todo',
                 showLast24Btn: 'Últimos 24 puntos',
                 copyChartBtn: 'Copiar Gráfico',
@@ -940,6 +944,8 @@
                 showLabelsBtn: 'Show Labels',
                 hideDecimalsBtn: 'Hide Decimals',
                 showDecimalsBtn: 'Show Decimals',
+				hideMonthBandsBtn: 'Hide Months/Years',
+                showMonthBandsBtn: 'Show Months/Years',
                 downloadChartBtn: 'Download Chart',
                 showAllBtn: 'Show All',
                 showLast24Btn: 'Last 24 points',
@@ -1367,6 +1373,53 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             
             return matchingWeeks;
         }
+
+// Group visible week-points into month segments (week assigned by its Thursday)
+function computeMonthSegments() {
+    const fr = getFilteredResults();
+    if (!fr || !fr.length) return [];
+    const monthNames = isSpanish ?
+        ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'] :
+        ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    const segs = [];
+    let prevYear = null;
+    for (let i = 0; i < fr.length; i++) {
+        const ws = fr[i].weekStart;
+        if (!ws) return []; // not week data
+        const thu = new Date(ws.getTime());
+        thu.setDate(thu.getDate() + 3); // Thursday of the ISO week
+        const y = thu.getFullYear();
+        const m = thu.getMonth();
+        const key = y + '-' + m;
+        const last = segs[segs.length - 1];
+        if (last && last.key === key) {
+            last.endIdx = i;
+        } else {
+            segs.push({
+                key: key,
+                label: monthNames[m] + '-' + y,
+                startIdx: i,
+                endIdx: i,
+                year: y,
+                yearChanged: (prevYear !== null && prevYear !== y),
+                prevYear: prevYear
+            });
+        }
+        prevYear = y;
+    }
+    return segs;
+}
+
+// Pixel edges of a segment; snaps to plot edges only at the true axis ends
+function segEdges(seg, xScale, area, maxCatIdx) {
+    let leftX, rightX;
+    if (seg.startIdx === 0) leftX = area.left;
+    else leftX = (xScale.getPixelForValue(seg.startIdx) + xScale.getPixelForValue(seg.startIdx - 1)) / 2;
+    if (seg.endIdx >= maxCatIdx) rightX = area.right;
+    else rightX = (xScale.getPixelForValue(seg.endIdx) + xScale.getPixelForValue(seg.endIdx + 1)) / 2;
+    return { leftX, rightX };
+}
+		
 // Add a new week marking input field
         // Add a new week marking input field
         function addWeekMarkingField(startDate = '', endDate = '', label = '', color = 'yellow', type = 'band', dates = []) {
@@ -2146,6 +2199,7 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             document.getElementById('startLabel').textContent = t.start;
             document.getElementById('endLabel').textContent = t.end;
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
+			document.getElementById('toggleMonthBandsBtn').textContent = showMonthBands ? t.hideMonthBandsBtn : t.showMonthBandsBtn;
             document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
             
@@ -2320,8 +2374,29 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             playbackFrames = [];
             let lo = Infinity, hi = -Infinity;
 
-            for (let k = N; k <= currentData.length; k++) {
-                const frame = calcSPC(currentData.slice(0, k), currentPeriods.slice(0, k), N);
+            for (let k = 1; k <= currentData.length; k++) {
+                let frame;
+                if (k < N) {
+                    // Pre-baseline: data points only, no limits yet (dots + blue line)
+                    frame = currentData.slice(0, k).map((dp, i) => {
+                        const pd = currentPeriods[i];
+                        const r = {
+                            period: i + 1,
+                            date: typeof pd === 'object' ? pd.display : pd,
+                            dp: dp,
+                            dpa: null, mr: null, mra: null,
+                            lcl: null, dla: null, dua: null, ucl: null, mrucl: null,
+                            rule: null, ruleApplied: null, signal: null
+                        };
+                        if (typeof pd === 'object' && pd.weekStart && pd.weekEnd) {
+                            r.weekStart = pd.weekStart;
+                            r.weekEnd = pd.weekEnd;
+                        }
+                        return r;
+                    });
+                } else {
+                    frame = calcSPC(currentData.slice(0, k), currentPeriods.slice(0, k), N);
+                }
                 playbackFrames.push(frame);
                 frame.forEach(r => {
                     [r.dp, r.lcl, r.ucl].forEach(v => {
@@ -2338,18 +2413,18 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             playbackYMax = hi + pad;
 
             const slider = document.getElementById('playbackSlider');
-            slider.min = N;
+            slider.min = 1;
             slider.max = currentData.length;
-            playbackIndex = N;
+            playbackIndex = 1;
         }
 
         function renderPlaybackFrame(k) {
             if (!playbackFrames || !currentData) return;
             const N = currentBaselineN;
-            k = Math.max(N, Math.min(currentData.length, k));
+            k = Math.max(1, Math.min(currentData.length, k));
             playbackIndex = k;
 
-            currentResults = playbackFrames[k - N];
+            currentResults = playbackFrames[k - 1];
             rangeStart = 1;
             rangeEnd = k;
 
@@ -2380,7 +2455,11 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             const uclData  = allDates.map((_, i) => filtered[i] ? filtered[i].ucl : null);
             const lclData  = allDates.map((_, i) => filtered[i] ? filtered[i].lcl : null);
             const dpColors = allDates.map((_, i) => filtered[i] && filtered[i].signal === 1 ? '#FF0000' : '#4169E1');
-
+			const lclData  = allDates.map((_, i) => filtered[i] ? filtered[i].lcl : null);
+            const duaData  = allDates.map((_, i) => filtered[i] ? filtered[i].dua : null);
+            const dlaData  = allDates.map((_, i) => filtered[i] ? filtered[i].dla : null);
+            const dpColors = allDates.map((_, i) => filtered[i] && filtered[i].signal === 1 ? '#FF0000' : '#4169E1');
+			
             spcChart.data.labels = allDates;
             spcChart.data.datasets[0].data = dpData;
             spcChart.data.datasets[0].pointBackgroundColor = dpColors;
@@ -2388,6 +2467,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             spcChart.data.datasets[1].data = dpaData;
             spcChart.data.datasets[2].data = uclData;
             spcChart.data.datasets[3].data = lclData;
+			spcChart.data.datasets[4].data = duaData;
+            spcChart.data.datasets[5].data = dlaData;
 
             // Keep the Y axis pinned so it doesn't jump between frames
             spcChart.options.scales.y.min = yAxisFromZero ? 0 : playbackYMin;
@@ -2406,7 +2487,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             if (!currentData) return;
             ensureFrames();
             if (spcChart) { spcChart.destroy(); spcChart = null; }
-			if (playbackIndex >= currentData.length) renderPlaybackFrame(currentBaselineN);
+            if (playbackIndex >= currentData.length) playbackIndex = 1;
+            renderPlaybackFrame(playbackIndex);
 
             playbackActive = true;
             document.getElementById('playBtn').textContent =
@@ -2555,6 +2637,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
             const dpaData = filteredResults.map(r => r.dpa);
             const uclData = filteredResults.map(r => r.ucl);
             const lclData = filteredResults.map(r => r.lcl);
+			const duaData = filteredResults.map(r => r.dua);
+            const dlaData = filteredResults.map(r => r.dla);
         
             // Prepare point colors for DP line (red for signals, blue for normal)
             const dpPointColors = filteredResults.map(r => r.signal === 1 ? '#FF0000' : '#4169E1');
@@ -2568,6 +2652,8 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                     dpaData.push(null);
                     uclData.push(null);
                     lclData.push(null);
+                    duaData.push(null);
+                    dlaData.push(null);
                     dpPointColors.push('#4169E1');
                     dpPointBorderColors.push('#4169E1');
                 }
@@ -2712,7 +2798,106 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                             }
                         });
 			}
-                }],
+                },
+                {
+                    id: 'monthYearBands',
+                    beforeDatasetsDraw: function(chart) {
+                        if (!showMonthBands) return;
+                        if (document.getElementById('timeUnitSelect').value !== 'weeks') return;
+                        if (!currentResults) return;
+                        const segs = computeMonthSegments();
+                        if (!segs.length) return;
+                        const ctx = chart.ctx, area = chart.chartArea, xScale = chart.scales.x;
+                        const maxCat = chart.data.labels.length - 1;
+                        ctx.save();
+                        ctx.strokeStyle = 'rgba(50,50,50,0.5)';
+                        ctx.lineWidth = 1.5;
+                        segs.forEach(seg => {
+                            if (!seg.yearChanged) return;
+                            const { leftX } = segEdges(seg, xScale, area, maxCat);
+                            ctx.beginPath();
+                            ctx.moveTo(leftX, area.top);
+                            ctx.lineTo(leftX, area.bottom);
+                            ctx.stroke();
+                        });
+                        ctx.restore();
+                    },
+                    afterDatasetsDraw: function(chart) {
+                        if (!showMonthBands) return;
+                        if (document.getElementById('timeUnitSelect').value !== 'weeks') return;
+                        if (!currentResults) return;
+                        const segs = computeMonthSegments();
+                        if (!segs.length) return;
+                        const ctx = chart.ctx, area = chart.chartArea, xScale = chart.scales.x;
+                        const maxCat = chart.data.labels.length - 1;
+                        const ribbonH = 20;
+                        const ribbonTop = area.top - ribbonH - 4;
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.font = 'bold 11px Segoe UI, sans-serif';
+                        segs.forEach((seg, si) => {
+                            const { leftX, rightX } = segEdges(seg, xScale, area, maxCat);
+                            ctx.fillStyle = (si % 2 === 0) ? 'rgba(120,120,120,0.10)' : 'rgba(120,120,120,0.22)';
+                            ctx.fillRect(leftX, ribbonTop, rightX - leftX, ribbonH);
+                            ctx.fillStyle = '#333';
+                            const w = ctx.measureText(seg.label).width;
+                            if (rightX - leftX > w + 6) {
+                                ctx.fillText(seg.label, (leftX + rightX) / 2, ribbonTop + ribbonH / 2);
+                            }
+                        });
+                        ctx.strokeStyle = 'rgba(120,120,120,0.4)';
+                        ctx.lineWidth = 1;
+                        ctx.strokeRect(area.left, ribbonTop, area.right - area.left, ribbonH);
+                        ctx.font = 'bold 12px Segoe UI, sans-serif';
+                        ctx.textBaseline = 'bottom';
+                        segs.forEach(seg => {
+                            if (!seg.yearChanged) return;
+                            const { leftX } = segEdges(seg, xScale, area, maxCat);
+                            const yTop = ribbonTop - 4;
+                            ctx.fillStyle = '#333';
+                            ctx.textAlign = 'right';
+                            ctx.fillText(String(seg.prevYear), leftX - 4, yTop);
+                            ctx.textAlign = 'left';
+                            ctx.fillText(String(seg.year), leftX + 4, yTop);
+                        });
+                        ctx.restore();
+                    }
+                },
+                {
+                    id: 'baselineLabels',
+                    afterDatasetsDraw: function(chart) {
+                        if (!currentResults) return;
+                        if (playbackFrames && playbackIndex < currentData.length) return;
+                        const fr = getFilteredResults();
+                        if (!fr || !fr.length) return;
+                        const ctx = chart.ctx;
+                        const xScale = chart.scales.x, yScale = chart.scales.y;
+                        ctx.save();
+                        ctx.textAlign = 'left';
+                        ctx.textBaseline = 'bottom';
+                        ctx.font = 'bold 11px Segoe UI, sans-serif';
+                        let prevDpa = null, prevUcl = null;
+                        for (let i = 0; i < fr.length; i++) {
+                            const r = fr[i];
+                            if (r.dpa == null) { prevDpa = null; prevUcl = null; continue; }
+                            const isStart = (prevDpa === null) ||
+                                            Math.abs(r.dpa - prevDpa) > 1e-9 ||
+                                            (r.ucl !== prevUcl);
+                            if (isStart) {
+                                const x = xScale.getPixelForValue(i) + 3;
+                                ctx.fillStyle = '#228B22';
+                                ctx.fillText('DPA', x, yScale.getPixelForValue(r.dpa) - 3);
+                                ctx.fillStyle = '#DC143C';
+                                ctx.fillText('UCL', x, yScale.getPixelForValue(r.ucl) - 3);
+                                ctx.fillText('LCL', x, yScale.getPixelForValue(r.lcl) - 3);
+                            }
+                            prevDpa = r.dpa; prevUcl = r.ucl;
+                        }
+                        ctx.restore();
+                    }
+                }
+                ],
                 data: {
                     labels: labels,
                     datasets: [
@@ -2754,12 +2939,49 @@ function genPeriods(refPeriod, refYear, unit, type, count) {
                             borderWidth: 2,
                             pointRadius: 0,
                             tension: 0
+                       {
+                            label: t.chartLabels.lcl,
+                            data: lclData,
+                            borderColor: '#DC143C',
+                            backgroundColor: 'rgba(220, 20, 60, 0.1)',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: t.chartLabels.dua,
+                            data: duaData,
+                            borderColor: '#228B22',
+                            backgroundColor: 'rgba(34, 139, 34, 0.05)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 4],
+                            pointRadius: 0,
+                            tension: 0
+                        },
+                        {
+                            label: t.chartLabels.dla,
+                            data: dlaData,
+                            borderColor: '#228B22',
+                            backgroundColor: 'rgba(34, 139, 34, 0.05)',
+                            borderWidth: 1.5,
+                            borderDash: [6, 4],
+                            pointRadius: 0,
+                            tension: 0
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: false,
+                    layout: {
+                        padding: {
+                            top: (showMonthBands && timeUnit === 'weeks') ? 52 : 10,
+                            right: 24,
+                            left: 12,
+                            bottom: 4
+                        }
+                    },
                     plugins: {
                         title: {
                             display: true,
@@ -2894,7 +3116,8 @@ footer: function(tooltipItems) {
                         },
                         datalabels: {
                             display: function(context) {
-                                if (context.datasetIndex !== 0) return false;
+                                if (playbackFrames && playbackIndex < currentData.length) return false;
+								if (context.datasetIndex !== 0) return false;
                                 
                                 const result = filteredResults[context.dataIndex];
                                 if (!result) return false;
@@ -2983,7 +3206,10 @@ footer: function(tooltipItems) {
                                 }
                             },
                             ticks: {
-                                maxRotation: 45
+                                autoSkip: false,
+                                maxRotation: 90,
+                                minRotation: 45,
+                                font: { size: 10 }
                             },
                             grid: {
                                 display: false
@@ -3071,7 +3297,16 @@ footer: function(tooltipItems) {
             updateChart();
             }
         }
-        
+
+		function toggleMonthBands() {
+            showMonthBands = !showMonthBands;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleMonthBandsBtn').textContent =
+                showMonthBands ? t.hideMonthBandsBtn : t.showMonthBandsBtn;
+            if (spcChart && currentResults) updateChart();
+        }
+
+		
         // Download chart as image
         function downloadChart() {
             if (!spcChart) return;
@@ -3344,6 +3579,7 @@ footer: function(tooltipItems) {
             document.getElementById('toggleLabelsBtn').onclick = toggleLabels;
             document.getElementById('toggleYAxisBtn').onclick = toggleYAxis;
             document.getElementById('toggleDecimalsBtn').onclick = toggleDecimals;
+			document.getElementById('toggleMonthBandsBtn').onclick = toggleMonthBands;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
