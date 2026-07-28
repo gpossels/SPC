@@ -2895,27 +2895,38 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         if (!fr || !fr.length) return;
                         const ctx = chart.ctx;
                         const xScale = chart.scales.x, yScale = chart.scales.y;
-                        ctx.save();
-                        ctx.textAlign = 'left';
-                        ctx.textBaseline = 'bottom';
-                        ctx.font = 'bold 11px Segoe UI, sans-serif';
-                        let prevDpa = null, prevUcl = null;
+
+                        // Group consecutive points that share the same DPA/UCL into segments
+                        const segments = [];
+                        let cur = null, prevDpa = null, prevUcl = null;
                         for (let i = 0; i < fr.length; i++) {
                             const r = fr[i];
-                            if (r.dpa == null) { prevDpa = null; prevUcl = null; continue; }
+                            if (r.dpa == null) { cur = null; prevDpa = null; prevUcl = null; continue; }
                             const isStart = (prevDpa === null) ||
                                             Math.abs(r.dpa - prevDpa) > 1e-9 ||
                                             (r.ucl !== prevUcl);
                             if (isStart) {
-                                const x = xScale.getPixelForValue(i) + 3;
-                                ctx.fillStyle = '#228B22';
-                                ctx.fillText(fmt(r.dpa), x, yScale.getPixelForValue(r.dpa) - 3);
-                                ctx.fillStyle = '#DC143C';
-                                ctx.fillText(fmt(r.ucl), x, yScale.getPixelForValue(r.ucl) - 3);
-                                ctx.fillText(fmt(r.lcl), x, yScale.getPixelForValue(r.lcl) - 3);
+                                cur = { startIdx: i, endIdx: i, dpa: r.dpa, ucl: r.ucl, lcl: r.lcl };
+                                segments.push(cur);
+                            } else if (cur) {
+                                cur.endIdx = i;
                             }
                             prevDpa = r.dpa; prevUcl = r.ucl;
                         }
+
+                        ctx.save();
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'bottom';
+                        ctx.font = 'bold 11px Segoe UI, sans-serif';
+                        segments.forEach(seg => {
+                            const midIdx = (seg.startIdx + seg.endIdx) / 2;
+                            const x = xScale.getPixelForValue(midIdx);
+                            ctx.fillStyle = '#228B22';
+                            ctx.fillText(fmt(seg.dpa), x, yScale.getPixelForValue(seg.dpa) - 3);
+                            ctx.fillStyle = '#DC143C';
+                            ctx.fillText(fmt(seg.ucl), x, yScale.getPixelForValue(seg.ucl) - 3);
+                            ctx.fillText(fmt(seg.lcl), x, yScale.getPixelForValue(seg.lcl) - 3);
+                        });
                         ctx.restore();
                     }
                 }
@@ -3005,7 +3016,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                                 weight: 'bold'
                             },
                             color: '#2c3e50',
-                            padding: { top: 0, bottom: (showMonthBands && timeUnit === 'weeks') ? 34 : 10 }
+                            padding: { top: 0, bottom: (showMonthBands && timeUnit === 'weeks') ? 48 : 10 }
                         },
                         legend: {
                             display: true,
