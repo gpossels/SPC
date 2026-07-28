@@ -2852,8 +2852,15 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         if (!segs.length) return;
                         const ctx = chart.ctx, area = chart.chartArea, xScale = chart.scales.x;
                         const maxCat = chart.data.labels.length - 1;
-                        const ribbonH = 20;
-                        const ribbonTop = area.top - ribbonH - 2;
+                        const ribbonH = 18;
+                        // Place the ribbon in the gap between the legend's bottom and the plot top
+                        const legend = chart.legend;
+                        const legendBottom = legend ? legend.bottom : area.top - 40;
+                        let ribbonTop = legendBottom + 4;
+                        // Never let it collide with the plot; clamp just above the plot area
+                        if (ribbonTop + ribbonH > area.top - 2) {
+                            ribbonTop = area.top - ribbonH - 2;
+                        }
                         ctx.save();
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
@@ -2990,7 +2997,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                     animation: false,
                     layout: {
                         padding: {
-                            top: (showMonthBands && timeUnit === 'weeks') ? 40 : 10,
+                            top: (showMonthBands && timeUnit === 'weeks') ? 34 : 10,
                             right: 24,
                             left: 12,
                             bottom: 4
@@ -3011,7 +3018,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             position: 'top',
                             labels: {
                                 usePointStyle: false,
-                                padding: (showMonthBands && timeUnit === 'weeks') ? 48 : 20,
+                                padding: 20,
                                 boxWidth: 20,
                                 boxHeight: 8,
                                 generateLabels: function(chart) {
@@ -3060,8 +3067,8 @@ function segEdges(seg, xScale, area, maxCatIdx) {
 							usePointStyle: false,
                             boxWidth: 20,
                             boxHeight: 8,
-                            filter: function(tooltipItem, i, items, chart) {
-                                if (!chart._ttReady) return false; // wait for dwell delay
+                            filter: function(tooltipItem) {
+                                if (spcChart && !spcChart._ttReady) return false; // wait for dwell delay
                                 const lbl = tooltipItem.dataset.label;
                                 return lbl !== t.chartLabels.dua && lbl !== t.chartLabels.dla;
                             },
@@ -3358,7 +3365,8 @@ footer: function(tooltipItems) {
                 if (tooltipDelayTimer) clearTimeout(tooltipDelayTimer);
                 tooltipDelayTimer = setTimeout(() => {
                     chart._ttReady = true;
-                    chart.draw(); // repaint so the now-allowed tooltip renders
+                    chart.setActiveElements(chart.tooltip.getActiveElements());
+                    chart.update('none'); // repaint so the now-allowed tooltip renders
                 }, TOOLTIP_DELAY_MS);
             }
         }
