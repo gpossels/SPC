@@ -1406,7 +1406,7 @@ function computeMonthSegments() {
         } else {
             segs.push({
                 key: key,
-                label: monthNames[m] + '-' + y,
+                label: monthNames[m],
                 startIdx: i,
                 endIdx: i,
                 year: y,
@@ -2986,10 +2986,10 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         {
                             label: t.chartLabels.dla,
                             data: dlaData,
-                            borderColor: '#228B22',
+                            borderColor: 'rgba(34, 139, 34, 0.55)',
                             backgroundColor: 'rgba(34, 139, 34, 0.05)',
-                            borderWidth: 1.5,
-                            borderDash: [6, 4],
+                            borderWidth: 1,
+                            borderDash: [1, 4],
                             pointRadius: 0,
                             tension: 0
                         }
