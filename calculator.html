@@ -2943,7 +2943,9 @@ function segEdges(seg, xScale, area, maxCatIdx) {
 
                             drawTag(fmt(seg.ucl), x, yScale.getPixelForValue(seg.ucl), 'above', '#DC143C'); // UCL above its line
                             drawTag(fmt(seg.dpa), x, yScale.getPixelForValue(seg.dpa), dpaPlace, '#228B22'); // DPA away from data
-                            drawTag(fmt(seg.lcl), x, yScale.getPixelForValue(seg.lcl), 'below', '#DC143C'); // LCL below its line
+                            if (seg.lcl >= 0) {
+                                drawTag(fmt(seg.lcl), x, yScale.getPixelForValue(seg.lcl), 'below', '#DC143C'); // LCL below its line
+                            }
                         });
                         ctx.restore();
                     }
@@ -3261,6 +3263,7 @@ footer: function(tooltipItems) {
                                 maxRotation: 90,
                                 minRotation: 45,
                                 font: { size: 10 }
+								padding: 12
                             },
                             grid: {
                                 display: false
