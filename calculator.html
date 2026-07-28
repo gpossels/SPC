@@ -2600,7 +2600,21 @@ function segEdges(seg, xScale, area, maxCatIdx) {
         
             const filteredResults = getFilteredResults();
             if (!filteredResults || filteredResults.length === 0) return;
-        
+
+			// A point is a "down spike" if it sits lower than its existing neighbors
+            function isDownSpike(idx) {
+                const cur = filteredResults[idx];
+                if (!cur || cur.dp == null) return false;
+                const prev = filteredResults[idx - 1];
+                const next = filteredResults[idx + 1];
+                const p = prev && prev.dp != null ? prev.dp : null;
+                const n = next && next.dp != null ? next.dp : null;
+                if (p == null && n == null) return false;      // isolated point
+                const lowerThanPrev = (p == null) || cur.dp < p;
+                const lowerThanNext = (n == null) || cur.dp < n;
+                return lowerThanPrev && lowerThanNext;
+            }
+			
             const t = isSpanish ? lang.es : lang.en;
             const ctx = document.getElementById('spcChart').getContext('2d');
         
@@ -2829,7 +2843,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         const ctx = chart.ctx, area = chart.chartArea, xScale = chart.scales.x;
                         const maxCat = chart.data.labels.length - 1;
                         const ribbonH = 20;
-                        const ribbonTop = area.top - ribbonH - 4;
+                        const ribbonTop = area.top - ribbonH - 22;
                         ctx.save();
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
@@ -2885,10 +2899,10 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             if (isStart) {
                                 const x = xScale.getPixelForValue(i) + 3;
                                 ctx.fillStyle = '#228B22';
-                                ctx.fillText('DPA', x, yScale.getPixelForValue(r.dpa) - 3);
+                                ctx.fillText(fmt(r.dpa), x, yScale.getPixelForValue(r.dpa) - 3);
                                 ctx.fillStyle = '#DC143C';
-                                ctx.fillText('UCL', x, yScale.getPixelForValue(r.ucl) - 3);
-                                ctx.fillText('LCL', x, yScale.getPixelForValue(r.lcl) - 3);
+                                ctx.fillText(fmt(r.ucl), x, yScale.getPixelForValue(r.ucl) - 3);
+                                ctx.fillText(fmt(r.lcl), x, yScale.getPixelForValue(r.lcl) - 3);
                             }
                             prevDpa = r.dpa; prevUcl = r.ucl;
                         }
@@ -2966,7 +2980,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                     animation: false,
                     layout: {
                         padding: {
-                            top: (showMonthBands && timeUnit === 'weeks') ? 52 : 10,
+                            top: (showMonthBands && timeUnit === 'weeks') ? 72 : 10,
                             right: 24,
                             left: 12,
                             bottom: 4
@@ -3131,7 +3145,8 @@ footer: function(tooltipItems) {
                                     return result.dp > result.dpa ? 'top' : 'bottom';
                                 }
                                 
-                                return 'top';
+                                // Downward spike (local minimum): put label below the dot
+                                return isDownSpike(context.dataIndex) ? 'bottom' : 'top';
                             },
                             offset: function(context) {
                                 const result = filteredResults[context.dataIndex];
