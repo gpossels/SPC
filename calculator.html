@@ -3383,9 +3383,10 @@ footer: function(tooltipItems) {
             if (spcChart && currentResults) updateChart();
         }
 
-		// Drives the dwell timer from real hover state (not the filtered tooltip)
+		// Drives the dwell timer from real hover state, tolerant of jitter between adjacent points
         function dwellHover(event, active, chart) {
-            if (!showTooltip) return;
+            console.log('hover idx:', active && active.length ? active[0].index : 'none', 'ready:', chart._ttReady);
+			if (!showTooltip) return;
 
             // Left all points: hide and reset
             if (!active || !active.length) {
@@ -3397,18 +3398,34 @@ footer: function(tooltipItems) {
 
             const idx = active[0].index;
 
-            // Same point as before: leave the running timer / ready state alone
-            if (idx === tooltipHoverIndex) return;
-
-            // Moved to a new point: restart the dwell
-            tooltipHoverIndex = idx;
-            chart._ttReady = false;
-            if (tooltipDelayTimer) clearTimeout(tooltipDelayTimer);
-            tooltipDelayTimer = setTimeout(() => {
-                chart._ttReady = true;
-                try {
-                    // Activate this index on EVERY dataset so the tooltip lists DP, DPA, UCL, LCL
+            // Already showing for a nearby point: don't restart, just retarget
+            if (chart._ttReady) {
+                if (idx !== tooltipHoverIndex) {
+                    tooltipHoverIndex = idx;
                     const els = chart.data.datasets.map((ds, di) => ({ datasetIndex: di, index: idx }));
+                    try {
+                        chart.setActiveElements(els);
+                        chart.tooltip.setActiveElements(els, { x: 0, y: 0 });
+                    } catch (e) {}
+                    chart.update('none');
+                }
+                return;
+            }
+
+            // A timer is already counting down: let it finish, just remember the latest index
+            if (tooltipDelayTimer) {
+                tooltipHoverIndex = idx;
+                return;
+            }
+
+            // No timer running and not ready yet: start the dwell
+            tooltipHoverIndex = idx;
+            tooltipDelayTimer = setTimeout(() => {
+                tooltipDelayTimer = null;
+                chart._ttReady = true;
+                const useIdx = tooltipHoverIndex;
+                try {
+                    const els = chart.data.datasets.map((ds, di) => ({ datasetIndex: di, index: useIdx }));
                     chart.setActiveElements(els);
                     chart.tooltip.setActiveElements(els, { x: 0, y: 0 });
                 } catch (e) {}
