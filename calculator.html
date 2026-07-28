@@ -780,6 +780,9 @@
         let showDecimals = true;
 		let showMonthBands = true;
         let showTooltip = true;
+		const TOOLTIP_DELAY_MS = 2500; // hover dwell time before the tooltip appears
+        let tooltipDelayTimer = null;
+        let tooltipHoverIndex = null;
 		let yAxisFromZero = false;
         let rangeStart = 1;
         let rangeEnd = 1;
@@ -3008,7 +3011,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             position: 'top',
                             labels: {
                                 usePointStyle: false,
-                                padding: (showMonthBands && timeUnit === 'weeks') ? 32 : 20,
+                                padding: (showMonthBands && timeUnit === 'weeks') ? 48 : 20,
                                 boxWidth: 20,
                                 boxHeight: 8,
                                 generateLabels: function(chart) {
@@ -3053,12 +3056,14 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             enabled: showTooltip,
 							mode: 'index',
                             intersect: false,
-                            usePointStyle: false,
+                            external: delayedTooltipHandler,
+							usePointStyle: false,
                             boxWidth: 20,
                             boxHeight: 8,
-                            filter: function(tooltipItem) {
-                                // Hide DUA and DLA from tooltip (they're no longer in chart)
-                                return true;
+                            filter: function(tooltipItem, i, items, chart) {
+                                if (!chart._ttReady) return false; // wait for dwell delay
+                                const lbl = tooltipItem.dataset.label;
+                                return lbl !== t.chartLabels.dua && lbl !== t.chartLabels.dla;
                             },
                             itemSort: function(a, b) {
                                 // Custom sort order: UCL, DP/custom, DPA, LCL
@@ -3330,6 +3335,34 @@ footer: function(tooltipItems) {
                 showTooltip ? t.hideTooltipBtn : t.showTooltipBtn;
             if (spcChart && currentResults) updateChart();
         }
+
+		// Gate the tooltip so it only shows after the pointer dwells on one point
+        function delayedTooltipHandler(context) {
+            const chart = context.chart;
+            const tt = context.tooltip;
+
+            // Nothing hovered: hide immediately and reset
+            if (!tt || tt.opacity === 0) {
+                if (tooltipDelayTimer) { clearTimeout(tooltipDelayTimer); tooltipDelayTimer = null; }
+                tooltipHoverIndex = null;
+                if (chart._ttReady) { chart._ttReady = false; chart.draw(); }
+                return;
+            }
+
+            const idx = tt.dataPoints && tt.dataPoints.length ? tt.dataPoints[0].dataIndex : null;
+
+            // Moved to a different point: restart the dwell timer
+            if (idx !== tooltipHoverIndex) {
+                tooltipHoverIndex = idx;
+                chart._ttReady = false;
+                if (tooltipDelayTimer) clearTimeout(tooltipDelayTimer);
+                tooltipDelayTimer = setTimeout(() => {
+                    chart._ttReady = true;
+                    chart.draw(); // repaint so the now-allowed tooltip renders
+                }, TOOLTIP_DELAY_MS);
+            }
+        }
+
 		
         // Download chart as image
         function downloadChart() {
