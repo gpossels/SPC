@@ -694,7 +694,8 @@
                             <button id="toggleLabelsBtn">Hide Labels</button>
                             <button id="toggleDecimalsBtn">Hide Decimals</button>
 							<button id="toggleMonthBandsBtn">Ocultar Meses/Años</button>
-                            <button id="downloadChartBtn">Descargar Gráfico</button>
+                            <button id="toggleTooltipBtn">Ocultar Tooltip</button>
+							<button id="downloadChartBtn">Descargar Gráfico</button>
                             <button id="copyChartBtn">Copiar Gráfico</button>
                             <button id="downloadTableBtn">Descargar Tabla</button>
                             <button id="toggleTableBtn">Mostrar Tabla</button>
@@ -778,7 +779,8 @@
         let showLabels = true;
         let showDecimals = true;
 		let showMonthBands = true;
-        let yAxisFromZero = false;
+        let showTooltip = true;
+		let yAxisFromZero = false;
         let rangeStart = 1;
         let rangeEnd = 1;
         let dataPointLabels = {}; // Store labels for red points: {index: "label text"}
@@ -852,6 +854,8 @@
 				showDecimalsBtn: 'Mostrar Decimales',
                 hideMonthBandsBtn: 'Ocultar Meses/Años',
                 showMonthBandsBtn: 'Mostrar Meses/Años',
+				hideTooltipBtn: 'Ocultar Tooltip',
+                showTooltipBtn: 'Mostrar Tooltip',
 				downloadChartBtn: 'Descargar Gráfico',
                 showAllBtn: 'Mostrar Todo',
                 showLast24Btn: 'Últimos 24 puntos',
@@ -946,7 +950,9 @@
                 showDecimalsBtn: 'Show Decimals',
 				hideMonthBandsBtn: 'Hide Months/Years',
                 showMonthBandsBtn: 'Show Months/Years',
-                downloadChartBtn: 'Download Chart',
+                hideTooltipBtn: 'Hide Tooltip',
+                showTooltipBtn: 'Show Tooltip',
+				downloadChartBtn: 'Download Chart',
                 showAllBtn: 'Show All',
                 showLast24Btn: 'Last 24 points',
                 copyChartBtn: 'Copy Chart',
@@ -2200,7 +2206,8 @@ function segEdges(seg, xScale, area, maxCatIdx) {
             document.getElementById('endLabel').textContent = t.end;
             document.getElementById('toggleDecimalsBtn').textContent = showDecimals ? t.hideDecimalsBtn : t.showDecimalsBtn;
 			document.getElementById('toggleMonthBandsBtn').textContent = showMonthBands ? t.hideMonthBandsBtn : t.showMonthBandsBtn;
-            document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
+            document.getElementById('toggleTooltipBtn').textContent = showTooltip ? t.hideTooltipBtn : t.showTooltipBtn;
+			document.getElementById('toggleYAxisBtn').textContent = yAxisFromZero ? t.autoScaleBtn : t.startFromZeroBtn;
             document.getElementById('backToIndex').textContent = t.backToIndex;
             
             // View controls
@@ -2843,7 +2850,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                         const ctx = chart.ctx, area = chart.chartArea, xScale = chart.scales.x;
                         const maxCat = chart.data.labels.length - 1;
                         const ribbonH = 20;
-                        const ribbonTop = area.top - ribbonH - 22;
+                        const ribbonTop = area.top - ribbonH - 2;
                         ctx.save();
                         ctx.textAlign = 'center';
                         ctx.textBaseline = 'middle';
@@ -2980,7 +2987,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                     animation: false,
                     layout: {
                         padding: {
-                            top: (showMonthBands && timeUnit === 'weeks') ? 72 : 10,
+                            top: (showMonthBands && timeUnit === 'weeks') ? 40 : 10,
                             right: 24,
                             left: 12,
                             bottom: 4
@@ -3001,7 +3008,7 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                             position: 'top',
                             labels: {
                                 usePointStyle: false,
-                                padding: 20,
+                                padding: (showMonthBands && timeUnit === 'weeks') ? 32 : 20,
                                 boxWidth: 20,
                                 boxHeight: 8,
                                 generateLabels: function(chart) {
@@ -3012,7 +3019,11 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                                         label.fillStyle = label.strokeStyle;
                                         return label;
                                     });
-                                    
+
+									// Hide DUA and DLA from the legend (keep their lines on the chart)
+                                    const hidden = [t.chartLabels.dua, t.chartLabels.dla];
+                                    const filtered = updatedLabels.filter(l => !hidden.includes(l.text));
+									
                                     // Add week marking labels
                                     if (weekMarkings && weekMarkings.length > 0) {
                                         weekMarkings.forEach((marking, index) => {
@@ -3022,24 +3033,25 @@ function segEdges(seg, xScale, area, maxCatIdx) {
                                                     colorPalette[marking.color] : 
                                                     colorPaletteSolid[marking.color];
                                                 
-                                                updatedLabels.push({
+                                                filtered.push({
                                                     text: marking.label,
                                                     fillStyle: legendColor,
                                                     strokeStyle: legendColor,
                                                     lineWidth: 0,
                                                     hidden: false,
-                                                    index: updatedLabels.length
+                                                    index: filtered.length
                                                 });
                                             }
                                         });
                                     }
                                     
-                                    return updatedLabels;
+                                    return filtered;
                                 }
                             }
                         },
                         tooltip: {
-                            mode: 'index',
+                            enabled: showTooltip,
+							mode: 'index',
                             intersect: false,
                             usePointStyle: false,
                             boxWidth: 20,
@@ -3311,6 +3323,13 @@ footer: function(tooltipItems) {
             if (spcChart && currentResults) updateChart();
         }
 
+		function toggleTooltip() {
+            showTooltip = !showTooltip;
+            const t = isSpanish ? lang.es : lang.en;
+            document.getElementById('toggleTooltipBtn').textContent =
+                showTooltip ? t.hideTooltipBtn : t.showTooltipBtn;
+            if (spcChart && currentResults) updateChart();
+        }
 		
         // Download chart as image
         function downloadChart() {
@@ -3585,6 +3604,7 @@ footer: function(tooltipItems) {
             document.getElementById('toggleYAxisBtn').onclick = toggleYAxis;
             document.getElementById('toggleDecimalsBtn').onclick = toggleDecimals;
 			document.getElementById('toggleMonthBandsBtn').onclick = toggleMonthBands;
+			document.getElementById('toggleTooltipBtn').onclick = toggleTooltip;
             document.getElementById('downloadChartBtn').onclick = downloadChart;
             document.getElementById('copyChartBtn').onclick = copyChart;
             document.getElementById('downloadTableBtn').onclick = downloadTable;
